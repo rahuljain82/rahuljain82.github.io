@@ -1,1 +1,143 @@
-<h1>Rahul's Portfolio</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running Ninjas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <!-- Navigation -->
+  <nav class="bg-white shadow p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️Running Ninjas</h1>
+      <a href="#" class="text-blue-500 hover:underline">Add Marathon</a>
+    </div>
+  </nav>
+
+  <!-- Filters -->
+  <div class="container mx-auto mt-6 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Search by name, city, or description..."
+        class="p-2 border border-gray-300 rounded-md w-full"
+      />
+      <select id="cityFilter" class="p-2 border border-gray-300 rounded-md w-full">
+        <option value="">Filter by City</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Boston">Boston</option>
+        <option value="Berlin">Berlin</option>
+      </select>
+      <input
+        id="dateFilter"
+        type="date"
+        class="p-2 border border-gray-300 rounded-md w-full"
+      />
+    </div>
+
+    <div class="flex justify-end mb-4">
+      <button
+        onclick="sortByDate()"
+        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+      >
+        Sort by Date
+      </button>
+    </div>
+  </div>
+
+  <!-- Marathon Cards -->
+  <main class="container mx-auto px-4">
+    <div id="marathonList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards will be inserted here by JS -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 p-4 bg-white shadow text-center text-sm text-gray-500">
+    © 2025 Running Ninjas Calendar. All rights reserved.
+  </footer>
+
+  <script>
+    const marathons = [
+      {
+        name: "Stonehill Marathon 2025",
+        date: "2025-09-14",
+        city: "Bangalore",
+        description: "Discount code with Anna"
+      },
+      {
+        name: "Wipro Bengaluru Marathon",
+        date: "2025-09-21",
+        city: "BEngaluru",
+        description: "Early bird ended"
+      },
+      {
+        name: "Malnad Ultra",
+        date: "2025-11-22",
+        city: "Bengaluru",
+        description: "30k, 50k and 100k"
+      },
+      // Add more events here
+    ];
+
+    const marathonList = document.getElementById("marathonList");
+    const searchInput = document.getElementById("searchInput");
+    const cityFilter = document.getElementById("cityFilter");
+    const dateFilter = document.getElementById("dateFilter");
+
+    function displayMarathons(data) {
+      marathonList.innerHTML = "";
+      data.forEach((marathon) => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-6 rounded-xl shadow";
+        card.innerHTML = `
+          <h3 class="text-lg font-bold text-blue-700">${marathon.name}</h3>
+          <p class="text-sm text-gray-600">📅 ${formatDate(marathon.date)} | 📍 ${marathon.city}</p>
+          <p class="mt-2 text-sm">${marathon.description}</p>
+        `;
+        marathonList.appendChild(card);
+      });
+    }
+
+    function formatDate(dateStr) {
+      const options = { year: "numeric", month: "long", day: "numeric" };
+      return new Date(dateStr).toLocaleDateString(undefined, options);
+    }
+
+    function filterAndDisplay() {
+      const searchText = searchInput.value.toLowerCase();
+      const selectedCity = cityFilter.value;
+      const selectedDate = dateFilter.value;
+
+      const filtered = marathons.filter((m) => {
+        const matchesSearch =
+          m.name.toLowerCase().includes(searchText) ||
+          m.city.toLowerCase().includes(searchText) ||
+          m.description.toLowerCase().includes(searchText);
+        const matchesCity = selectedCity === "" || m.city === selectedCity;
+        const matchesDate = selectedDate === "" || m.date === selectedDate;
+        return matchesSearch && matchesCity && matchesDate;
+      });
+
+      displayMarathons(filtered);
+    }
+
+    function sortByDate() {
+      const sorted = [...marathons].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+      displayMarathons(sorted);
+    }
+
+    searchInput.addEventListener("input", filterAndDisplay);
+    cityFilter.addEventListener("change", filterAndDisplay);
+    dateFilter.addEventListener("change", filterAndDisplay);
+
+    // Initial display
+    displayMarathons(marathons);
+  </script>
+</body>
+</html>
+
