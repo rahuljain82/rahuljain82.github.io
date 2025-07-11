@@ -9,30 +9,45 @@
 <body class="bg-gray-100 text-gray-800">
   <!-- Navigation -->
   <nav class="bg-white shadow p-4">
-    <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+    <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️ Running Ninjas</h1>
-      <a href="#" class="text-blue-500 hover:underline text-sm">Beta 1.1</a>
+      <h5>Beta 2.0</h5>
+      <div class="flex items-center gap-4">
+        <!-- Search Icon -->
+        <button id="toggleSearch" class="text-gray-600 hover:text-blue-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-4.35-4.35M16.65 16.65A8 8 0 1010 18a8 8 0 006.65-1.35z"></path>
+          </svg>
+        </button>
+        <!-- Filter Icon -->
+        <button id="toggleFilters" class="text-gray-600 hover:text-blue-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-4.586L3.293 6.707A1 1 0 013 6V4z" />
+          </svg>
+        </button>
+      </div>
     </div>
   </nav>
 
-  <!-- Filter Ribbon -->
-  <div class="bg-white shadow mt-6">
-    <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center gap-4">
-      <!-- Search Bar with Icon -->
-      <div class="relative w-full md:w-1/3">
-        <input
-          id="searchInput"
-          type="text"
-          placeholder="Search..."
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <div class="absolute left-3 top-2.5 text-gray-500">
-          🔍
-        </div>
-      </div>
+  <!-- Search Box (Hidden by default) -->
+  <div id="searchBox" class="container mx-auto px-4 mt-4 hidden">
+    <input
+      id="searchInput"
+      type="text"
+      placeholder="Search marathons..."
+      class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
 
+  <!-- Filter Panel (Hidden by default) -->
+  <div id="filterPanel" class="bg-white shadow mt-4 hidden">
+    <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center gap-4">
       <!-- Race Filter -->
-      <select id="raceFilter" class="w-full md:w-1/4 p-2 border border-gray-300 rounded-md">
+      <select id="raceFilter" class="w-full md:w-1/3 p-2 border border-gray-300 rounded-md">
         <option value="">Filter by Race</option>
         <option value="Stonehill">Stonehill</option>
         <option value="Wipro">Wipro</option>
@@ -40,7 +55,7 @@
       </select>
 
       <!-- Date Range -->
-      <div class="flex gap-2 w-full md:w-1/3">
+      <div class="flex gap-2 w-full md:w-2/3">
         <input
           id="fromDate"
           type="date"
@@ -75,8 +90,8 @@
         name: "Stonehill Marathon 2025",
         date: "2025-09-14",
         city: "Bangalore",
-        description: "Discount code with Anna",
-        registrationLink: "https://registrations.indiarunning.com/stonehill_founders_day_run_45692"
+        description: "PSN Ninjas - Use the Register link below for filling Anna's sheet",
+        registrationLink: "https://docs.google.com/spreadsheets/d/1C4ky1DzcwBiOxmE8Le8NA2J7dGEuTjqMUBIy9syzfkE/edit?usp=sharing"
       },
       {
         name: "Wipro Bengaluru Marathon",
@@ -129,7 +144,7 @@
     }
 
     function filterAndDisplay() {
-      const searchText = searchInput.value.toLowerCase();
+      const searchText = searchInput?.value.toLowerCase() || "";
       const selectedRace = raceFilter.value.toLowerCase();
       const from = fromDate.value;
       const to = toDate.value;
@@ -149,12 +164,21 @@
       displayMarathons(filtered);
     }
 
-    searchInput.addEventListener("input", filterAndDisplay);
+    // Event Listeners
+    document.getElementById("toggleSearch").addEventListener("click", () => {
+      document.getElementById("searchBox").classList.toggle("hidden");
+    });
+
+    document.getElementById("toggleFilters").addEventListener("click", () => {
+      document.getElementById("filterPanel").classList.toggle("hidden");
+    });
+
+    searchInput?.addEventListener("input", filterAndDisplay);
     raceFilter.addEventListener("change", filterAndDisplay);
     fromDate.addEventListener("change", filterAndDisplay);
     toDate.addEventListener("change", filterAndDisplay);
 
-    // Initial display
+    // Initial Display
     displayMarathons(marathons);
   </script>
 </body>
