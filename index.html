@@ -93,7 +93,8 @@
         city: "Bangalore",
         description: "5k, 10k and Half Marathon",
         registrationLink: "https://raadiantsports.com/registration/",
-	busAvailable: true
+	busAvailable: true,
+	bibdetails: true
       },
       {
         name: "Wipro Bengaluru Marathon",
@@ -101,7 +102,8 @@
         city: "Bengaluru",
         description: "Early bird ended",
         registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
-	busAvailable: false
+	busAvailable: false,
+	bibdetails: true
       },
       {
         name: "Malnad Ultra",
@@ -109,7 +111,8 @@
         city: "Bengaluru",
         description: "30k, 50k and 100k",
         registrationLink: "https://malnadultra.com",
-	busAvailable: false
+	busAvailable: false,
+	bibdetails: false
       },
       {
         name: "Goa River Marathon",
@@ -117,7 +120,8 @@
         city: "Goa",
         description: "Scenic route by the river",
         registrationLink: "https://www.skfgoarivermarathon.com/",
-	busAvailable: false
+	busAvailable: false,
+	bibdetails: false
       },
       {
         name: "Ladakh Marathon",
@@ -125,7 +129,8 @@
         city: "Leh",
         description: "For Brave and Resilient",
         registrationLink: "https://ladakhmarathon.com/",
-	busAvailable: false
+	busAvailable: false,
+	bibdetails: false
       }
     ];
 
@@ -167,6 +172,12 @@ const busLink = marathon.busAvailable ? `
           <i data-feather="truck"></i> Opt for Bus
         </a>` : "";
 
+	      const bibLink = marathon.bibdetails ? `
+        <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
+          class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
+          <i data-feather="truck"></i> Enter Bib details here
+        </a>` : "";
+
         card.innerHTML = `
           <div>
             <h3 class="text-lg font-bold text-blue-700">${marathon.name}</h3>
@@ -179,6 +190,7 @@ const busLink = marathon.busAvailable ? `
               Register Here
             </a>
 		${busLink}
+  		${bibLink}
           </div>
         `;
         marathonList.appendChild(card);
