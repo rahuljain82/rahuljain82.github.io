@@ -12,8 +12,7 @@
   <nav class="bg-white shadow p-4">
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️ Running Ninjas</h1>
-      <h5>Beta 3.0</h5>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-4 relative">
         <!-- Search Icon -->
         <button id="toggleSearch" class="text-gray-600 hover:text-blue-600">
           <i data-feather="search" class="w-6 h-6"></i>
@@ -22,11 +21,22 @@
         <button id="toggleFilters" class="text-gray-600 hover:text-blue-600">
           <i data-feather="filter" class="w-6 h-6"></i>
         </button>
+        <!-- Hamburger Menu -->
+        <div class="relative">
+          <button id="toggleMenu" class="text-gray-600 hover:text-blue-600">
+            <i data-feather="menu" class="w-6 h-6"></i>
+          </button>
+          <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden z-50">
+            <a href="#blog" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Blog</a>
+            <a href="#training" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Training Plans</a>
+            <a href="#about" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Race Reports</a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
 
-  <!-- Search Box (Hidden by default) -->
+  <!-- Search Box -->
   <div id="searchBox" class="container mx-auto px-4 mt-4 hidden">
     <input
       id="searchInput"
@@ -36,10 +46,9 @@
     />
   </div>
 
-  <!-- Filter Panel (Hidden by default) -->
+  <!-- Filter Panel -->
   <div id="filterPanel" class="bg-white shadow mt-4 hidden">
     <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center gap-4">
-      <!-- Race Filter -->
       <select id="raceFilter" class="w-full md:w-1/3 p-2 border border-gray-300 rounded-md">
         <option value="">Filter by Race</option>
         <option value="Stonehill">Stonehill</option>
@@ -49,18 +58,9 @@
         <option value="Goa">Goa</option>
       </select>
 
-      <!-- Date Range -->
       <div class="flex gap-2 w-full md:w-2/3">
-        <input
-          id="fromDate"
-          type="date"
-          class="w-1/2 p-2 border border-gray-300 rounded-md"
-        />
-        <input
-          id="toDate"
-          type="date"
-          class="w-1/2 p-2 border border-gray-300 rounded-md"
-        />
+        <input id="fromDate" type="date" class="w-1/2 p-2 border border-gray-300 rounded-md" />
+        <input id="toDate" type="date" class="w-1/2 p-2 border border-gray-300 rounded-md" />
       </div>
     </div>
   </div>
@@ -71,7 +71,6 @@
       <!-- Cards inserted by JS -->
     </div>
 
-    <!-- Show More / Less Button -->
     <div id="showMoreContainer" class="flex justify-center mt-6 hidden">
       <button id="showMoreButton" class="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-lg">
         <i data-feather="chevron-down"></i>
@@ -93,7 +92,7 @@
         city: "Bangalore",
         description: "5k, 10k and Half Marathon",
         registrationLink: "https://raadiantsports.com/registration/",
-	busAvailable: true,
+        busAvailable: true,
 	bibdetails: true
       },
       {
@@ -102,7 +101,7 @@
         city: "Bengaluru",
         description: "Early bird ended",
         registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
-	busAvailable: false,
+        busAvailable: false,
 	bibdetails: false
       },
       {
@@ -111,7 +110,7 @@
         city: "Bengaluru",
         description: "30k, 50k and 100k",
         registrationLink: "https://malnadultra.com",
-	busAvailable: false,
+        busAvailable: false,
 	bibdetails: false
       },
       {
@@ -120,7 +119,7 @@
         city: "Goa",
         description: "Scenic route by the river",
         registrationLink: "https://www.skfgoarivermarathon.com/",
-	busAvailable: false,
+        busAvailable: false,
 	bibdetails: false
       },
       {
@@ -129,7 +128,7 @@
         city: "Leh",
         description: "For Brave and Resilient",
         registrationLink: "https://ladakhmarathon.com/",
-	busAvailable: false,
+        busAvailable: false,
 	bibdetails: false
       }
     ];
@@ -148,7 +147,6 @@
     let filteredMarathons = [];
     let showAll = false;
 
-	 
     function formatDate(dateStr) {
       const options = { year: "numeric", month: "long", day: "numeric" };
       return new Date(dateStr).toLocaleDateString(undefined, options);
@@ -166,20 +164,29 @@
         const card = document.createElement("div");
         card.className = "bg-white p-6 rounded-xl shadow flex flex-col justify-between transition-all duration-300";
 
-const busLink = marathon.busAvailable ? `
-        <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
-          class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
-          <i data-feather="truck"></i> Opt for Bus
-        </a>` : "";
+        const infoLink = "https://example.com/route-map"; // replace with specific links if available
 
-	      const bibLink = marathon.bibdetails ? `
+        const busLink = marathon.busAvailable ? `
+          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
+            class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
+            <i data-feather="truck"></i> Opt for Bus
+          </a>` : "";
+
+ const bibLink = marathon.bibdetails ? `
         <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
           class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
           <i data-feather="truck"></i> Enter Bib details here
         </a>` : "";
 
         card.innerHTML = `
-          <div>
+          <div class="relative">
+            <div class="absolute top-2 right-2">
+              <a href="${infoLink}" target="_blank" title="Route Map & Plan">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 hover:text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1010 10A10 10 0 0012 2z" />
+                </svg>
+              </a>
+            </div>
             <h3 class="text-lg font-bold text-blue-700">${marathon.name}</h3>
             <p class="text-sm text-gray-600">📅 ${formatDate(marathon.date)} | 📍 ${marathon.city}</p>
             <p class="mt-2 text-sm">${marathon.description}</p>
@@ -189,10 +196,11 @@ const busLink = marathon.busAvailable ? `
               class="inline-block mt-2 text-sm text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-center w-full">
               Register Here
             </a>
-		${busLink}
-  		${bibLink}
+            ${busLink}
+	    ${bibLink}
           </div>
         `;
+
         marathonList.appendChild(card);
       });
 
@@ -204,7 +212,7 @@ const busLink = marathon.busAvailable ? `
       } else {
         showMoreContainer.classList.add("hidden");
       }
-	feather.replace();
+      feather.replace();
     }
 
     function filterAndDisplay() {
@@ -241,6 +249,18 @@ const busLink = marathon.busAvailable ? `
 
     document.getElementById("toggleFilters").addEventListener("click", () => {
       document.getElementById("filterPanel").classList.toggle("hidden");
+    });
+
+    document.getElementById("toggleMenu").addEventListener("click", () => {
+      document.getElementById("dropdownMenu").classList.toggle("hidden");
+    });
+
+    window.addEventListener("click", function(e) {
+      const menu = document.getElementById("dropdownMenu");
+      const button = document.getElementById("toggleMenu");
+      if (!button.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add("hidden");
+      }
     });
 
     searchInput?.addEventListener("input", filterAndDisplay);
