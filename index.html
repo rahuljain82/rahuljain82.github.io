@@ -12,7 +12,7 @@
   <nav class="bg-white shadow p-4">
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️ Running Ninjas</h1>
-      <h5>Beta 2.1</h5>
+      <h5>Beta 3.0</h5>
       <div class="flex items-center gap-4">
         <!-- Search Icon -->
         <button id="toggleSearch" class="text-gray-600 hover:text-blue-600">
@@ -92,35 +92,40 @@
         date: "2025-09-14",
         city: "Bangalore",
         description: "PSN Ninjas - Use the Register link below for filling Anna's sheet",
-        registrationLink: "https://docs.google.com/spreadsheets/d/1C4ky1DzcwBiOxmE8Le8NA2J7dGEuTjqMUBIy9syzfkE/edit?usp=sharing"
+        registrationLink: "https://docs.google.com/spreadsheets/d/1C4ky1DzcwBiOxmE8Le8NA2J7dGEuTjqMUBIy9syzfkE/edit?usp=sharing",
+	busAvailable: true
       },
       {
         name: "Wipro Bengaluru Marathon",
         date: "2025-09-21",
         city: "Bengaluru",
         description: "Early bird ended",
-        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs"
+        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
+	busAvailable: false
       },
       {
         name: "Malnad Ultra",
         date: "2025-11-22",
         city: "Bengaluru",
         description: "30k, 50k and 100k",
-        registrationLink: "https://malnadultra.com"
+        registrationLink: "https://malnadultra.com",
+	busAvailable: false
       },
       {
         name: "Goa River Marathon",
         date: "2025-12-14",
         city: "Goa",
         description: "Scenic route by the river",
-        registrationLink: "https://www.skfgoarivermarathon.com/"
+        registrationLink: "https://www.skfgoarivermarathon.com/",
+	busAvailable: false
       },
       {
         name: "Ladakh Marathon",
         date: "2025-09-14",
         city: "Leh",
         description: "For Brave and Resilient",
-        registrationLink: "https://ladakhmarathon.com/"
+        registrationLink: "https://ladakhmarathon.com/",
+	busAvailable: false
       }
     ];
 
@@ -138,6 +143,7 @@
     let filteredMarathons = [];
     let showAll = false;
 
+	 
     function formatDate(dateStr) {
       const options = { year: "numeric", month: "long", day: "numeric" };
       return new Date(dateStr).toLocaleDateString(undefined, options);
@@ -155,6 +161,12 @@
         const card = document.createElement("div");
         card.className = "bg-white p-6 rounded-xl shadow flex flex-col justify-between transition-all duration-300";
 
+const busLink = marathon.busAvailable ? `
+        <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
+          class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
+          <i data-feather="truck"></i> Opt for Bus
+        </a>` : "";
+
         card.innerHTML = `
           <div>
             <h3 class="text-lg font-bold text-blue-700">${marathon.name}</h3>
@@ -166,6 +178,7 @@
               class="inline-block mt-2 text-sm text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-center w-full">
               Register Here
             </a>
+		${busLink}
           </div>
         `;
         marathonList.appendChild(card);
@@ -179,6 +192,7 @@
       } else {
         showMoreContainer.classList.add("hidden");
       }
+	feather.replace();
     }
 
     function filterAndDisplay() {
