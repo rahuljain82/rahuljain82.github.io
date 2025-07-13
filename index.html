@@ -5,29 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Running Ninjas</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
   <!-- Navigation -->
   <nav class="bg-white shadow p-4">
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️ Running Ninjas</h1>
-      <h5>Beta 2.0</h5>
+      <h5>Beta 3.0</h5>
       <div class="flex items-center gap-4">
         <!-- Search Icon -->
         <button id="toggleSearch" class="text-gray-600 hover:text-blue-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
-            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M21 21l-4.35-4.35M16.65 16.65A8 8 0 1010 18a8 8 0 006.65-1.35z"></path>
-          </svg>
+          <i data-feather="search" class="w-6 h-6"></i>
         </button>
         <!-- Filter Icon -->
         <button id="toggleFilters" class="text-gray-600 hover:text-blue-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
-            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-4.586L3.293 6.707A1 1 0 013 6V4z" />
-          </svg>
+          <i data-feather="filter" class="w-6 h-6"></i>
         </button>
       </div>
     </div>
@@ -52,6 +45,8 @@
         <option value="Stonehill">Stonehill</option>
         <option value="Wipro">Wipro</option>
         <option value="Malnad">Malnad</option>
+        <option value="Ladakh">Ladakh</option>
+        <option value="Goa">Goa</option>
       </select>
 
       <!-- Date Range -->
@@ -60,13 +55,11 @@
           id="fromDate"
           type="date"
           class="w-1/2 p-2 border border-gray-300 rounded-md"
-          placeholder="From"
         />
         <input
           id="toDate"
           type="date"
           class="w-1/2 p-2 border border-gray-300 rounded-md"
-          placeholder="To"
         />
       </div>
     </div>
@@ -74,8 +67,16 @@
 
   <!-- Marathon Cards -->
   <main class="container mx-auto px-4 mt-6">
-    <div id="marathonList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="marathonList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-500">
       <!-- Cards inserted by JS -->
+    </div>
+
+    <!-- Show More / Less Button -->
+    <div id="showMoreContainer" class="flex justify-center mt-6 hidden">
+      <button id="showMoreButton" class="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-lg">
+        <i data-feather="chevron-down"></i>
+        <span>Show More</span>
+      </button>
     </div>
   </main>
 
@@ -90,36 +91,92 @@
         name: "Stonehill Marathon 2025",
         date: "2025-09-14",
         city: "Bangalore",
-        description: "PSN Ninjas - Use the Register link below for filling Anna's sheet",
-        registrationLink: "https://docs.google.com/spreadsheets/d/1C4ky1DzcwBiOxmE8Le8NA2J7dGEuTjqMUBIy9syzfkE/edit?usp=sharing"
+        description: "5k, 10k and Half Marathon",
+        registrationLink: "https://raadiantsports.com/registration/",
+	busAvailable: true,
+	bibdetails: true
       },
       {
         name: "Wipro Bengaluru Marathon",
         date: "2025-09-21",
         city: "Bengaluru",
         description: "Early bird ended",
-        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs"
+        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
+	busAvailable: false,
+	bibdetails: false
       },
       {
         name: "Malnad Ultra",
         date: "2025-11-22",
         city: "Bengaluru",
         description: "30k, 50k and 100k",
-        registrationLink: "https://malnadultra.com"
+        registrationLink: "https://malnadultra.com",
+	busAvailable: false,
+	bibdetails: false
+      },
+      {
+        name: "Goa River Marathon",
+        date: "2025-12-14",
+        city: "Goa",
+        description: "Scenic route by the river",
+        registrationLink: "https://www.skfgoarivermarathon.com/",
+	busAvailable: false,
+	bibdetails: false
+      },
+      {
+        name: "Ladakh Marathon",
+        date: "2025-09-14",
+        city: "Leh",
+        description: "For Brave and Resilient",
+        registrationLink: "https://ladakhmarathon.com/",
+	busAvailable: false,
+	bibdetails: false
       }
     ];
 
     const marathonList = document.getElementById("marathonList");
+    const showMoreContainer = document.getElementById("showMoreContainer");
+    const showMoreButton = document.getElementById("showMoreButton");
+    const icon = showMoreButton.querySelector("i");
+    const buttonText = showMoreButton.querySelector("span");
+
     const searchInput = document.getElementById("searchInput");
     const raceFilter = document.getElementById("raceFilter");
     const fromDate = document.getElementById("fromDate");
     const toDate = document.getElementById("toDate");
 
+    let filteredMarathons = [];
+    let showAll = false;
+
+	 
+    function formatDate(dateStr) {
+      const options = { year: "numeric", month: "long", day: "numeric" };
+      return new Date(dateStr).toLocaleDateString(undefined, options);
+    }
+
+    function isFutureDate(dateStr) {
+      return new Date(dateStr) >= new Date().setHours(0, 0, 0, 0);
+    }
+
     function displayMarathons(data) {
       marathonList.innerHTML = "";
-      data.forEach((marathon) => {
+      const eventsToShow = showAll ? data : data.slice(0, 3);
+
+      eventsToShow.forEach((marathon) => {
         const card = document.createElement("div");
-        card.className = "bg-white p-6 rounded-xl shadow flex flex-col justify-between";
+        card.className = "bg-white p-6 rounded-xl shadow flex flex-col justify-between transition-all duration-300";
+
+const busLink = marathon.busAvailable ? `
+        <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
+          class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
+          <i data-feather="truck"></i> Opt for Bus
+        </a>` : "";
+
+	      const bibLink = marathon.bibdetails ? `
+        <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
+          class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
+          <i data-feather="truck"></i> Enter Bib details here
+        </a>` : "";
 
         card.innerHTML = `
           <div>
@@ -132,24 +189,32 @@
               class="inline-block mt-2 text-sm text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-center w-full">
               Register Here
             </a>
+		${busLink}
+  		${bibLink}
           </div>
         `;
         marathonList.appendChild(card);
       });
-    }
 
-    function formatDate(dateStr) {
-      const options = { year: "numeric", month: "long", day: "numeric" };
-      return new Date(dateStr).toLocaleDateString(undefined, options);
+      if (data.length > 3) {
+        showMoreContainer.classList.remove("hidden");
+        buttonText.textContent = showAll ? "Show Less" : "Show More";
+        icon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
+        feather.replace();
+      } else {
+        showMoreContainer.classList.add("hidden");
+      }
+	feather.replace();
     }
 
     function filterAndDisplay() {
       const searchText = searchInput?.value.toLowerCase() || "";
-      const selectedRace = raceFilter.value.toLowerCase();
-      const from = fromDate.value;
-      const to = toDate.value;
+      const selectedRace = raceFilter?.value.toLowerCase() || "";
+      const from = fromDate?.value;
+      const to = toDate?.value;
 
-      const filtered = marathons.filter((m) => {
+      filteredMarathons = marathons.filter((m) => {
+        const isUpcoming = isFutureDate(m.date);
         const matchesSearch =
           m.name.toLowerCase().includes(searchText) ||
           m.city.toLowerCase().includes(searchText) ||
@@ -158,13 +223,18 @@
         const matchesFromDate = !from || new Date(m.date) >= new Date(from);
         const matchesToDate = !to || new Date(m.date) <= new Date(to);
 
-        return matchesSearch && matchesRace && matchesFromDate && matchesToDate;
+        return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
       });
 
-      displayMarathons(filtered);
+      showAll = false;
+      displayMarathons(filteredMarathons);
     }
 
-    // Event Listeners
+    showMoreButton.addEventListener("click", () => {
+      showAll = !showAll;
+      displayMarathons(filteredMarathons);
+    });
+
     document.getElementById("toggleSearch").addEventListener("click", () => {
       document.getElementById("searchBox").classList.toggle("hidden");
     });
@@ -174,12 +244,12 @@
     });
 
     searchInput?.addEventListener("input", filterAndDisplay);
-    raceFilter.addEventListener("change", filterAndDisplay);
-    fromDate.addEventListener("change", filterAndDisplay);
-    toDate.addEventListener("change", filterAndDisplay);
+    raceFilter?.addEventListener("change", filterAndDisplay);
+    fromDate?.addEventListener("change", filterAndDisplay);
+    toDate?.addEventListener("change", filterAndDisplay);
 
     // Initial Display
-    displayMarathons(marathons);
+    filterAndDisplay();
   </script>
 </body>
 </html>
