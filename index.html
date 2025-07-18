@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,34 +8,43 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <!-- Navigation -->
-  <nav class="bg-white shadow p-4">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️ Running Ninjas</h1>
-      <div class="flex items-center gap-4 relative">
-        <!-- Search Icon -->
-        <button id="toggleSearch" class="text-gray-600 hover:text-blue-600">
-          <i data-feather="search" class="w-6 h-6"></i>
-        </button>
-        <!-- Filter Icon -->
-        <button id="toggleFilters" class="text-gray-600 hover:text-blue-600">
-          <i data-feather="filter" class="w-6 h-6"></i>
-        </button>
-        <!-- Hamburger Menu -->
-        <div class="relative">
-          <button id="toggleMenu" class="text-gray-600 hover:text-blue-600">
-            <i data-feather="menu" class="w-6 h-6"></i>
-          </button>
-          <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden z-50">
-            <a href="#blog" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Blog</a>
-            <a href="#training" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Training Plans</a>
-            <a href="#about" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Race Reports</a>
-          </div>
-        </div>
-      </div>
+<body class="bg-gray-100">
+
+  <!-- Logo Section -->
+  <div class="flex justify-center bg-white py-4 shadow">
+    <img src="https://drive.google.com/uc?export=view&id=13zGfXQSVE1zBOpuwrO3x_wnCzlBrJegL" alt="Running Ninjas Logo" class="h-16">
+  </div>
+
+<!-- Navigation Bar with Dropdown Menu -->
+<nav class="bg-indigo-900 text-white px-4 py-3 shadow-md relative">
+  <div class="flex justify-between items-center">
+    <!-- Hamburger Icon -->
+    <button id="toggleMenu" class="hover:text-gray-300 focus:outline-none">
+      <i data-feather="menu" class="w-6 h-6"></i>
+    </button>
+
+    <!-- Logo Spacer (or add brand text if needed) -->
+    <div></div>
+
+    <!-- Search and Filter Icons -->
+    <div class="flex space-x-4">
+      <button id="toggleSearch" class="hover:text-gray-300">
+        <i data-feather="search" class="w-6 h-6"></i>
+      </button>
+      <button id="toggleFilters" class="hover:text-gray-300">
+        <i data-feather="filter" class="w-6 h-6"></i>
+      </button>
     </div>
-  </nav>
+  </div>
+
+  <!-- Dropdown Menu -->
+  <div id="dropdownMenu" class="absolute left-4 top-14 bg-white text-black rounded shadow-md w-48 hidden z-50">
+    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Race Reports</a>
+    <a href="https://aashutosh.net/category/running-ninjas-race-reports/" class="block px-4 py-2 hover:bg-gray-100">Aashu's Blog</a>
+    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Sundar's Training Plan</a>
+  </div>
+</nav>
+
 
   <!-- Search Box -->
   <div id="searchBox" class="container mx-auto px-4 mt-4 hidden">
@@ -271,5 +281,13 @@
     // Initial Display
     filterAndDisplay();
   </script>
+
+<script src="https://unpkg.com/feather-icons"></script>
+
+
+<script>
+    feather.replace();
+  </script>
+
 </body>
 </html>
