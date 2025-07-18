@@ -4,96 +4,304 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Running Ninjas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    html, body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .center-logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .center-logo .logo-bg {
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      border-radius: 50%;
+      padding: 1.8rem; /* increased from 1.2rem */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+      width: 130px;   /* increased from 90px */
+      height: 130px;  /* increased from 90px */
+    }
+    .center-logo img {
+      max-width: 90px;  /* increased from 60px */
+      max-height: 90px; /* increased from 60px */
+      width: 90px;
+      height: 90px;
+      display: block;
+      border-radius: 50%;
+      background: transparent;
+    }
+    .floating-buttons {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.2rem;
+      z-index: 100;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .floating-buttons button {
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+      border: none;
+      padding: 0.7rem;
+      border-radius: 9999px;
+      transition: background 0.2s;
+    }
+    .floating-buttons button:active {
+      background: #e0e7ff;
+    }
+    /* Card styles */
+    .marathon-card {
+      width: 100%;
+      margin: 0 auto 1.1rem auto;
+      border-radius: 1.2rem;
+      background: #fff;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10), 0 1.5px 4px 0 rgba(0,0,0,0.03);
+      overflow: hidden;
+      position: relative;
+      border: none;
+      transition: box-shadow 0.2s;
+    }
+    .marathon-card:active {
+      box-shadow: 0 8px 32px 0 rgba(102,126,234,0.18);
+    }
+    .marathon-card .accent-bar {
+      height: 5px;
+      width: 100%;
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      display: block;
+    }
+    .marathon-card .card-inner {
+      padding: 1.1rem 1.2rem 1.2rem 1.2rem;
+    }
+    .marathon-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #312e81;
+      margin-bottom: 0.2rem;
+      letter-spacing: -0.01em;
+    }
+    .marathon-card .info-btn {
+      margin-left: 0.5rem;
+      color: #6366f1;
+      background: #f1f5f9;
+      border-radius: 9999px;
+      padding: 0.35rem;
+      display: flex;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .marathon-card .info-btn:active {
+      background: #e0e7ff;
+    }
+    .marathon-card .meta {
+      font-size: 0.98rem;
+      color: #64748b;
+      margin-bottom: 0.15rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .marathon-card .desc {
+      font-size: 0.97rem;
+      color: #334155;
+      margin-bottom: 0.7rem;
+      margin-top: 0.2rem;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.05rem;
+      border-radius: 0.8rem;
+      padding: 0.85rem 0;
+      width: 100%;
+      margin-bottom: 0.3rem;
+      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-primary:active {
+      background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+      transform: scale(0.98);
+    }
+    .marathon-card .card-actions a {
+      font-size: 0.97rem;
+      padding: 0.7rem 0;
+      border-radius: 0.7rem;
+      width: 100%;
+      margin-bottom: 0.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .marathon-card .bus-btn {
+      background: #22c55e;
+      color: #fff;
+    }
+    .marathon-card .bus-btn:active {
+      background: #16a34a;
+    }
+    .marathon-card .bib-btn {
+      background: #f59e42;
+      color: #fff;
+    }
+    .marathon-card .bib-btn:active {
+      background: #ea580c;
+    }
+    @media (min-width: 640px) {
+      .marathon-card {
+        max-width: 420px;
+      }
+      .marathon-list-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    @media (max-width: 639px) {
+      .container, .marathon-list-wrap {
+        padding-left: 0.2rem !important;
+        padding-right: 0.2rem !important;
+      }
+      .marathon-card {
+        max-width: 100vw;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <!-- Navigation -->
-  <nav class="bg-white shadow p-4">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-blue-600">🏃‍♂️ Running Ninjas</h1>
-      <div class="flex items-center gap-4 relative">
-        <!-- Search Icon -->
-        <button id="toggleSearch" class="text-gray-600 hover:text-blue-600">
-          <i data-feather="search" class="w-6 h-6"></i>
-        </button>
-        <!-- Filter Icon -->
-        <button id="toggleFilters" class="text-gray-600 hover:text-blue-600">
-          <i data-feather="filter" class="w-6 h-6"></i>
-        </button>
-        <!-- Hamburger Menu -->
-        <div class="relative">
-          <button id="toggleMenu" class="text-gray-600 hover:text-blue-600">
-            <i data-feather="menu" class="w-6 h-6"></i>
-          </button>
-          <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden z-50">
-            <a href="#blog" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Blog</a>
-            <a href="#training" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Training Plans</a>
-            <a href="#about" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Race Reports</a>
-          </div>
-        </div>
+<body class="min-h-screen">
+  <div class="center-logo">
+    <div class="logo-bg">
+      <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Running Ninjas Logo">
+    </div>
+  </div>
+
+  <!-- Floating Buttons -->
+  <div class="floating-buttons">
+    <button id="toggleSearch" title="Search">
+      <i data-feather="search" class="w-5 h-5 text-indigo-600"></i>
+    </button>
+    <button id="toggleFilters" title="Filter">
+      <i data-feather="filter" class="w-5 h-5 text-indigo-600"></i>
+    </button>
+    <div class="relative">
+      <button id="toggleMenu" title="Menu">
+        <i data-feather="menu" class="w-5 h-5 text-indigo-600"></i>
+      </button>
+      <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50">
+        <a href="#blog" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl transition-colors">
+          <i data-feather="book-open" class="w-4 h-4 inline mr-2"></i>Blog
+        </a>
+        <a href="#training" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <i data-feather="target" class="w-4 h-4 inline mr-2"></i>Training Plans
+        </a>
+        <a href="#about" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-b-xl transition-colors">
+          <i data-feather="award" class="w-4 h-4 inline mr-2"></i>Race Reports
+        </a>
       </div>
     </div>
-  </nav>
+  </div>
 
   <!-- Search Box -->
-  <div id="searchBox" class="container mx-auto px-4 mt-4 hidden">
-    <input
-      id="searchInput"
-      type="text"
-      placeholder="Search marathons..."
-      class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
+  <div id="searchBox" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden animate-fade-in">
+    <div class="relative">
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Search marathons, cities, or descriptions..."
+        class="w-full p-4 pl-12 pr-4 bg-white rounded-xl shadow-lg border-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 search-focus text-gray-800 placeholder-gray-500 text-base"
+      />
+      <i data-feather="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+    </div>
   </div>
 
   <!-- Filter Panel -->
-  <div id="filterPanel" class="bg-white shadow mt-4 hidden">
-    <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center gap-4">
-      <select id="raceFilter" class="w-full md:w-1/3 p-2 border border-gray-300 rounded-md">
-        <option value="">Filter by Race</option>
-        <option value="Stonehill">Stonehill</option>
-        <option value="Wipro">Wipro</option>
-        <option value="Malnad">Malnad</option>
-        <option value="Ladakh">Ladakh</option>
-        <option value="Goa">Goa</option>
-      </select>
-
-      <div class="flex gap-2 w-full md:w-2/3">
-        <input id="fromDate" type="date" class="w-1/2 p-2 border border-gray-300 rounded-md" />
-        <input id="toDate" type="date" class="w-1/2 p-2 border border-gray-300 rounded-md" />
+  <div id="filterPanel" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden animate-fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <i data-feather="sliders" class="w-5 h-5 mr-2 text-indigo-600"></i>
+        Filter Events
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Race Type</label>
+          <select id="raceFilter" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            <option value="">All Races</option>
+            <option value="Stonehill">Stonehill</option>
+            <option value="Wipro">Wipro</option>
+            <option value="Malnad">Malnad</option>
+            <option value="Ladakh">Ladakh</option>
+            <option value="Goa">Goa</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+          <input id="fromDate" type="date" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+          <input id="toDate" type="date" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Hero Section -->
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-0">
+    <!-- Removed hero section text -->
+  </div>
+
   <!-- Marathon Cards -->
-  <main class="container mx-auto px-4 mt-6">
-    <div id="marathonList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-500">
-      <!-- Cards inserted by JS -->
+  <main class="marathon-list-wrap container mx-auto px-0 sm:px-0 lg:px-0 pb-12 mt-0">
+    <div id="marathonList" class="flex flex-col gap-0 w-full">
+      <!-- Cards will be inserted by JavaScript -->
     </div>
 
-    <div id="showMoreContainer" class="flex justify-center mt-6 hidden">
-      <button id="showMoreButton" class="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-lg">
-        <i data-feather="chevron-down"></i>
-        <span>Show More</span>
+    <!-- Show More Button -->
+    <div id="showMoreContainer" class="flex justify-center mt-8 hidden">
+      <button id="showMoreButton" class="btn-primary text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg">
+        <i data-feather="chevron-down" class="w-5 h-5"></i>
+        <span>Show All Races</span>
       </button>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16">
+      <div class="text-6xl mb-4">🏃‍♂️</div>
+      <h3 class="text-2xl font-semibold text-gray-800 mb-2">No events found</h3>
+      <p class="text-gray-600">Try adjusting your search or filter criteria</p>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer class="mt-12 p-4 bg-white shadow text-center text-sm text-gray-500">
-    © 2025 Running Ninjas Calendar. All rights reserved.
+  <footer class="bg-white border-t border-gray-200 mt-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="text-center text-gray-600 text-sm">
+        <p>&copy; 2025 Running Ninjas Calendar. Made with ❤️ for runners.</p>
+      </div>
+    </div>
   </footer>
 
   <script>
     const marathons = [
       {
         name: "Stonehill Marathon 2025",
-        date: "2025-09-14",
+        date: "2025-09-07",
         city: "Bangalore",
         description: "5k, 10k and Half Marathon",
         registrationLink: "https://raadiantsports.com/registration/",
         busAvailable: true,
-	bibdetails: true
+        bibdetails: true
       },
       {
         name: "Wipro Bengaluru Marathon",
@@ -102,7 +310,7 @@
         description: "Early bird ended",
         registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
         busAvailable: false,
-	bibdetails: false
+        bibdetails: false
       },
       {
         name: "Malnad Ultra",
@@ -111,7 +319,7 @@
         description: "30k, 50k and 100k",
         registrationLink: "https://malnadultra.com",
         busAvailable: false,
-	bibdetails: false
+        bibdetails: false
       },
       {
         name: "Goa River Marathon",
@@ -120,7 +328,7 @@
         description: "Scenic route by the river",
         registrationLink: "https://www.skfgoarivermarathon.com/",
         busAvailable: false,
-	bibdetails: false
+        bibdetails: false
       },
       {
         name: "Ladakh Marathon",
@@ -129,16 +337,15 @@
         description: "For Brave and Resilient",
         registrationLink: "https://ladakhmarathon.com/",
         busAvailable: false,
-	bibdetails: false
+        bibdetails: false
       }
     ];
 
+    // DOM elements
     const marathonList = document.getElementById("marathonList");
     const showMoreContainer = document.getElementById("showMoreContainer");
     const showMoreButton = document.getElementById("showMoreButton");
-    const icon = showMoreButton.querySelector("i");
-    const buttonText = showMoreButton.querySelector("span");
-
+    const emptyState = document.getElementById("emptyState");
     const searchInput = document.getElementById("searchInput");
     const raceFilter = document.getElementById("raceFilter");
     const fromDate = document.getElementById("fromDate");
@@ -147,8 +354,14 @@
     let filteredMarathons = [];
     let showAll = false;
 
+    // Utility functions
     function formatDate(dateStr) {
-      const options = { year: "numeric", month: "long", day: "numeric" };
+      const options = { 
+        weekday: 'short',
+        year: "numeric", 
+        month: "short", 
+        day: "numeric" 
+      };
       return new Date(dateStr).toLocaleDateString(undefined, options);
     }
 
@@ -156,62 +369,99 @@
       return new Date(dateStr) >= new Date().setHours(0, 0, 0, 0);
     }
 
+    function getTimeUntilEvent(dateStr) {
+      const now = new Date();
+      const eventDate = new Date(dateStr);
+      const diffTime = eventDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "Tomorrow";
+      if (diffDays <= 7) return `${diffDays} days`;
+      if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks`;
+      return `${Math.ceil(diffDays / 30)} months`;
+    }
+
     function displayMarathons(data) {
       marathonList.innerHTML = "";
+      
+      if (data.length === 0) {
+        emptyState.classList.remove("hidden");
+        showMoreContainer.classList.add("hidden");
+        return;
+      }
+      
+      emptyState.classList.add("hidden");
+      // Show only 3 by default, all if showAll is true
       const eventsToShow = showAll ? data : data.slice(0, 3);
 
-      eventsToShow.forEach((marathon) => {
+      eventsToShow.forEach((marathon, index) => {
         const card = document.createElement("div");
-        card.className = "bg-white p-6 rounded-xl shadow flex flex-col justify-between transition-all duration-300";
+        card.className = "marathon-card animate-fade-in";
+        card.style.animationDelay = `${index * 0.1}s`;
 
-        const infoLink = "https://example.com/route-map"; // replace with specific links if available
-
-        const busLink = marathon.busAvailable ? `
-          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
-            class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
-            <i data-feather="truck"></i> Opt for Bus
+        const busButton = marathon.busAvailable ? `
+          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" 
+             target="_blank"
+             class="bus-btn card-action">
+            <i data-feather="truck" class="w-4 h-4"></i>
+            <span>Bus Available</span>
           </a>` : "";
 
- const bibLink = marathon.bibdetails ? `
-        <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" target="_blank"
-          class="inline-flex items-center gap-1 mt-2 text-sm text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-center w-full">
-          <i data-feather="truck"></i> Enter Bib details here
-        </a>` : "";
+        const bibButton = marathon.bibdetails ? `
+          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev" 
+             target="_blank"
+             class="bib-btn card-action">
+            <i data-feather="user" class="w-4 h-4"></i>
+            <span>Bib Details</span>
+          </a>` : "";
 
         card.innerHTML = `
-          <div class="relative">
-            <div class="absolute top-2 right-2">
-              <a href="${infoLink}" target="_blank" title="Route Map & Plan">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 hover:text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1010 10A10 10 0 0012 2z" />
-                </svg>
+          <div class="accent-bar"></div>
+          <div class="card-inner">
+            <div class="flex items-center justify-between mb-1">
+              <h3>${marathon.name}</h3>
+              <a href="#" class="info-btn" title="Route Info">
+                <i data-feather="info" class="w-5 h-5"></i>
               </a>
             </div>
-            <h3 class="text-lg font-bold text-blue-700">${marathon.name}</h3>
-            <p class="text-sm text-gray-600">📅 ${formatDate(marathon.date)} | 📍 ${marathon.city}</p>
-            <p class="mt-2 text-sm">${marathon.description}</p>
-          </div>
-          <div class="mt-4">
-            <a href="${marathon.registrationLink}" target="_blank"
-              class="inline-block mt-2 text-sm text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-center w-full">
-              Register Here
+            <div class="meta">
+              <i data-feather="calendar" class="w-4 h-4"></i>
+              <span>${formatDate(marathon.date)}</span>
+            </div>
+            <div class="meta mb-2">
+              <i data-feather="map-pin" class="w-4 h-4"></i>
+              <span>${marathon.city}</span>
+            </div>
+            <div class="desc">${marathon.description}</div>
+            <a href="${marathon.registrationLink}"
+               target="_blank"
+               class="btn-primary block text-center">
+              Register Now
             </a>
-            ${busLink}
-	    ${bibLink}
+            <div class="card-actions flex flex-col gap-2 mt-1">
+              ${busButton}
+              ${bibButton}
+            </div>
           </div>
         `;
 
         marathonList.appendChild(card);
       });
 
+      // Update show more button
       if (data.length > 3) {
         showMoreContainer.classList.remove("hidden");
-        buttonText.textContent = showAll ? "Show Less" : "Show More";
-        icon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
+        const buttonText = showMoreButton.querySelector("span");
+        const buttonIcon = showMoreButton.querySelector("i");
+        
+        buttonText.textContent = showAll ? "Show Less" : "Show All Races";
+        buttonIcon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
         feather.replace();
       } else {
         showMoreContainer.classList.add("hidden");
       }
+      
       feather.replace();
     }
 
@@ -221,30 +471,38 @@
       const from = fromDate?.value;
       const to = toDate?.value;
 
-      filteredMarathons = marathons.filter((m) => {
-        const isUpcoming = isFutureDate(m.date);
-        const matchesSearch =
-          m.name.toLowerCase().includes(searchText) ||
-          m.city.toLowerCase().includes(searchText) ||
-          m.description.toLowerCase().includes(searchText);
-        const matchesRace = selectedRace === "" || m.name.toLowerCase().includes(selectedRace);
-        const matchesFromDate = !from || new Date(m.date) >= new Date(from);
-        const matchesToDate = !to || new Date(m.date) <= new Date(to);
+      filteredMarathons = marathons.filter((marathon) => {
+        const isUpcoming = isFutureDate(marathon.date);
+        const matchesSearch = !searchText || 
+          marathon.name.toLowerCase().includes(searchText) ||
+          marathon.city.toLowerCase().includes(searchText) ||
+          marathon.description.toLowerCase().includes(searchText);
+        const matchesRace = !selectedRace || marathon.name.toLowerCase().includes(selectedRace);
+        const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
+        const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
 
         return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
       });
+
+      // Sort by soonest event first
+      filteredMarathons.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       showAll = false;
       displayMarathons(filteredMarathons);
     }
 
+    // Event listeners
     showMoreButton.addEventListener("click", () => {
       showAll = !showAll;
       displayMarathons(filteredMarathons);
     });
 
     document.getElementById("toggleSearch").addEventListener("click", () => {
-      document.getElementById("searchBox").classList.toggle("hidden");
+      const searchBox = document.getElementById("searchBox");
+      searchBox.classList.toggle("hidden");
+      if (!searchBox.classList.contains("hidden")) {
+        searchInput.focus();
+      }
     });
 
     document.getElementById("toggleFilters").addEventListener("click", () => {
@@ -255,7 +513,8 @@
       document.getElementById("dropdownMenu").classList.toggle("hidden");
     });
 
-    window.addEventListener("click", function(e) {
+    // Close menu when clicking outside
+    window.addEventListener("click", (e) => {
       const menu = document.getElementById("dropdownMenu");
       const button = document.getElementById("toggleMenu");
       if (!button.contains(e.target) && !menu.contains(e.target)) {
@@ -263,12 +522,14 @@
       }
     });
 
+    // Search and filter event listeners
     searchInput?.addEventListener("input", filterAndDisplay);
     raceFilter?.addEventListener("change", filterAndDisplay);
     fromDate?.addEventListener("change", filterAndDisplay);
     toDate?.addEventListener("change", filterAndDisplay);
 
-    // Initial Display
+    // Initialize
+    feather.replace();
     filterAndDisplay();
   </script>
 </body>
