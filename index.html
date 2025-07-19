@@ -197,6 +197,30 @@
   </div>
 
   <!-- Floating Buttons -->
+<!-- Toggle visibility by setting showAddRunnerButton = true or false -->
+<script>
+  const showAddRunnerButton = true; // Set false to hide the button
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (showAddRunnerButton) {
+      const btn = document.createElement("button");
+      btn.id = "addRunnerBtn";
+      btn.title = "Add Runner Details";
+      btn.innerHTML = '<i data-feather="user-plus" class="w-5 h-5 text-indigo-600"></i>';
+      document.querySelector(".floating-buttons").prepend(btn);
+      feather.replace();
+
+      document.getElementById("addRunnerBtn").addEventListener("click", () => {
+        window.location.href = "add-runner-form.html";
+      });
+    }
+  });
+</script>
+
+
+
   <div class="floating-buttons">
     <button id="toggleSearch" title="Search">
       <i data-feather="search" class="w-5 h-5 text-indigo-600"></i>
