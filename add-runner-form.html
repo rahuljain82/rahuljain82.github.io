@@ -47,29 +47,38 @@
     </form>
     <p id="formMessage" class="text-green-600 mt-4 hidden">Details submitted successfully!</p>
   </div>
-  <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby3DBvcj_yjIlB_FMBwkoUFKdkqjIjm7fcKkFURJ30Mm9-Mh8Cf0N7M0WVCHGS8XhM24w/exec';
-    const form = document.getElementById('runnerForm');
-    const msg = document.getElementById('formMessage');
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycby3DBvcj_yjIlB_FMBwkoUFKdkqjIjm7fcKkFURJ30Mm9-Mh8Cf0N7M0WVCHGS8XhM24w/exec';
+  const form = document.getElementById('runnerForm');
+  const msg = document.getElementById('formMessage');
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const formData = new FormData(form);
-      const community = formData.get("community").trim().toUpperCase();
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const community = formData.get("community").trim().toUpperCase();
 
-      if (community !== 'PSN') {
-        alert("Only PSN community members can be added.");
-        return;
-      }
+    if (community !== 'PSN') {
+      alert("Sorry, your community is not registered !");
+      return;
+    }
 
-      fetch(scriptURL, { method: 'POST', body: formData })
-        .then(() => {
+    fetch(scriptURL, {
+      method: 'POST',
+      body: new URLSearchParams(formData)
+    })
+      .then(response => response.text())
+      .then(responseText => {
+        if (responseText.includes("Success")) {
           msg.classList.remove("hidden");
           form.reset();
-        })
-        .catch((error) => alert('Error: ' + error.message));
-    });
-  </script>
+        } else {
+          alert("Error: " + responseText);
+        }
+      })
+      .catch((error) => alert('Error: ' + error.message));
+  });
+</script>
+
 </body>
 </html>
 
