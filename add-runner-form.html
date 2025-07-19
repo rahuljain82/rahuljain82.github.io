@@ -62,10 +62,7 @@
       return;
     }
 
-    fetch(scriptURL, {
-      method: 'POST',
-      body: new URLSearchParams(formData)
-    })
+   fetch(scriptURL, { method: 'POST', body: formData })
       .then(response => response.text())
       .then(responseText => {
         if (responseText.includes("Success")) {
