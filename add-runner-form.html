@@ -43,6 +43,33 @@
           <option value="Do not wish to disclose">Do not wish to disclose</option>
         </select>
       </label>
+       <label class="block mb-2">Date Of Birth (optional)
+        <input name="dob" type="number" min="0" class="w-full mt-1 p-2 border rounded" />
+      </label>
+        <label class="block mb-4">Tshirt Size
+        <select name="teesize" class="w-full mt-1 p-2 border rounded">
+          <option value="">Select...</option>
+          <option value="xxs">XXS</option>
+          <option value="xs">XS</option>
+          <option value="s">S</option>
+          <option value="m">M</option>
+          <option value="l">L</option>
+          <option value="xl">XL</option>
+          <option value="xxl">XXL</option>
+        </select>
+      </label>
+      <label class="block mb-2">eMail Address
+        <input name="email" type="number" min="0" class="w-full mt-1 p-2 border rounded" />
+      </label>
+      <label class="block mb-2">Blood Group (optional)
+        <input name="bloodgroup" type="number" min="0" class="w-full mt-1 p-2 border rounded" />
+      </label>
+      <label class="block mb-2">Emergency Contact Name (optional)
+        <input name="emergencyname" type="number" min="0" class="w-full mt-1 p-2 border rounded" />
+      </label>
+      <label class="block mb-2">Emergency Contact Number (optional)
+        <input name="emergencynumber" type="number" min="0" class="w-full mt-1 p-2 border rounded" />
+      </label>
       <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded">Submit</button>
     </form>
     <p id="formMessage" class="text-green-600 mt-4 hidden">Details submitted successfully!</p>
