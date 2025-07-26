@@ -93,11 +93,10 @@
     const formData = new FormData(form);
     const community = formData.get("community").trim().toUpperCase();
 
-    if (community !== 'PSNinja') {
-      alert("Sorry, your community is not registered !");
-      return;
-    }
-
+   // if (community !== 'PSNinja') {
+    //  alert("Sorry, your community is not registered !");
+      //return;
+   // }
    fetch(scriptURL, { method: 'POST', body: formData })
       .then(response => response.text())
       .then(responseText => {
