@@ -2,106 +2,159 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Running Ninjas</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/feather-icons"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    .marathon-card {
-      transition: transform 0.2s ease-in-out;
-    }
-    .marathon-card:hover {
-      transform: translateY(-4px);
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/heroicons@2.0.16/dist/outline.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-900">
-  <!-- Header -->
-  <header class="bg-white shadow p-4 flex justify-between items-center">
-    <div class="flex items-center space-x-3">
-      <img src="logo.png" alt="Running Ninjas Logo" class="h-10 w-10">
-      <h1 class="text-xl font-semibold">Running Ninjas</h1>
+<body>
+  <header class="header">
+    <div class="logo-container">
+      <img src="logo.png" alt="Running Ninjas Logo" class="logo" />
+      <h1 class="site-title">Running Ninjas</h1>
     </div>
     <nav>
-      <button id="menuBtn" class="md:hidden">
-        <i data-feather="menu"></i>
-      </button>
-      <ul class="hidden md:flex space-x-6 font-medium">
-        <li><a href="#" class="hover:underline">Home</a></li>
-        <li><a href="#" class="hover:underline">Training Plan</a></li>
-        <li><a href="#" class="hover:underline">Blog</a></li>
-      </ul>
+      <a href="/">Home</a>
+      <a href="/training.html">Training Plan</a>
+      <a href="/blog.html">Blog</a>
     </nav>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-6xl mx-auto px-4 py-6">
-    <h2 class="text-2xl font-semibold mb-4">Upcoming Marathons</h2>
-    <div id="marathonContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  <main>
+    <section class="marathon-section">
+      <h2>Upcoming Marathons</h2>
+      <div id="marathonContainer" class="marathon-container">
+        <p>Loading events...</p>
+      </div>
+    </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="text-center text-sm text-gray-500 py-6">
-    &copy; 2025 Running Ninjas. All rights reserved.
+  <footer>
+    <p>&copy; 2025 Running Ninjas. All rights reserved.</p>
   </footer>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybIrPBphnX54W8A6ayaAo9Rnw3kuRhoHMOQkGsPXEicj-wiL2PyGNHvaNJ-5zqOz8sxg/exec";
+    const marathonContainer = document.getElementById("marathonContainer");
 
-    async function fetchMarathonData() {
-      try {
-        const response = await fetch(SCRIPT_URL);
-        const data = await response.json();
-        return data.filter(event => event.showFlag?.toLowerCase() === "yes");
-      } catch (error) {
-        console.error("Failed to fetch marathon data:", error);
-        return [];
-      }
-    }
+    fetch("https://script.google.com/macros/s/YOUR_GOOGLE_SCRIPT_URL/exec")
+      .then(response => response.json())
+      .then(data => {
+        marathonContainer.innerHTML = "";
 
-    async function renderMarathonCards() {
-      const container = document.getElementById("marathonContainer");
-      container.innerHTML = `<p class="text-gray-400">Loading...</p>`;
-      const marathonData = await fetchMarathonData();
-      container.innerHTML = "";
+        const upcoming = data.filter(event => {
+          const eventDate = new Date(event["Event date"]);
+          return eventDate >= new Date();
+        });
 
-      if (marathonData.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500">No upcoming events found.</p>`;
-        return;
-      }
+        if (upcoming.length === 0) {
+          marathonContainer.innerHTML = "<p>No upcoming events found.</p>";
+          return;
+        }
 
-      marathonData.forEach(event => {
-        const card = document.createElement("div");
-        card.className = "marathon-card bg-white rounded-xl shadow-md p-4 relative";
+        upcoming.forEach(event => {
+          const card = document.createElement("div");
+          card.className = "marathon-card";
 
-        card.innerHTML = `
-          <div class="absolute top-2 right-2">
-            ${event.infoLink ? `<a href="${event.infoLink}" target="_blank"><i data-feather="info" class="text-blue-500"></i></a>` : ""}
-          </div>
-          <h3 class="text-lg font-semibold mb-1">${event.name}</h3>
-          <p class="text-sm text-gray-600 mb-1"><i data-feather="map-pin" class="inline h-4 w-4 mr-1"></i>${event.city}</p>
-          <p class="text-sm text-gray-600 mb-2"><i data-feather="calendar" class="inline h-4 w-4 mr-1"></i>${event.date}</p>
-          <p class="text-sm text-gray-700 mb-3">${event.description}</p>
-          <a href="${event.registrationLink}" target="_blank" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Register</a>
-          <div class="mt-3 text-xs text-gray-500">
-            ${event.busAvailable ? `<p><strong>Bus:</strong> ${event.busAvailable}</p>` : ""}
-            ${event.bibdetails ? `<p><strong>Bib:</strong> ${event.bibdetails}</p>` : ""}
-          </div>
-        `;
-
-        container.appendChild(card);
+          card.innerHTML = `
+            <h3>${event["Event name"]}</h3>
+            <p><strong>Date:</strong> ${event["Event date"]}</p>
+            <p><strong>Location:</strong> ${event["location of the event"]}</p>
+            <p>${event["a few lines of summary of the event"] || ''}</p>
+            <p>
+              ${event["5k"] === "y" ? "🏃 5K" : ""} 
+              ${event["10k"] === "y" ? "🏃‍♂️ 10K" : ""} 
+              ${event["half marathon"] === "y" ? "🏅 Half" : ""} 
+              ${event["full marathon"] === "y" ? "🎖️ Full" : ""} 
+              ${event["ultra"] === "y" ? "🌌 Ultra" : ""}
+            </p>
+            <p><strong>Register by:</strong> ${event["last date to register"]}</p>
+            <a href="${event["Link to register"]}" target="_blank" class="register-button">Register</a>
+          `;
+          marathonContainer.appendChild(card);
+        });
+      })
+      .catch(err => {
+        marathonContainer.innerHTML = "<p>Error loading events.</p>";
+        console.error(err);
       });
-
-      feather.replace();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderMarathonCards();
-    });
   </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      height: 40px;
+      margin-right: 0.5rem;
+    }
+    .site-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+    nav a {
+      margin-left: 1.5rem;
+      text-decoration: none;
+      color: #111827;
+      font-weight: 500;
+    }
+    .marathon-section {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .marathon-section h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .marathon-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .marathon-card {
+      background-color: #fff;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .marathon-card h3 {
+      margin-top: 0;
+      font-size: 1.25rem;
+    }
+    .register-button {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.5rem 1rem;
+      background-color: #2563eb;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background: #f1f5f9;
+      font-size: 0.9rem;
+      margin-top: 3rem;
+    }
+  </style>
 </body>
 </html>
