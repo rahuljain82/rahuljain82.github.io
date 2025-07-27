@@ -1,0 +1,11 @@
+name,date,city,description,registrationLink,busAvailable,bibdetails,display
+Stonehill Marathon 2025,2025-09-07,Bangalore,5k 10k and Half Marathon,https://raadiantsports.com/registration/,FALSE,FALSE,TRUE
+Wipro Bengaluru Marathon,2025-09-21,Bengaluru,Early bird ended,https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs,FALSE,FALSE,TRUE
+Malnad Ultra,2025-11-22,Bengaluru,30k 50k and 100k,https://malnadultra.com,FALSE,FALSE,TRUE
+Goa River Marathon,2025-12-14,Goa,Scenic route by the river,https://www.skfgoarivermarathon.com/,FALSE,FALSE,TRUE
+Ladakh Marathon,2025-09-14,Leh,For Brave and Resilient,https://ladakhmarathon.com/,FALSE,FALSE,FALSE
+Mumbai Marathon,2025-01-19,Mumbai,World Athletics Gold Label Race,https://procamrunning.in/tcs-world-10k-bangalore/,TRUE,TRUE,TRUE
+Delhi Half Marathon,2025-10-21,New Delhi,Airtel Delhi Half Marathon,https://procamrunning.in/airtel-delhi-half-marathon/,FALSE,TRUE,TRUE
+Bangalore Ultra,2025-02-16,Bengaluru,50K and 25K trail run,https://bangaloreultra.com,TRUE,FALSE,TRUE
+Kaveri Trail Marathon,2025-03-09,Srirangapatna,Trail marathon along Kaveri river,https://kaveritrail.com,FALSE,FALSE,TRUE
+Hampi Ultra,2025-12-07,Hampi,Ultra marathon in UNESCO World Heritage site,https://hampiultra.com,TRUE,TRUE,TRUE
