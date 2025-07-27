@@ -327,15 +327,10 @@
   </footer>
 
   <script>
-    // Google Sheets configuration
-    const SHEET_ID = '1YOUR_SHEET_ID_HERE'; // Replace with your Google Sheet ID
-    const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Google Sheets API key
-    const SHEET_NAME = 'marathons'; // Name of the sheet tab containing marathon data
+    // Google Apps Script configuration
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec'; // Replace with your Google Apps Script URL
     
-    // Google Sheets API URL
-    const SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
-
-    // Fallback data in case Google Sheets is unavailable
+    // Fallback data in case Google Apps Script is unavailable
     const fallbackMarathons = [
       {
         name: "Stonehill Marathon 2025",
@@ -404,75 +399,60 @@
     let filteredMarathons = [];
     let showAll = false;
 
-    // Function to convert Google Sheets data to marathon objects
-    function parseSheetData(sheetData) {
-      if (!sheetData.values || sheetData.values.length < 2) {
-        console.warn('No data found in Google Sheet, using fallback data');
+    // Function to validate and process marathon data
+    function processMarathonData(data) {
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn('No valid data received from Google Apps Script, using fallback data');
         return fallbackMarathons;
       }
 
-      const headers = sheetData.values[0];
-      const rows = sheetData.values.slice(1);
-      
-      // Expected column headers (case-insensitive):
-      // name, date, city, description, registrationLink, busAvailable, bibdetails, display
-      const headerMap = {};
-      headers.forEach((header, index) => {
-        const normalizedHeader = header.toLowerCase().trim();
-        headerMap[normalizedHeader] = index;
-      });
-
-      const requiredFields = ['name', 'date', 'city', 'description', 'registrationlink'];
-      const missingFields = requiredFields.filter(field => !(field in headerMap));
-      
-      if (missingFields.length > 0) {
-        console.error('Missing required columns in Google Sheet:', missingFields);
-        console.log('Available columns:', Object.keys(headerMap));
-        return fallbackMarathons;
-      }
-
-      return rows.map(row => {
-        const marathon = {};
-        
-        // Map required fields
-        marathon.name = row[headerMap.name] || '';
-        marathon.date = row[headerMap.date] || '';
-        marathon.city = row[headerMap.city] || '';
-        marathon.description = row[headerMap.description] || '';
-        marathon.registrationLink = row[headerMap.registrationlink] || '';
-        
-        // Map optional boolean fields
-        marathon.busAvailable = row[headerMap.busavailable]?.toLowerCase() === 'true' || false;
-        marathon.bibdetails = row[headerMap.bibdetails]?.toLowerCase() === 'true' || false;
-        marathon.display = row[headerMap.display]?.toLowerCase() !== 'false'; // Default to true if not specified
-        
-        return marathon;
+      return data.map(marathon => {
+        // Ensure all required fields exist and have default values
+        return {
+          name: marathon.name || '',
+          date: marathon.date || '',
+          city: marathon.city || '',
+          description: marathon.description || '',
+          registrationLink: marathon.registrationLink || marathon.registrationlink || '',
+          busAvailable: marathon.busAvailable === true || marathon.busAvailable === 'true',
+          bibdetails: marathon.bibdetails === true || marathon.bibdetails === 'true',
+          display: marathon.display !== false && marathon.display !== 'false' // Default to true
+        };
       }).filter(marathon => {
         // Filter out rows with missing essential data
         return marathon.name && marathon.date && marathon.city;
       });
     }
 
-    // Function to load marathons from Google Sheets
-    async function loadMarathonsFromSheet() {
+    // Function to load marathons from Google Apps Script
+    async function loadMarathonsFromScript() {
       try {
-        console.log('Loading marathons from Google Sheets...');
-        const response = await fetch(SHEETS_API_URL);
+        console.log('Loading marathons from Google Apps Script...');
+        
+        // Add a timestamp parameter to prevent caching
+        const url = `${GOOGLE_SCRIPT_URL}?timestamp=${Date.now()}`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        marathons = parseSheetData(data);
-        console.log(`Loaded ${marathons.length} marathons from Google Sheets`);
+        marathons = processMarathonData(data);
+        console.log(`Loaded ${marathons.length} marathons from Google Apps Script`);
         
         // Update race filter options based on loaded data
         updateRaceFilterOptions();
         
         return marathons;
       } catch (error) {
-        console.error('Error loading from Google Sheets:', error);
+        console.error('Error loading from Google Apps Script:', error);
         console.log('Using fallback data');
         marathons = fallbackMarathons;
         updateRaceFilterOptions();
@@ -686,7 +666,7 @@
     // Add refresh functionality
     function refreshMarathons() {
       console.log('Refreshing marathon data...');
-      loadMarathonsFromSheet().then(() => {
+      loadMarathonsFromScript().then(() => {
         filterAndDisplay();
       });
     }
@@ -706,7 +686,7 @@
       
       // Initialize the app
       feather.replace();
-      loadMarathonsFromSheet().then(() => {
+      loadMarathonsFromScript().then(() => {
         filterAndDisplay();
       });
 

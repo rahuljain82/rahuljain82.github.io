@@ -1,14 +1,15 @@
-# Google Sheets Integration Setup Guide
+# Google Apps Script Integration Setup Guide
 
 ## Overview
-This guide will help you set up Google Sheets integration for your marathon application. The app will dynamically load marathon data from a Google Sheet with automatic filtering for future dates and display flags.
+This guide will help you set up Google Apps Script integration for your marathon application. The app will dynamically load marathon data from a Google Sheet via Google Apps Script with automatic filtering for future dates and display flags.
 
 ## Features Implemented
 - ✅ **Display Flag**: Control which marathons appear on the app
 - ✅ **Automatic Date Filtering**: Past marathons are automatically hidden
 - ✅ **Dynamic Updates**: New races added to the sheet appear automatically
 - ✅ **Real-time Refresh**: Manual refresh button + auto-refresh every 30 minutes
-- ✅ **Fallback Data**: App works even if Google Sheets is unavailable
+- ✅ **Fallback Data**: App works even if Google Apps Script is unavailable
+- ✅ **No API Keys Required**: Uses Google Apps Script web app deployment
 
 ## Step 1: Create Your Google Sheet
 
@@ -38,50 +39,48 @@ Here's sample data for rows 2-6:
 
 **Note**: The last marathon has `display` set to `FALSE`, so it won't appear in the app.
 
-## Step 2: Set Up Google Sheets API
+## Step 2: Set Up Google Apps Script
 
-### 2.1 Create a Google Cloud Project
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a new project or select an existing one
-3. Name it "Marathon App" or similar
+### 2.1 Create a Google Apps Script Project
+1. Go to [Google Apps Script](https://script.google.com)
+2. Click "New Project"
+3. Name it "Marathon Calendar API" or similar
 
-### 2.2 Enable Google Sheets API
-1. In the Google Cloud Console, go to "APIs & Services" > "Library"
-2. Search for "Google Sheets API"
-3. Click on it and press "Enable"
+### 2.2 Add the Script Code
+1. Delete the default `myFunction()` code
+2. Copy the entire content from `google-apps-script.js` file
+3. Paste it into the script editor
 
-### 2.3 Create API Credentials
-1. Go to "APIs & Services" > "Credentials"
-2. Click "Create Credentials" > "API Key"
-3. Copy the API key (you'll need this later)
-4. (Optional) Click "Restrict Key" to add restrictions:
-   - Application restrictions: HTTP referrers
-   - API restrictions: Google Sheets API
-
-### 2.4 Make Your Sheet Public
-1. In your Google Sheet, click "Share" (top right)
-2. Change access to "Anyone with the link can view"
-3. Click "Done"
-
-## Step 3: Configure Your Application
-
-### 3.1 Get Your Sheet ID
-From your Google Sheet URL: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
-Copy the `SHEET_ID_HERE` part.
-
-### 3.2 Update index.html
-In your `index.html` file, find these lines and replace with your values:
-
+### 2.3 Configure the Script
+Update these variables in the script:
 ```javascript
-const SHEET_ID = '1YOUR_SHEET_ID_HERE'; // Replace with your Google Sheet ID
-const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Google Sheets API key
+const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE'; // Replace with your Google Sheet ID
 const SHEET_NAME = 'marathons'; // Name of the sheet tab containing marathon data
 ```
 
-Replace:
-- `YOUR_SHEET_ID_HERE` with your actual Sheet ID
-- `YOUR_API_KEY_HERE` with your actual API key
-- `marathons` with your sheet tab name (if different)
+### 2.4 Get Your Sheet ID
+From your Google Sheet URL: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
+Copy the `SHEET_ID_HERE` part and replace `YOUR_GOOGLE_SHEET_ID_HERE` in the script.
+
+### 2.5 Deploy as Web App
+1. Click "Deploy" > "New deployment"
+2. Choose type: "Web app"
+3. Description: "Marathon Calendar API"
+4. Execute as: "Me"
+5. Who has access: "Anyone"
+6. Click "Deploy"
+7. Copy the web app URL (you'll need this for your HTML file)
+
+## Step 3: Configure Your Application
+
+### 3.1 Update index.html
+In your `index.html` file, find this line and replace with your web app URL:
+
+```javascript
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+```
+
+Replace `YOUR_SCRIPT_ID_HERE` with the actual script ID from your deployed web app URL.
 
 ## Step 4: Column Specifications
 
@@ -100,12 +99,23 @@ Replace:
 ### Date Format
 **Important**: Use YYYY-MM-DD format for dates (e.g., 2025-09-07)
 
-## Step 5: Testing
+## Step 4: Test Your Google Apps Script
 
-### 5.1 Test the Integration
+### 4.1 Test the Script Functions
+1. In the Google Apps Script editor, run the `testMarathonData()` function
+2. Check the execution log for any errors
+3. You should see: "Test successful!" and a list of marathons
+
+### 4.2 Optional: Create Sample Data
+1. Run the `createSampleData()` function to automatically set up your sheet
+2. This will create the proper structure and add sample marathon data
+
+## Step 5: Testing the Integration
+
+### 5.1 Test the Web App
 1. Open your `index.html` in a browser
 2. Check the browser console (F12) for any errors
-3. You should see: "Loading marathons from Google Sheets..." followed by "Loaded X marathons from Google Sheets"
+3. You should see: "Loading marathons from Google Apps Script..." followed by "Loaded X marathons from Google Apps Script"
 
 ### 5.2 Test Features
 - **Display Flag**: Set a marathon's `display` to FALSE and verify it doesn't appear
@@ -135,34 +145,41 @@ Replace:
 
 ### Common Issues
 
-1. **"No data found in Google Sheet"**
-   - Check if your sheet is public
-   - Verify the SHEET_ID and SHEET_NAME are correct
+1. **"No valid data received from Google Apps Script"**
+   - Check if your Google Apps Script is deployed correctly
+   - Verify the SHEET_ID in your script is correct
    - Ensure your sheet has data in the expected format
+   - Run the `testMarathonData()` function in Apps Script to debug
 
-2. **"HTTP error! status: 403"**
-   - Check your API key is correct
-   - Verify Google Sheets API is enabled
-   - Make sure your sheet is publicly accessible
+2. **"HTTP error! status: 403" or "HTTP error! status: 404"**
+   - Check your Google Apps Script URL is correct
+   - Verify the web app is deployed with "Anyone" access
+   - Make sure you're using the correct deployment URL
 
-3. **"Missing required columns"**
+3. **"Missing required headers" in Apps Script logs**
    - Check column headers match exactly: name, date, city, description, registrationLink
    - Headers are case-insensitive but must be present
+   - Run `createSampleData()` function to set up proper structure
 
 4. **Marathons not appearing**
    - Check the `display` column is TRUE
    - Verify dates are in the future
    - Ensure date format is YYYY-MM-DD
+   - Check Apps Script execution logs for errors
+
+5. **Script timeout or permission errors**
+   - Make sure you've authorized the script to access your Google Sheets
+   - Check that the Google Apps Script has permission to read your sheet
 
 ### Fallback Behavior
-If Google Sheets fails to load, the app will automatically use fallback data and continue working.
+If Google Apps Script fails to load, the app will automatically use fallback data and continue working.
 
 ## Security Notes
 
-- API keys should be restricted to your domain in production
-- Consider using environment variables for sensitive data
-- The current setup is suitable for public marathon information
-- For sensitive data, consider server-side integration
+- No API keys required - Google Apps Script handles authentication
+- The web app can be deployed with "Anyone" access for public marathon information
+- For sensitive data, consider additional authentication in the Apps Script
+- The current setup is suitable for public marathon calendars
 
 ## Support
 
