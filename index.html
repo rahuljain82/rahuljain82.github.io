@@ -327,53 +327,25 @@
   </footer>
 
   <script>
-    const marathons = [
-      {
-        name: "Stonehill Marathon 2025",
-        date: "2025-09-07",
-        city: "Bangalore",
-        description: "5k, 10k and Half Marathon",
-        registrationLink: "https://raadiantsports.com/registration/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Wipro Bengaluru Marathon",
-        date: "2025-09-21",
-        city: "Bengaluru",
-        description: "Early bird ended",
-        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Malnad Ultra",
-        date: "2025-11-22",
-        city: "Bengaluru",
-        description: "30k, 50k and 100k",
-        registrationLink: "https://malnadultra.com",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Goa River Marathon",
-        date: "2025-12-14",
-        city: "Goa",
-        description: "Scenic route by the river",
-        registrationLink: "https://www.skfgoarivermarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Ladakh Marathon",
-        date: "2025-09-14",
-        city: "Leh",
-        description: "For Brave and Resilient",
-        registrationLink: "https://ladakhmarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      }
-    ];
+    let marathons = [];
+window.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbx5zYF5uxXzLoYH3P5xu1sK2JJIPKkXaaOJ2p2hDnbsLBUsX94ov5pJfdB3Wz2F5O5N/exec");
+    const data = await response.json();
+    marathons = data.map(item => ({
+      name: item["Event name"],
+      date: item["Event date"],
+      city: item["Location"],
+      description: item["Summary"],
+      registrationLink: item["Link to register"],
+      busAvailable: item["Bus Available"]?.toLowerCase() === "yes",
+      bibdetails: item["Bib Details"]?.toLowerCase() === "yes"
+    }));
+    filterAndDisplay(); // re-render using new data
+  } catch (error) {
+    console.error("Failed to fetch marathon data:", error);
+  }
+});
 
     // DOM elements
     const marathonList = document.getElementById("marathonList");
