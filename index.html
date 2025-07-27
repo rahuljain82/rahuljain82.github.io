@@ -332,14 +332,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   try {
     const response = await fetch("https://script.google.com/macros/s/AKfycbybIrPBphnX54W8A6ayaAo9Rnw3kuRhoHMOQkGsPXEicj-wiL2PyGNHvaNJ-5zqOz8sxg/exec");
     const data = await response.json();
-    marathons = data.map(item => ({
+    marathons = data
+      .filter(item => (item["Display"] || "").toString().toLowerCase() === "yes")
+      .map(item => ({
       name: item["Event name"],
       date: item["Event date"],
       city: item["Location"],
       description: item["Summary"],
       registrationLink: item["Link to register"],
-      busAvailable: item["Bus Available"]?.toLowerCase() === "yes",
-      bibdetails: item["Bib Details"]?.toLowerCase() === "yes"
+      busAvailable: item["Bus Available"]?.toLowerCase() === true,
+      bibdetails: item["Bib Details"]?.toLowerCase() === true
     }));
     filterAndDisplay(); // re-render using new data
   } catch (error) {
