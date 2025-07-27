@@ -399,7 +399,7 @@
     let filteredMarathons = [];
     let showAll = false;
 
-    // Function to validate and process marathon data
+    // Function to process marathon data from your Google Apps Script
     function processMarathonData(data) {
       if (!Array.isArray(data) || data.length === 0) {
         console.warn('No valid data received from Google Apps Script, using fallback data');
@@ -407,16 +407,16 @@
       }
 
       return data.map(marathon => {
-        // Ensure all required fields exist and have default values
+        // Handle different possible field names and ensure all required fields exist
         return {
-          name: marathon.name || '',
-          date: marathon.date || '',
-          city: marathon.city || '',
-          description: marathon.description || '',
-          registrationLink: marathon.registrationLink || marathon.registrationlink || '',
-          busAvailable: marathon.busAvailable === true || marathon.busAvailable === 'true',
-          bibdetails: marathon.bibdetails === true || marathon.bibdetails === 'true',
-          display: marathon.display !== false && marathon.display !== 'false' // Default to true
+          name: marathon.name || marathon.Name || '',
+          date: formatDateFromSheet(marathon.date || marathon.Date || ''),
+          city: marathon.city || marathon.City || '',
+          description: marathon.description || marathon.Description || '',
+          registrationLink: marathon.registrationLink || marathon.registrationlink || marathon.RegistrationLink || '',
+          busAvailable: parseBooleanFromSheet(marathon.busAvailable || marathon.busavailable || marathon.BusAvailable),
+          bibdetails: parseBooleanFromSheet(marathon.bibdetails || marathon.bibDetails || marathon.BibDetails),
+          display: parseBooleanFromSheet(marathon.display || marathon.Display, true) // Default to true
         };
       }).filter(marathon => {
         // Filter out rows with missing essential data
@@ -424,7 +424,62 @@
       });
     }
 
-    // Function to load marathons from Google Apps Script
+    // Helper function to parse boolean values from sheet
+    function parseBooleanFromSheet(value, defaultValue = false) {
+      if (value === undefined || value === null || value === '') {
+        return defaultValue;
+      }
+      
+      const stringValue = value.toString().toLowerCase().trim();
+      return stringValue === 'true' || stringValue === '1' || stringValue === 'yes';
+    }
+
+    // Helper function to format dates from sheet
+    function formatDateFromSheet(dateValue) {
+      if (!dateValue) {
+        return '';
+      }
+      
+      try {
+        let date;
+        
+        // Handle different date formats
+        if (dateValue instanceof Date) {
+          date = dateValue;
+        } else if (typeof dateValue === 'string') {
+          // Try parsing the string - handle various formats
+          if (dateValue.includes('/')) {
+            // Handle DD/MM/YYYY or MM/DD/YYYY format
+            const parts = dateValue.split('/');
+            if (parts.length === 3) {
+              // Assume DD/MM/YYYY format
+              date = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`);
+            }
+          } else {
+            date = new Date(dateValue);
+          }
+        } else if (typeof dateValue === 'number') {
+          // Handle Excel serial dates
+          date = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          throw new Error('Invalid date format');
+        }
+        
+        // Validate the date
+        if (isNaN(date.getTime())) {
+          throw new Error('Invalid date');
+        }
+        
+        // Return in YYYY-MM-DD format
+        return date.toISOString().split('T')[0];
+        
+      } catch (error) {
+        console.error(`Error formatting date "${dateValue}":`, error);
+        return dateValue.toString(); // Return original value if formatting fails
+      }
+    }
+
+    // Function to load marathons from your Google Apps Script
     async function loadMarathonsFromScript() {
       try {
         console.log('Loading marathons from Google Apps Script...');
