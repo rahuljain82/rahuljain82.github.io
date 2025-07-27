@@ -340,8 +340,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       city: item["Location"],
       description: item["Summary"],
       registrationLink: item["Link to register"],
-      busAvailable: item["Bus Available"]?.toLowerCase() === true,
-      bibdetails: item["Bib Details"]?.toLowerCase() === true
+      //busAvailable: item["Bus Available"]?.toLowerCase() === true,
+      busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
+      //bibdetails: item["Bib Details"]?.toLowerCase() === true
+      bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
     }));
     filterAndDisplay(); // re-render using new data
   } catch (error) {
