@@ -1,0 +1,8 @@
+Name,Date,City,Description,Registration Link,Bus Available,Bib Details,Display Flag
+Mumbai Marathon 2025,2025-01-19,Mumbai,Full Marathon Half Marathon 10K,https://mumbaimarathon.com,true,true,true
+Delhi Half Marathon,2025-02-15,Delhi,Half Marathon and 10K,https://delhihalfmarathon.com,false,true,true
+Bangalore Ultra,2025-03-10,Bangalore,50K and 25K Ultra,https://bangaloreultra.com,true,false,true
+Chennai Coastal Run,2025-04-05,Chennai,21K Coastal Route,https://chennaicoastal.com,false,false,false
+Pune Marathon,2025-05-20,Pune,Full Marathon Half Marathon,https://punemarathon.com,true,true,true
+Goa River Marathon,2025-06-15,Goa,Scenic route by the river,https://goarivermarathon.com,false,true,true
+Ladakh Marathon,2025-09-14,Leh,For Brave and Resilient,https://ladakhmarathon.com,false,false,true

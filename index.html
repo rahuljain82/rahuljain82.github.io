@@ -327,53 +327,134 @@
   </footer>
 
   <script>
-    const marathons = [
-      {
-        name: "Stonehill Marathon 2025",
-        date: "2025-09-07",
-        city: "Bangalore",
-        description: "5k, 10k and Half Marathon",
-        registrationLink: "https://raadiantsports.com/registration/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Wipro Bengaluru Marathon",
-        date: "2025-09-21",
-        city: "Bengaluru",
-        description: "Early bird ended",
-        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Malnad Ultra",
-        date: "2025-11-22",
-        city: "Bengaluru",
-        description: "30k, 50k and 100k",
-        registrationLink: "https://malnadultra.com",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Goa River Marathon",
-        date: "2025-12-14",
-        city: "Goa",
-        description: "Scenic route by the river",
-        registrationLink: "https://www.skfgoarivermarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Ladakh Marathon",
-        date: "2025-09-14",
-        city: "Leh",
-        description: "For Brave and Resilient",
-        registrationLink: "https://ladakhmarathon.com/",
-        busAvailable: false,
-        bibdetails: false
+    // ============================================================================
+    // GOOGLE SHEETS CONFIGURATION - CHANGE THESE VALUES TO CONNECT YOUR SHEET
+    // ============================================================================
+    // Follow the setup guide in GOOGLE_SHEETS_SETUP.md for detailed instructions
+    
+    const GOOGLE_SHEETS_CONFIG = {
+      // Replace with your Google Sheets ID from the URL
+      // Example: If your sheet URL is https://docs.google.com/spreadsheets/d/1ABC123xyz/edit
+      // Then your sheetId is: 1ABC123xyz
+      sheetId: 'YOUR_GOOGLE_SHEET_ID_HERE',
+      
+      // Replace with your Google Sheets API key from Google Cloud Console
+      apiKey: 'YOUR_GOOGLE_SHEETS_API_KEY_HERE',
+      
+      // Sheet name/tab (default is 'Sheet1' - change if you renamed the tab)
+      sheetName: 'Sheet1',
+      
+      // Range to fetch (A:H means columns A through H, all rows)
+      // Don't change this unless you modify the column structure
+      range: 'A:H'
+    };
+    
+    // ============================================================================
+
+    // Global variable to store marathons data
+    let marathons = [];
+
+    // Function to fetch marathon data from Google Sheets
+    async function fetchMarathonData() {
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.sheetId}/values/${GOOGLE_SHEETS_CONFIG.sheetName}!${GOOGLE_SHEETS_CONFIG.range}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const rows = data.values;
+        
+        if (!rows || rows.length <= 1) {
+          console.warn('No data found in Google Sheets');
+          return [];
+        }
+        
+        // Skip header row and convert to marathon objects
+        const marathonData = rows.slice(1).map(row => {
+          return {
+            name: row[0] || '',
+            date: row[1] || '',
+            city: row[2] || '',
+            description: row[3] || '',
+            registrationLink: row[4] || '',
+            busAvailable: (row[5] || '').toLowerCase() === 'true',
+            bibdetails: (row[6] || '').toLowerCase() === 'true',
+            displayFlag: (row[7] || '').toLowerCase() !== 'false' // Default to true if not specified
+          };
+        });
+        
+        // Filter marathons based on display flag and future dates
+        const filteredMarathons = marathonData.filter(marathon => {
+          const isDisplayEnabled = marathon.displayFlag;
+          const isFutureEvent = isFutureDate(marathon.date);
+          const hasRequiredFields = marathon.name && marathon.date;
+          
+          return isDisplayEnabled && isFutureEvent && hasRequiredFields;
+        });
+        
+        return filteredMarathons;
+        
+      } catch (error) {
+        console.error('Error fetching marathon data from Google Sheets:', error);
+        
+        // Fallback to hardcoded data if Google Sheets fails
+        return [
+          {
+            name: "Stonehill Marathon 2025",
+            date: "2025-09-07",
+            city: "Bangalore",
+            description: "5k, 10k and Half Marathon",
+            registrationLink: "https://raadiantsports.com/registration/",
+            busAvailable: false,
+            bibdetails: false,
+            displayFlag: true
+          },
+          {
+            name: "Wipro Bengaluru Marathon",
+            date: "2025-09-21",
+            city: "Bengaluru",
+            description: "Early bird ended",
+            registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
+            busAvailable: false,
+            bibdetails: false,
+            displayFlag: true
+          },
+          {
+            name: "Malnad Ultra",
+            date: "2025-11-22",
+            city: "Bengaluru",
+            description: "30k, 50k and 100k",
+            registrationLink: "https://malnadultra.com",
+            busAvailable: false,
+            bibdetails: false,
+            displayFlag: true
+          },
+          {
+            name: "Goa River Marathon",
+            date: "2025-12-14",
+            city: "Goa",
+            description: "Scenic route by the river",
+            registrationLink: "https://www.skfgoarivermarathon.com/",
+            busAvailable: false,
+            bibdetails: false,
+            displayFlag: true
+          },
+          {
+            name: "Ladakh Marathon",
+            date: "2025-09-14",
+            city: "Leh",
+            description: "For Brave and Resilient",
+            registrationLink: "https://ladakhmarathon.com/",
+            busAvailable: false,
+            bibdetails: false,
+            displayFlag: true
+          }
+        ];
       }
-    ];
+    }
 
     // DOM elements
     const marathonList = document.getElementById("marathonList");
@@ -512,7 +593,7 @@
       const to = toDate?.value;
 
       filteredMarathons = marathons.filter((marathon) => {
-        const isUpcoming = isFutureDate(marathon.date);
+        // Note: Future date filtering is already done in fetchMarathonData()
         const matchesSearch = !searchText ||
           marathon.name.toLowerCase().includes(searchText) ||
           marathon.city.toLowerCase().includes(searchText) ||
@@ -521,7 +602,7 @@
         const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
         const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
 
-        return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
+        return matchesSearch && matchesRace && matchesFromDate && matchesToDate;
       });
 
       // Sort by soonest event first
@@ -529,6 +610,35 @@
 
       showAll = false;
       displayMarathons(filteredMarathons);
+    }
+
+    // Initialize the application
+    async function initializeApp() {
+      try {
+        // Show loading state
+        marathonList.innerHTML = '<div class="text-center py-8 text-gray-600">Loading marathons...</div>';
+        
+        // Fetch marathon data from Google Sheets
+        marathons = await fetchMarathonData();
+        
+        // Initial display
+        filterAndDisplay();
+        
+      } catch (error) {
+        console.error('Error initializing app:', error);
+        marathonList.innerHTML = '<div class="text-center py-8 text-red-600">Error loading marathons. Please try again later.</div>';
+      }
+    }
+
+    // Function to refresh marathon data (can be called periodically)
+    async function refreshMarathonData() {
+      try {
+        marathons = await fetchMarathonData();
+        filterAndDisplay();
+        console.log('Marathon data refreshed successfully');
+      } catch (error) {
+        console.error('Error refreshing marathon data:', error);
+      }
     }
 
     // Event listeners
@@ -568,9 +678,14 @@
     fromDate?.addEventListener("change", filterAndDisplay);
     toDate?.addEventListener("change", filterAndDisplay);
 
-    // Initialize
-    feather.replace();
-    filterAndDisplay();
+    // Initialize the application when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      feather.replace();
+      initializeApp();
+    });
+
+    // Auto-refresh data every 5 minutes (300000 ms) to get latest updates
+    setInterval(refreshMarathonData, 300000);
   </script>
 </body>
 </html>
