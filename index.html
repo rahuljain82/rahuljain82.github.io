@@ -336,6 +336,7 @@
     let marathons = [];
 window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("loadingState")?.classList.remove("hidden");
+  document.getElementById("emptyState")?.classList.add("hidden");
   try {
     const response = await fetch("https://script.google.com/macros/s/AKfycbybIrPBphnX54W8A6ayaAo9Rnw3kuRhoHMOQkGsPXEicj-wiL2PyGNHvaNJ-5zqOz8sxg/exec");
     const data = await response.json();
