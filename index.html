@@ -309,6 +309,24 @@
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-16">
+      <div class="text-6xl mb-4">⏳</div>
+      <h3 class="text-2xl font-semibold text-gray-800 mb-2">Loading marathons...</h3>
+      <p class="text-gray-600">Fetching latest event data</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden text-center py-16">
+      <div class="text-6xl mb-4">⚠️</div>
+      <h3 class="text-2xl font-semibold text-gray-800 mb-2">Unable to load events</h3>
+      <p class="text-gray-600 mb-4" id="errorMessage">There was an error loading the marathon data.</p>
+      <button id="retryButton" class="btn-primary text-white px-6 py-2 rounded-full font-semibold">
+        <i data-feather="refresh-cw" class="w-4 h-4 inline mr-2"></i>
+        Try Again
+      </button>
+    </div>
+
     <!-- Empty State -->
     <div id="emptyState" class="hidden text-center py-16">
       <div class="text-6xl mb-4">🏃‍♂️</div>
@@ -327,59 +345,22 @@
   </footer>
 
   <script>
-    const marathons = [
-      {
-        name: "Stonehill Marathon 2025",
-        date: "2025-09-07",
-        city: "Bangalore",
-        description: "5k, 10k and Half Marathon",
-        registrationLink: "https://raadiantsports.com/registration/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Wipro Bengaluru Marathon",
-        date: "2025-09-21",
-        city: "Bengaluru",
-        description: "Early bird ended",
-        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Malnad Ultra",
-        date: "2025-11-22",
-        city: "Bengaluru",
-        description: "30k, 50k and 100k",
-        registrationLink: "https://malnadultra.com",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Goa River Marathon",
-        date: "2025-12-14",
-        city: "Goa",
-        description: "Scenic route by the river",
-        registrationLink: "https://www.skfgoarivermarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Ladakh Marathon",
-        date: "2025-09-14",
-        city: "Leh",
-        description: "For Brave and Resilient",
-        registrationLink: "https://ladakhmarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      }
-    ];
+    // Configuration
+    const GOOGLE_APPS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // Replace with your deployed Google Apps Script URL
+    
+    let marathons = []; // Will be populated from Google Sheets
+    let isLoading = true;
+    let loadError = null;
 
     // DOM elements
     const marathonList = document.getElementById("marathonList");
     const showMoreContainer = document.getElementById("showMoreContainer");
     const showMoreButton = document.getElementById("showMoreButton");
     const emptyState = document.getElementById("emptyState");
+    const loadingState = document.getElementById("loadingState");
+    const errorState = document.getElementById("errorState");
+    const errorMessage = document.getElementById("errorMessage");
+    const retryButton = document.getElementById("retryButton");
     const searchInput = document.getElementById("searchInput");
     const raceFilter = document.getElementById("raceFilter");
     const fromDate = document.getElementById("fromDate");
@@ -387,6 +368,122 @@
 
     let filteredMarathons = [];
     let showAll = false;
+
+    // State management functions
+    function showLoading() {
+      loadingState.classList.remove("hidden");
+      errorState.classList.add("hidden");
+      emptyState.classList.add("hidden");
+      marathonList.innerHTML = "";
+      showMoreContainer.classList.add("hidden");
+    }
+
+    function showError(message) {
+      loadingState.classList.add("hidden");
+      errorState.classList.remove("hidden");
+      emptyState.classList.add("hidden");
+      errorMessage.textContent = message;
+    }
+
+    function showContent() {
+      loadingState.classList.add("hidden");
+      errorState.classList.add("hidden");
+    }
+
+    // Fetch marathon data from Google Sheets
+    async function fetchMarathons() {
+      try {
+        showLoading();
+        
+        if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+          throw new Error('Google Apps Script URL not configured. Please update the GOOGLE_APPS_SCRIPT_URL variable.');
+        }
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        if (!data.marathons || !Array.isArray(data.marathons)) {
+          throw new Error('Invalid data format received from server');
+        }
+        
+        marathons = data.marathons;
+        isLoading = false;
+        loadError = null;
+        
+        showContent();
+        filterAndDisplay();
+        
+      } catch (error) {
+        console.error('Error fetching marathons:', error);
+        isLoading = false;
+        loadError = error.message;
+        showError(error.message);
+      }
+    }
+
+    // Fallback to hardcoded data if API fails
+    function loadFallbackData() {
+      marathons = [
+        {
+          name: "Stonehill Marathon 2025",
+          date: "2025-09-07",
+          city: "Bangalore",
+          description: "5k, 10k and Half Marathon",
+          registrationLink: "https://raadiantsports.com/registration/",
+          busAvailable: false,
+          bibdetails: false
+        },
+        {
+          name: "Wipro Bengaluru Marathon",
+          date: "2025-09-21",
+          city: "Bengaluru",
+          description: "Early bird ended",
+          registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
+          busAvailable: false,
+          bibdetails: false
+        },
+        {
+          name: "Malnad Ultra",
+          date: "2025-11-22",
+          city: "Bengaluru",
+          description: "30k, 50k and 100k",
+          registrationLink: "https://malnadultra.com",
+          busAvailable: false,
+          bibdetails: false
+        },
+        {
+          name: "Goa River Marathon",
+          date: "2025-12-14",
+          city: "Goa",
+          description: "Scenic route by the river",
+          registrationLink: "https://www.skfgoarivermarathon.com/",
+          busAvailable: false,
+          bibdetails: false
+        },
+        {
+          name: "Ladakh Marathon",
+          date: "2025-09-14",
+          city: "Leh",
+          description: "For Brave and Resilient",
+          registrationLink: "https://ladakhmarathon.com/",
+          busAvailable: false,
+          bibdetails: false
+        }
+      ];
+      
+      isLoading = false;
+      showContent();
+      filterAndDisplay();
+    }
 
     // Utility functions
     function formatDate(dateStr) {
@@ -568,9 +665,21 @@
     fromDate?.addEventListener("change", filterAndDisplay);
     toDate?.addEventListener("change", filterAndDisplay);
 
+    // Event listeners
+    retryButton.addEventListener("click", () => {
+      fetchMarathons();
+    });
+
     // Initialize
     feather.replace();
-    filterAndDisplay();
+    
+    // Try to fetch data from Google Sheets, fallback to hardcoded data if needed
+    if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+      fetchMarathons();
+    } else {
+      // Use fallback data if Google Apps Script URL is not configured
+      loadFallbackData();
+    }
   </script>
 </body>
 </html>
