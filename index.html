@@ -422,21 +422,21 @@ document.getElementById("emptyState")?.classList.remove("hidden");
         card.className = "marathon-card animate-fade-in";
         card.style.animationDelay = `${index * 0.1}s`;
 
-      const busButton = marathon.busAvailable ? `
-          <a href="RNBusForm.html"
+      // const busButton = marathon.busAvailable ? `
+      //     <a href="RNBusForm.html"
+      //        target="_blank"
+      //        class="bus-btn card-action">
+      //       <i data-feather="truck" class="w-4 h-4"></i>
+      //       <span>Bus Available</span>
+      //     </a>` : "";
+        
+        const busButton = marathon.busAvailable ? `
+          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
              target="_blank"
              class="bus-btn card-action">
             <i data-feather="truck" class="w-4 h-4"></i>
             <span>Bus Available</span>
           </a>` : "";
-        
-        // const busButton = marathon.busAvailable ? `
-        //   <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
-        //      target="_blank"
-        //      class="bus-btn card-action">
-        //     <i data-feather="truck" class="w-4 h-4"></i>
-        //     <span>Bus Available</span>
-        //   </a>` : "";
 
         const bibButton = marathon.bibdetails ? `
           <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
