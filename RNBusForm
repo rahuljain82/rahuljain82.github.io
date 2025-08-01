@@ -34,7 +34,7 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwea_Lm7I2QpeEoZ-Jup8DdSDjB-8BhdMgeE55BZIEiKH5pBsYy3_rfI4SqO54xra9F/exec';
 
     async function fetchDetails() {
       const uniqueId = document.getElementById("uniqueId").value.trim();
