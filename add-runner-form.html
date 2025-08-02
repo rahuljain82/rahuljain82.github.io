@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Runner Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 py-10">
+  <div class="w-full flex justify-center mb-6">
+    <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Logo" class="w-16 h-16 rounded-full" />
+  </div>
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Add Runner Details</h2>
+    
+    <form id="runnerForm">
+      <!-- Unique ID - Auto-populated -->
+      <label class="block mb-2">Unique ID
+        <input name="uniqueId" type="text" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed" />
+        <span class="text-xs text-gray-500">Auto-generated from first name (first 4 letters) + flat number</span>
+      </label>
+      
+      <!-- First Name - Required -->
+      <label class="block mb-2">First Name *
+        <input name="firstName" type="text" required class="w-full mt-1 p-2 border rounded" />
+        <span class="text-red-500 text-xs hidden" id="firstNameError">Please enter a valid first name (letters only)</span>
+      </label>
+      
+      <!-- Last Name - Optional -->
+      <label class="block mb-2">Last Name
+        <input name="lastName" type="text" class="w-full mt-1 p-2 border rounded" />
+        <span class="text-red-500 text-xs hidden" id="lastNameError">Please enter a valid last name (letters only)</span>
+      </label>
+      
+      <!-- Flat Number - Required -->
+      <label class="block mb-2">Flat Number *
+        <input name="flat" type="number" required min="1001" max="23188" class="w-full mt-1 p-2 border rounded" />
+        <span class="text-xs text-gray-500">Enter your PSN flat number</span>
+        <span class="text-red-500 text-xs hidden" id="flatError">Flat number must be between 1001 and 23188</span>
+      </label>
+      
+      <!-- Community Code - Required -->
+      <label class="block mb-2">Community Code *
+        <input name="community" type="password" required class="w-full mt-1 p-2 border rounded" />
+        <span class="text-xs text-gray-500">Contact your running group admin for the code</span>
+      </label>
+      
+      <!-- Phone Number - Optional -->
+      <label class="block mb-2">Phone Number
+        <input name="phone" type="tel" class="w-full mt-1 p-2 border rounded" />
+        <span class="text-red-500 text-xs hidden" id="phoneError">Please enter a valid 10-digit phone number</span>
+      </label>
+      
+      <!-- DOB - Optional -->
+      <label class="block mb-2">Date Of Birth
+        <input name="dob" type="date" class="w-full mt-1 p-2 border rounded" />
+      </label>
+      
+      <!-- Age - Auto-calculated -->
+      <label class="block mb-2">Age
+        <input name="age" type="number" disabled class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed" />
+<!--        <span class="text-xs text-gray-500">Automatically calculated from DOB</span>-->
+      </label>
+      
+      <!-- Gender - Optional -->
+      <label class="block mb-4">Gender
+        <select name="gender" class="w-full mt-1 p-2 border rounded">
+          <option value="">Select...</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Do not wish to disclose">Do not wish to disclose</option>
+        </select>
+      </label>
+
+      <!-- Tshirt Size - Optional -->
+      <label class="block mb-4">Tshirt Size
+        <select name="teesize" class="w-full mt-1 p-2 border rounded">
+          <option value="">Select...</option>
+          <option value="kids-xs">Kids XS</option>
+          <option value="kids-s">Kids S</option>
+          <option value="kids-m">Kids M</option>
+          <option value="kids-l">Kids L</option>
+          <option value="kids-xl">Kids XL</option>
+          <option value="xxs">XXS</option>
+          <option value="xs">XS</option>
+          <option value="s">S</option>
+          <option value="m">M</option>
+          <option value="l">L</option>
+          <option value="xl">XL</option>
+          <option value="xxl">XXL</option>
+        </select>
+      </label>
+
+      <!-- Email - Required -->
+      <label class="block mb-2">Email Address *
+        <input name="email" type="email" required class="w-full mt-1 p-2 border rounded" />
+        <span class="text-red-500 text-xs hidden" id="emailError">Please enter a valid email address</span>
+      </label>
+
+      <!-- Blood Group - Optional -->
+      <label class="block mb-2">Blood Group
+        <select name="bloodgroup" class="w-full mt-1 p-2 border rounded">
+          <option value="">Select Blood Group...</option>
+          <option value="A+">A+</option>
+          <option value="A-">A-</option>
+          <option value="B+">B+</option>
+          <option value="B-">B-</option>
+          <option value="AB+">AB+</option>
+          <option value="AB-">AB-</option>
+          <option value="O+">O+</option>
+          <option value="O-">O-</option>
+        </select>
+      </label>
+
+      <!-- Emergency Contact Name - Optional -->
+      <label class="block mb-2">Emergency Contact Name
+        <input name="emergencyname" type="text" class="w-full mt-1 p-2 border rounded" />
+        <span class="text-red-500 text-xs hidden" id="emergencyNameError">Please enter a valid contact name (letters only)</span>
+      </label>
+
+      <!-- Emergency Contact Number - Optional -->
+      <label class="block mb-2">Emergency Contact Number
+        <input name="emergencynumber" type="tel" class="w-full mt-1 p-2 border rounded" />
+        <span class="text-red-500 text-xs hidden" id="emergencyNumberError">Please enter a valid 10-digit phone number</span>
+      </label>
+
+      <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded">Submit</button>
+    </form>
+    <p id="formMessage" class="text-green-600 mt-4 hidden">Details submitted successfully!</p>
+  </div>
+
+<script>
+var scriptURL = 'https://script.google.com/macros/s/AKfycbyEB4gixGjhCJKhb6LGgpqFrGQBQ_HrnzsSlSKGHS7-cTwGl0J-aNRvipcEcrlJka6eKw/exec';
+
+// Validation patterns
+var namePattern = /^[A-Za-z\s]+$/;
+var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var phonePattern = /^\d{10}$/;
+
+// Show/hide error messages
+function showError(elementId, show) {
+  var errorElement = document.getElementById(elementId);
+  if (errorElement) {
+    if (show) {
+      errorElement.classList.remove('hidden');
+    } else {
+      errorElement.classList.add('hidden');
+    }
+  }
+}
+
+// Generate unique ID
+function generateUniqueId() {
+  var firstName = document.querySelector('input[name="firstName"]').value.trim();
+  var flatNumber = document.querySelector('input[name="flat"]').value.trim();
+  var uniqueIdField = document.querySelector('input[name="uniqueId"]');
+  
+  if (firstName && flatNumber) {
+    var namePrefix = '';
+    if (firstName.length >= 4) {
+      namePrefix = firstName.substring(0, 4).toUpperCase();
+    } else {
+      namePrefix = (firstName + 'XXXX').substring(0, 4).toUpperCase();
+    }
+    uniqueIdField.value = namePrefix + flatNumber;
+  } else {
+    uniqueIdField.value = '';
+  }
+}
+
+// Calculate age from DOB
+function calculateAge() {
+  var dobInput = document.querySelector('input[name="dob"]');
+  var ageInput = document.querySelector('input[name="age"]');
+  
+  if (dobInput.value) {
+    var dob = new Date(dobInput.value);
+    var today = new Date();
+    var age = today.getFullYear() - dob.getFullYear();
+    var monthDiff = today.getMonth() - dob.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    
+    ageInput.value = age >= 0 ? age : '';
+  } else {
+    ageInput.value = '';
+  }
+}
+
+// Validate required name
+function validateRequiredName(input, errorId) {
+  var value = input.value.trim();
+  if (!value) {
+    showError(errorId, true);
+    return false;
+  }
+  if (!namePattern.test(value)) {
+    showError(errorId, true);
+    return false;
+  }
+  showError(errorId, false);
+  return true;
+}
+
+// Validate optional name
+function validateOptionalName(input, errorId) {
+  var value = input.value.trim();
+  if (!value) {
+    showError(errorId, false);
+    return true;
+  }
+  if (!namePattern.test(value)) {
+    showError(errorId, true);
+    return false;
+  }
+  showError(errorId, false);
+  return true;
+}
+
+// Validate email
+function validateEmail(input, errorId) {
+  var value = input.value.trim();
+  if (!value) {
+    showError(errorId, true);
+    return false;
+  }
+  if (!emailPattern.test(value)) {
+    showError(errorId, true);
+    return false;
+  }
+  showError(errorId, false);
+  return true;
+}
+
+// Validate optional phone
+function validateOptionalPhone(input, errorId) {
+  var value = input.value.trim();
+  if (!value) {
+    showError(errorId, false);
+    return true;
+  }
+  if (!phonePattern.test(value)) {
+    showError(errorId, true);
+    return false;
+  }
+  showError(errorId, false);
+  return true;
+}
+
+// Validate flat number
+function validateFlatNumber(input, errorId) {
+  var value = parseInt(input.value);
+  if (!input.value.trim()) {
+    showError(errorId, true);
+    return false;
+  }
+  if (isNaN(value) || value < 1001 || value > 23188) {
+    showError(errorId, true);
+    return false;
+  }
+  showError(errorId, false);
+  return true;
+}
+
+// Initialize when DOM is loaded
+document.addEventListener("DOMContentLoaded", function() {
+  var form = document.getElementById('runnerForm');
+  var msg = document.getElementById('formMessage');
+  var dobInput = form.querySelector('input[name="dob"]');
+  var submitButton = form.querySelector('button[type="submit"]');
+  
+  // Get all input elements
+  var firstNameInput = form.querySelector('input[name="firstName"]');
+  var lastNameInput = form.querySelector('input[name="lastName"]');
+  var flatInput = form.querySelector('input[name="flat"]');
+  var emailInput = form.querySelector('input[name="email"]');
+  var phoneInput = form.querySelector('input[name="phone"]');
+  var emergencyNameInput = form.querySelector('input[name="emergencyname"]');
+  var emergencyNumberInput = form.querySelector('input[name="emergencynumber"]');
+
+  // Create spinner element
+  var spinner = document.createElement("div");
+  spinner.className = "mt-4 text-center hidden";
+  spinner.innerHTML = '<svg class="animate-spin h-6 w-6 text-indigo-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Submitting...';
+  form.appendChild(spinner);
+
+  // Set max date for DOB to today
+  if (dobInput) {
+    dobInput.max = new Date().toISOString().split('T')[0];
+  }
+
+  // Event listeners for real-time validation and unique ID generation
+  if (firstNameInput) {
+    firstNameInput.addEventListener('input', function() {
+      validateRequiredName(firstNameInput, 'firstNameError');
+      generateUniqueId();
+    });
+  }
+
+  if (lastNameInput) {
+    lastNameInput.addEventListener('input', function() {
+      validateOptionalName(lastNameInput, 'lastNameError');
+    });
+  }
+
+  if (flatInput) {
+    flatInput.addEventListener('input', function() {
+      validateFlatNumber(flatInput, 'flatError');
+      generateUniqueId();
+    });
+  }
+
+  if (emailInput) {
+    emailInput.addEventListener('input', function() {
+      validateEmail(emailInput, 'emailError');
+    });
+  }
+
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function() {
+      validateOptionalPhone(phoneInput, 'phoneError');
+    });
+  }
+
+  if (emergencyNameInput) {
+    emergencyNameInput.addEventListener('input', function() {
+      validateOptionalName(emergencyNameInput, 'emergencyNameError');
+    });
+  }
+
+  if (emergencyNumberInput) {
+    emergencyNumberInput.addEventListener('input', function() {
+      validateOptionalPhone(emergencyNumberInput, 'emergencyNumberError');
+    });
+  }
+
+  // Auto-calculate age when DOB changes
+  if (dobInput) {
+    dobInput.addEventListener('change', calculateAge);
+  }
+
+  // Form submission handler
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    var isValid = true;
+    
+    // Validate required fields
+    if (firstNameInput) {
+      isValid = validateRequiredName(firstNameInput, 'firstNameError') && isValid;
+    }
+    if (flatInput) {
+      isValid = validateFlatNumber(flatInput, 'flatError') && isValid;
+    }
+    if (emailInput) {
+      isValid = validateEmail(emailInput, 'emailError') && isValid;
+    }
+    
+    // Validate optional fields only if they have values
+    if (lastNameInput && lastNameInput.value.trim()) {
+      isValid = validateOptionalName(lastNameInput, 'lastNameError') && isValid;
+    }
+    if (phoneInput && phoneInput.value.trim()) {
+      isValid = validateOptionalPhone(phoneInput, 'phoneError') && isValid;
+    }
+    if (emergencyNameInput && emergencyNameInput.value.trim()) {
+      isValid = validateOptionalName(emergencyNameInput, 'emergencyNameError') && isValid;
+    }
+    if (emergencyNumberInput && emergencyNumberInput.value.trim()) {
+      isValid = validateOptionalPhone(emergencyNumberInput, 'emergencyNumberError') && isValid;
+    }
+
+    if (!isValid) {
+      alert('Please fix the validation errors before submitting.');
+      return;
+    }
+
+    // Show spinner and disable submit button
+    submitButton.disabled = true;
+    spinner.classList.remove("hidden");
+
+    // Submit form data
+    var formData = new FormData(form);
+    
+    fetch(scriptURL, { method: 'POST', body: formData })
+      .then(function(response) {
+        return response.text();
+      })
+      .then(function(responseText) {
+        submitButton.disabled = false;
+        spinner.classList.add("hidden");
+
+        if (responseText.includes("Success")) {
+          msg.classList.remove("hidden");
+          form.reset();
+          document.querySelector('input[name="uniqueId"]').value = '';
+          document.querySelector('input[name="age"]').value = '';
+          setTimeout(function() {
+            msg.classList.add("hidden");
+          }, 4000);
+        } else {
+          alert("Error: " + responseText);
+        }
+      })
+      .catch(function(error) {
+        submitButton.disabled = false;
+        spinner.classList.add("hidden");
+        alert('Error: ' + error.message);
+      });
+  });
+});
+</script>
+
+</body>
+</html>
