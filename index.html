@@ -338,7 +338,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("loadingState")?.classList.remove("hidden");
   document.getElementById("emptyState")?.classList.add("hidden");
   try {
-    const response = await fetch("https://script.google.com/macros/s/AKfycbybIrPBphnX54W8A6ayaAo9Rnw3kuRhoHMOQkGsPXEicj-wiL2PyGNHvaNJ-5zqOz8sxg/exec");
+    const response = await fetch("https://script.google.com/macros/s/AKfycbwKWgJw-msf00OMMv-KY_ypkAM27H0uGbwx4w6E8hX1RV2-SzasD-uFYnZxhXSi8qJuQg/exec");
     const data = await response.json();
     marathons = data
       .filter(item => (item["Display"] || "").toString().toLowerCase() === "yes")
