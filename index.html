@@ -18,7 +18,7 @@
       justify-content: center;
       align-items: center;
       margin-top: 2.5rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
     }
     .center-logo .logo-bg {
       background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
@@ -39,6 +39,62 @@
       display: block;
       border-radius: 50%;
       background: transparent;
+    }
+    .nav-bar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background-color: #1f2937;
+      color: white;
+    }
+    .nav-bar-top .search-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+    .nav-bar-top input {
+      width: 100%;
+      max-width: 500px;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      color: #000000;
+    }
+    .nav-bar-bottom {
+      display: flex;
+      justify-content: center;
+      background-color: #e5e7eb;
+      padding: 0.5rem 1rem;
+      gap: 1.5rem;
+      font-weight: 500;
+    }
+    .nav-bar-bottom a {
+      color: #1f2937;
+      text-decoration: none;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 3.5rem;
+      left: 1rem;
+      background-color: white;
+      color: black;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 0.75rem;
+      display: none;
+      z-index: 50;
+    }
+    .dropdown-menu a {
+      display: block;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      transition: background 0.2s;
+    }
+    .dropdown-menu a:hover {
+      background-color: #f3f4f6;
     }
     .floating-buttons {
       position: fixed;
@@ -190,60 +246,44 @@
   </style>
 </head>
 <body class="min-h-screen">
+  <!-- Logo -->
   <div class="center-logo">
     <div class="logo-bg">
       <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Running Ninjas Logo">
     </div>
   </div>
 
-  <!-- Floating Buttons -->
-<!-- Toggle visibility by setting showAddRunnerButton = true or false -->
-<script>
-  const showAddRunnerButton = true; // Set false to hide the button
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    if (showAddRunnerButton) {
-      const btn = document.createElement("button");
-      btn.id = "addRunnerBtn";
-      btn.title = "Add Runner Details";
-      btn.innerHTML = '<i data-feather="user-plus" class="w-5 h-5 text-indigo-600"></i>';
-      document.querySelector(".floating-buttons").prepend(btn);
-      feather.replace();
-
-      document.getElementById("addRunnerBtn").addEventListener("click", () => {
-        window.location.href = "add-runner-form.html";
-      });
-    }
-  });
-</script>
-
-
-
-  <div class="floating-buttons">
-    <button id="toggleSearch" title="Search">
-      <i data-feather="search" class="w-5 h-5 text-indigo-600"></i>
-    </button>
-    <button id="toggleFilters" title="Filter">
-      <i data-feather="filter" class="w-5 h-5 text-indigo-600"></i>
-    </button>
+  <!-- Top Nav Bar -->
+  <div class="nav-bar-top">
     <div class="relative">
-      <button id="toggleMenu" title="Menu">
-        <i data-feather="menu" class="w-5 h-5 text-indigo-600"></i>
+      <button id="hamburgerMenu">
+        <i data-feather="menu" class="w-6 h-6"></i>
       </button>
-      <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50">
-        <a href="https://aashutosh.net/" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl transition-colors">
-          <i data-feather="book-open" class="w-4 h-4 inline mr-2"></i>Aashu's Blog
-        </a>
-        <a href="https://www.strava.com/training-plans/running" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-          <i data-feather="target" class="w-4 h-4 inline mr-2"></i>Sundar's Trng. plan
-        </a>
-        <a href="https://aashutosh.net/?s=race+report" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-b-xl transition-colors">
-          <i data-feather="award" class="w-4 h-4 inline mr-2"></i>Race Reports
-        </a>
+      <div id="dropdownMenu" class="dropdown-menu">
+        <a href="https://aashutosh.net/">Aashu's Blog</a>
+        <a href="https://www.strava.com/training-plans/running">Sundar's Training Plan</a>
+        <a href="https://aashutosh.net/?s=race+report">Race Reports</a>
       </div>
     </div>
+    <div class="search-container">
+      <input type="text" placeholder="Search marathons, cities, or descriptions..." id="searchInputTop" />
+    </div>
+    <div class="flex gap-2">
+      <button id="filterBtn">
+        <i data-feather="filter" class="w-5 h-5"></i>
+      </button>
+      <button id="addRunnerBtn">
+        <i data-feather="user-plus" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Nav Bar -->
+  <div class="nav-bar-bottom">
+    <a href="#">5K to Couch</a>
+    <a href="#">10K Training Plan</a>
+    <a href="#">Half Marathon Plan</a>
+    <a href="#">Full Marathon Plan</a>
   </div>
 
   <!-- Search Box -->
@@ -332,362 +372,363 @@
     </div>
   </footer>
 
-<script>
-   let marathons = [];
+  <script>
+    feather.replace();
 
-   // Cache configuration
-   const CACHE_KEY = 'running_ninjas_marathons';
-   const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
-   const API_URL = 'https://script.google.com/macros/s/AKfycbwKWgJw-msf00OMMv-KY_ypkAM27H0uGbwx4w6E8hX1RV2-SzasD-uFYnZxhXSi8qJuQg/exec';
+    // Top navigation bar functionality
+    const searchInputTop = document.getElementById("searchInputTop");
+    const filterBtn = document.getElementById("filterBtn");
+    const addRunnerBtn = document.getElementById("addRunnerBtn");
+    const dropdownMenu = document.getElementById("dropdownMenu");
 
-   // Cache utility functions
-   function setCachedData(key, data) {
-     const cacheItem = {
-       data: data,
-       timestamp: Date.now()
-     };
-     try {
-       // Store in memory cache
-       window.marathonCache = window.marathonCache || {};
-       window.marathonCache[key] = cacheItem;
+    document.getElementById("hamburgerMenu").addEventListener("click", () => {
+      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+    });
 
-       // Also try localStorage for persistence across sessions
-       if (typeof Storage !== 'undefined') {
-         localStorage.setItem(key, JSON.stringify(cacheItem));
-       }
-     } catch (e) {
-       console.warn('Failed to cache data:', e);
-     }
-   }
+    // Integrate with global search input if available
+    searchInputTop.addEventListener("input", (e) => {
+      const searchInput = document.getElementById("searchInput");
+      if (searchInput) {
+        searchInput.value = e.target.value;
+        const event = new Event("input");
+        searchInput.dispatchEvent(event);
+      }
+    });
 
-   function getCachedData(key, maxAge) {
-     try {
-       let cacheItem = null;
+    // Toggle filter panel visibility if #filterPanel exists
+    filterBtn.addEventListener("click", () => {
+      const panel = document.getElementById("filterPanel");
+      if (panel) {
+        panel.classList.toggle("hidden");
+      }
+    });
 
-       // First try memory cache
-       if (window.marathonCache && window.marathonCache[key]) {
-         cacheItem = window.marathonCache[key];
-       }
-       // Fallback to localStorage
-       else if (typeof Storage !== 'undefined') {
-         const stored = localStorage.getItem(key);
-         if (stored) {
-           cacheItem = JSON.parse(stored);
-           // Restore to memory cache
-           window.marathonCache = window.marathonCache || {};
-           window.marathonCache[key] = cacheItem;
-         }
-       }
+    // Redirect to add runner form
+    addRunnerBtn.addEventListener("click", () => {
+      window.location.href = "add-runner-form.html";
+    });
 
-       if (!cacheItem) return null;
+    // Close hamburger dropdown when clicking outside
+    window.addEventListener("click", (e) => {
+      const button = document.getElementById("hamburgerMenu");
+      if (!button.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.style.display = "none";
+      }
+    });
 
-       // Check if cache is still valid
-       const age = Date.now() - cacheItem.timestamp;
-       if (age < maxAge) {
-         return cacheItem.data;
-       } else {
-         // Clear expired cache
-         clearCachedData(key);
-         return null;
-       }
-     } catch (e) {
-       console.warn('Failed to retrieve cached data:', e);
-       return null;
-     }
-   }
+    // Cache configuration
+    const CACHE_KEY = 'marathon_data_cache';
+    const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+    const API_URL = "https://script.google.com/macros/s/AKfycbybIrPBphnX54W8A6ayaAo9Rnw3kuRhoHMOQkGsPXEicj-wiL2PyGNHvaNJ-5zqOz8sxg/exec";
 
-   function clearCachedData(key) {
-     try {
-       if (window.marathonCache && window.marathonCache[key]) {
-         delete window.marathonCache[key];
-       }
-       if (typeof Storage !== 'undefined') {
-         localStorage.removeItem(key);
-       }
-     } catch (e) {
-       console.warn('Failed to clear cached data:', e);
-     }
-   }
+    let marathons = [];
 
-   // Enhanced fetch with timeout
-   async function fetchWithTimeout(url, timeout = 10000) {
-     const controller = new AbortController();
-     const timeoutId = setTimeout(() => controller.abort(), timeout);
+    // Cache utility functions
+    function setCachedData(key, data) {
+      try {
+        if (typeof Storage !== 'undefined') {
+          const cacheData = {
+            data: data,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(key, JSON.stringify(cacheData));
+        }
+        if (!window.marathonCache) {
+          window.marathonCache = {};
+        }
+        window.marathonCache[key] = {
+          data: data,
+          timestamp: Date.now()
+        };
+      } catch (e) {
+        console.warn('Failed to cache data:', e);
+      }
+    }
 
-     try {
-       const response = await fetch(url, {
-         signal: controller.signal
-       });
-       clearTimeout(timeoutId);
+    function getCachedData(key, maxAge) {
+      try {
+        // First check memory cache
+        if (window.marathonCache && window.marathonCache[key]) {
+          const cache = window.marathonCache[key];
+          if (Date.now() - cache.timestamp < maxAge) {
+            return cache.data;
+          }
+        }
 
-       if (!response.ok) {
-         throw new Error(`HTTP error! status: ${response.status}`);
-       }
+        // Then check localStorage
+        if (typeof Storage !== 'undefined') {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const cacheData = JSON.parse(cached);
+            if (Date.now() - cacheData.timestamp < maxAge) {
+              // Update memory cache
+              if (!window.marathonCache) {
+                window.marathonCache = {};
+              }
+              window.marathonCache[key] = cacheData;
+              return cacheData.data;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to retrieve cached data:', e);
+      }
+      return null;
+    }
 
-       return await response.json();
-     } catch (error) {
-       clearTimeout(timeoutId);
-       throw error;
-     }
-   }
+    function clearCache(key) {
+      try {
+        if (window.marathonCache && window.marathonCache[key]) {
+          delete window.marathonCache[key];
+        }
+        if (typeof Storage !== 'undefined') {
+          localStorage.removeItem(key);
+        }
+      } catch (e) {
+        console.warn('Failed to clear cached data:', e);
+      }
+    }
 
-   window.addEventListener("DOMContentLoaded", async () => {
-     document.getElementById("loadingState")?.classList.remove("hidden");
-     document.getElementById("emptyState")?.classList.add("hidden");
+    // Enhanced fetch with timeout
+    async function fetchWithTimeout(url, timeout = 10000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-     try {
-       // Check for cached data first
-       const cachedData = getCachedData(CACHE_KEY, CACHE_DURATION);
-       if (cachedData && cachedData.length > 0) {
-         console.log('Loading from cache...');
-         marathons = cachedData;
-         filterAndDisplay();
-         return;
-       }
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-       // If no cache, fetch from API
-       console.log('Loading from API...');
-       const data = await fetchWithTimeout(API_URL);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-       marathons = data
-         .filter(item => (item["Display"] || "").toString().toLowerCase() === "yes")
-         .map(item => ({
-           name: item["Event name"],
-           date: item["Event date"],
-           city: item["Location"],
-           description: item["Summary"],
-           registrationLink: item["Link to register"],
-           busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
-           bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
-         }));
+        return await response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    }
 
-       // Cache the processed data
-       setCachedData(CACHE_KEY, marathons);
+    window.addEventListener("DOMContentLoaded", async () => {
+      document.getElementById("loadingState")?.classList.remove("hidden");
+      document.getElementById("emptyState")?.classList.add("hidden");
 
-       filterAndDisplay();
-     } catch (error) {
-       console.error("Failed to fetch marathon data:", error);
+      try {
+        // Check for cached data first
+        const cachedData = getCachedData(CACHE_KEY, CACHE_DURATION);
+        if (cachedData && cachedData.length > 0) {
+          console.log('Loading from cache...');
+          marathons = cachedData;
+          filterAndDisplay();
+          return;
+        }
 
-       // Try to load from localStorage as fallback (24 hour old cache)
-       const fallbackData = getCachedData(CACHE_KEY, 24 * 60 * 60 * 1000);
-       if (fallbackData && fallbackData.length > 0) {
-         console.log('Loading from fallback cache...');
-         marathons = fallbackData;
-         filterAndDisplay();
-       } else {
-         document.getElementById("loadingState")?.classList.add("hidden");
-         document.getElementById("emptyState")?.classList.remove("hidden");
-       }
-     }
-   });
+        // If no cache, fetch from API
+        console.log('Loading from API...');
+        const data = await fetchWithTimeout(API_URL);
 
-   // DOM elements
-   const marathonList = document.getElementById("marathonList");
-   const showMoreContainer = document.getElementById("showMoreContainer");
-   const showMoreButton = document.getElementById("showMoreButton");
-   const emptyState = document.getElementById("emptyState");
-   const searchInput = document.getElementById("searchInput");
-   const raceFilter = document.getElementById("raceFilter");
-   const fromDate = document.getElementById("fromDate");
-   const toDate = document.getElementById("toDate");
+        marathons = data
+          .filter(item => (item["Display"] || "").toString().toLowerCase() === "yes")
+          .map(item => ({
+            name: item["Event name"],
+            date: item["Event date"],
+            city: item["Location"],
+            description: item["Summary"],
+            registrationLink: item["Link to register"],
+            busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
+            bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
+          }));
 
-   let filteredMarathons = [];
-   let showAll = false;
+        // Cache the processed data
+        setCachedData(CACHE_KEY, marathons);
 
-   // Utility functions
-   function formatDate(dateStr) {
-     const options = {
-       weekday: 'short',
-       year: "numeric",
-       month: "short",
-       day: "numeric"
-     };
-     return new Date(dateStr).toLocaleDateString(undefined, options);
-   }
+        filterAndDisplay();
+      } catch (error) {
+        console.error("Failed to fetch marathon data:", error);
 
-   function isFutureDate(dateStr) {
-     return new Date(dateStr) >= new Date().setHours(0, 0, 0, 0);
-   }
+        // Try to load from localStorage as fallback (24 hour old cache)
+        const fallbackData = getCachedData(CACHE_KEY, 24 * 60 * 60 * 1000);
+        if (fallbackData && fallbackData.length > 0) {
+          console.log('Loading from fallback cache...');
+          marathons = fallbackData;
+          filterAndDisplay();
+        } else {
+          document.getElementById("loadingState")?.classList.add("hidden");
+          document.getElementById("emptyState")?.classList.remove("hidden");
+        }
+      }
+    });
 
-   function getTimeUntilEvent(dateStr) {
-     const now = new Date();
-     const eventDate = new Date(dateStr);
-     const diffTime = eventDate - now;
-     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // DOM elements
+    const marathonList = document.getElementById("marathonList");
+    const showMoreContainer = document.getElementById("showMoreContainer");
+    const showMoreButton = document.getElementById("showMoreButton");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+    const raceFilter = document.getElementById("raceFilter");
+    const fromDate = document.getElementById("fromDate");
+    const toDate = document.getElementById("toDate");
 
-     if (diffDays === 0) return "Today";
-     if (diffDays === 1) return "Tomorrow";
-     if (diffDays <= 7) return `${diffDays} days`;
-     if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks`;
-     return `${Math.ceil(diffDays / 30)} months`;
-   }
+    let filteredMarathons = [];
+    let showAll = false;
 
-   function displayMarathons(data) {
-     marathonList.innerHTML = "";
-     document.getElementById("loadingState")?.classList.add("hidden");
+    // Utility functions
+    function formatDate(dateStr) {
+      const options = {
+        weekday: 'short',
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      };
+      return new Date(dateStr).toLocaleDateString(undefined, options);
+    }
 
-     if (data.length === 0) {
-       emptyState.classList.remove("hidden");
-       showMoreContainer.classList.add("hidden");
-       return;
-     }
+    function isFutureDate(dateStr) {
+      return new Date(dateStr) >= new Date().setHours(0, 0, 0, 0);
+    }
 
-     emptyState.classList.add("hidden");
-     // Show only 3 by default, all if showAll is true
-     const eventsToShow = showAll ? data : data.slice(0, 3);
+    function getTimeUntilEvent(dateStr) {
+      const now = new Date();
+      const eventDate = new Date(dateStr);
+      const diffTime = eventDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-     eventsToShow.forEach((marathon, index) => {
-       const card = document.createElement("div");
-       card.className = "marathon-card animate-fade-in";
-       card.style.animationDelay = `${index * 0.1}s`;
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "Tomorrow";
+      if (diffDays < 7) return `${diffDays} days`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks`;
+      return `${Math.ceil(diffDays / 30)} months`;
+    }
 
-     const busButton = marathon.busAvailable ? `
-         <a href="RNBusForm.html"
-            target="_blank"
-            class="bus-btn card-action">
-           <i data-feather="truck" class="w-4 h-4"></i>
-           <span>Bus Available</span>
-         </a>` : "";
+    function displayMarathons(data) {
+      // Hide loading and empty states
+      document.getElementById("loadingState")?.classList.add("hidden");
+      document.getElementById("emptyState")?.classList.add("hidden");
 
-       // const busButton = marathon.busAvailable ? `
-       //   <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
-       //      target="_blank"
-       //      class="bus-btn card-action">
-       //     <i data-feather="truck" class="w-4 h-4"></i>
-       //     <span>Bus Available</span>
-       //   </a>` : "";
+      // Clear existing cards
+      marathonList.innerHTML = "";
 
-       const bibButton = marathon.bibdetails ? `
-         <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
-            target="_blank"
-            class="bib-btn card-action">
-           <i data-feather="user" class="w-4 h-4"></i>
-           <span>Bib Details</span>
-         </a>` : "";
+      if (data.length === 0) {
+        document.getElementById("emptyState")?.classList.remove("hidden");
+        return;
+      }
 
-       card.innerHTML = `
-         <div class="accent-bar"></div>
-         <div class="card-inner">
-           <div class="flex items-center justify-between mb-1">
-             <h3>${marathon.name}</h3>
-             <a href="#" class="info-btn" title="Route Info">
-               <i data-feather="info" class="w-5 h-5"></i>
-             </a>
-           </div>
-           <div class="meta">
-             <i data-feather="calendar" class="w-4 h-4"></i>
-             <span>${formatDate(marathon.date)}</span>
-           </div>
-           <div class="meta mb-2">
-             <i data-feather="map-pin" class="w-4 h-4"></i>
-             <span>${marathon.city}</span>
-           </div>
-           <div class="desc">${marathon.description}</div>
-           <a href="${marathon.registrationLink}"
-              target="_blank"
-              class="btn-primary block text-center">
-             Register Now
-           </a>
-           <div class="card-actions flex flex-col gap-2 mt-1">
-             ${busButton}
-             ${bibButton}
-           </div>
-         </div>
-       `;
+      // Show only first 3 cards initially, or all if showAll is true
+      const cardsToShow = showAll ? data : data.slice(0, 3);
 
-       marathonList.appendChild(card);
-     });
+      cardsToShow.forEach((marathon) => {
+        const card = document.createElement("div");
+        card.className = "marathon-card";
+        card.innerHTML = `
+          <div class="accent-bar"></div>
+          <div class="card-inner">
+            <div class="flex items-start justify-between">
+              <h3>${marathon.name}</h3>
+              <button class="info-btn" onclick="alert('${marathon.description.replace(/'/g, "\\'")}')">
+                <i data-feather="info" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div class="meta">
+              <i data-feather="calendar" class="w-4 h-4"></i>
+              <span>${formatDate(marathon.date)}</span>
+              <span class="text-indigo-600 font-medium">(${getTimeUntilEvent(marathon.date)})</span>
+            </div>
+            <div class="meta">
+              <i data-feather="map-pin" class="w-4 h-4"></i>
+              <span>${marathon.city}</span>
+            </div>
+            <div class="desc">${marathon.description}</div>
+            <div class="card-actions">
+              <a href="${marathon.registrationLink}" target="_blank" class="btn-primary">
+                <i data-feather="external-link" class="w-4 h-4"></i>
+                Register Now
+              </a>
+              ${marathon.busAvailable ? `
+                <a href="RNBusForm.html" class="bus-btn">
+                  <i data-feather="truck" class="w-4 h-4"></i>
+                  Book Bus
+                </a>
+              ` : ''}
+              ${marathon.bibdetails ? `
+                <a href="#" class="bib-btn">
+                  <i data-feather="file-text" class="w-4 h-4"></i>
+                  Bib Details
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        `;
 
-     // Update show more button
-     if (data.length > 3) {
-       showMoreContainer.classList.remove("hidden");
-       const buttonText = showMoreButton.querySelector("span");
-       const buttonIcon = showMoreButton.querySelector("i");
+        marathonList.appendChild(card);
+      });
 
-       buttonText.textContent = showAll ? "Show Less" : "Show More";
-       if (showMoreButton) {
-       const buttonIcon = showMoreButton.querySelector("i");
-       if (buttonIcon) {
-       buttonIcon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
-       }
-       }
+      // Update show more button
+      if (data.length > 3) {
+        showMoreContainer.classList.remove("hidden");
+        const buttonText = showMoreButton.querySelector("span");
+        const buttonIcon = showMoreButton.querySelector("i");
 
-     } else {
-       showMoreContainer.classList.add("hidden");
-     }
+        buttonText.textContent = showAll ? "Show Less" : "Show More";
+        if (showMoreButton) {
+        const buttonIcon = showMoreButton.querySelector("i");
+        if (buttonIcon) {
+        buttonIcon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
+        }
+        }
 
-     // Ensure Feather icons are rendered after DOM updates
-     feather.replace();
-   }
+      } else {
+        showMoreContainer.classList.add("hidden");
+      }
 
-   function filterAndDisplay() {
-     const searchText = searchInput?.value.toLowerCase() || "";
-     const selectedRace = raceFilter?.value.toLowerCase() || "";
-     const from = fromDate?.value;
-     const to = toDate?.value;
+      // Ensure Feather icons are rendered after DOM updates
+      feather.replace();
+    }
 
-     filteredMarathons = marathons.filter((marathon) => {
-       const isUpcoming = isFutureDate(marathon.date);
-       const matchesSearch = !searchText ||
-         marathon.name.toLowerCase().includes(searchText) ||
-         marathon.city.toLowerCase().includes(searchText) ||
-         marathon.description.toLowerCase().includes(searchText);
-       const matchesRace = !selectedRace || marathon.name.toLowerCase().includes(selectedRace);
-       const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
-       const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
+    function filterAndDisplay() {
+      const searchText = searchInput?.value.toLowerCase() || "";
+      const selectedRace = raceFilter?.value.toLowerCase() || "";
+      const from = fromDate?.value;
+      const to = toDate?.value;
 
-       return matchesSearch && matchesRace && matchesFromDate && matchesToDate;
+      filteredMarathons = marathons.filter((marathon) => {
+        const isUpcoming = isFutureDate(marathon.date);
+        const matchesSearch = !searchText ||
+          marathon.name.toLowerCase().includes(searchText) ||
+          marathon.city.toLowerCase().includes(searchText) ||
+          marathon.description.toLowerCase().includes(searchText);
+        const matchesRace = !selectedRace || marathon.name.toLowerCase().includes(selectedRace);
+        const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
+        const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
+        
+        return matchesSearch && matchesRace && matchesFromDate && matchesToDate;
 
-       //return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
-     });
+        //return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
+      });
 
-     // Sort by soonest event first
-     filteredMarathons.sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Sort by soonest event first
+      filteredMarathons.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-     showAll = false;
-     displayMarathons(filteredMarathons);
-   }
+      showAll = false;
+      displayMarathons(filteredMarathons);
+    }
 
-   // Event listeners
-   showMoreButton.addEventListener("click", () => {
-     showAll = !showAll;
-     displayMarathons(filteredMarathons);
-   });
+    // Event listeners
+    showMoreButton.addEventListener("click", () => {
+      showAll = !showAll;
+      displayMarathons(filteredMarathons);
+    });
 
-   document.getElementById("toggleSearch").addEventListener("click", () => {
-     const searchBox = document.getElementById("searchBox");
-     searchBox.classList.toggle("hidden");
-     if (!searchBox.classList.contains("hidden")) {
-       searchInput.focus();
-     }
-   });
+    // Search and filter event listeners
+    searchInput?.addEventListener("input", filterAndDisplay);
+    raceFilter?.addEventListener("change", filterAndDisplay);
+    fromDate?.addEventListener("change", filterAndDisplay);
+    toDate?.addEventListener("change", filterAndDisplay);
 
-   document.getElementById("toggleFilters").addEventListener("click", () => {
-     document.getElementById("filterPanel").classList.toggle("hidden");
-   });
-
-   document.getElementById("toggleMenu").addEventListener("click", () => {
-     document.getElementById("dropdownMenu").classList.toggle("hidden");
-   });
-
-   // Close menu when clicking outside
-   window.addEventListener("click", (e) => {
-     const menu = document.getElementById("dropdownMenu");
-     const button = document.getElementById("toggleMenu");
-     if (!button.contains(e.target) && !menu.contains(e.target)) {
-       menu.classList.add("hidden");
-     }
-   });
-
-   // Search and filter event listeners
-   searchInput?.addEventListener("input", filterAndDisplay);
-   raceFilter?.addEventListener("change", filterAndDisplay);
-   fromDate?.addEventListener("change", filterAndDisplay);
-   toDate?.addEventListener("change", filterAndDisplay);
-
-   // Initialize
-   feather.replace();
-   filterAndDisplay();
-</script>
+    // Initialize
+    feather.replace();
+    filterAndDisplay();
+  </script>
 </body>
 </html>
