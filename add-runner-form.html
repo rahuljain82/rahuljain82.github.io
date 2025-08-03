@@ -19,49 +19,49 @@
         <input name="uniqueId" type="text" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed" />
         <span class="text-xs text-gray-500">Auto-generated from first name (first 4 letters) + flat number</span>
       </label>
-      
+
       <!-- First Name - Required -->
       <label class="block mb-2">First Name *
         <input name="firstName" type="text" required class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="firstNameError">Please enter a valid first name (letters only)</span>
       </label>
-      
+
       <!-- Last Name - Optional -->
       <label class="block mb-2">Last Name
         <input name="lastName" type="text" class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="lastNameError">Please enter a valid last name (letters only)</span>
       </label>
-      
+
       <!-- Flat Number - Required -->
       <label class="block mb-2">Flat Number *
         <input name="flat" type="number" required min="1001" max="23188" class="w-full mt-1 p-2 border rounded" />
         <span class="text-xs text-gray-500">Enter your PSN flat number</span>
         <span class="text-red-500 text-xs hidden" id="flatError">Flat number must be between 1001 and 23188</span>
       </label>
-      
+
       <!-- Community Code - Required -->
       <label class="block mb-2">Community Code *
         <input name="community" type="password" required class="w-full mt-1 p-2 border rounded" />
         <span class="text-xs text-gray-500">Contact your running group admin for the code</span>
       </label>
-      
+
       <!-- Phone Number - Optional -->
       <label class="block mb-2">Phone Number
         <input name="phone" type="tel" class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="phoneError">Please enter a valid 10-digit phone number</span>
       </label>
-      
+
       <!-- DOB - Optional -->
       <label class="block mb-2">Date Of Birth
         <input name="dob" type="date" class="w-full mt-1 p-2 border rounded" />
       </label>
-      
+
       <!-- Age - Auto-calculated -->
       <label class="block mb-2">Age
         <input name="age" type="number" disabled class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed" />
 <!--        <span class="text-xs text-gray-500">Automatically calculated from DOB</span>-->
       </label>
-      
+
       <!-- Gender - Optional -->
       <label class="block mb-4">Gender
         <select name="gender" class="w-full mt-1 p-2 border rounded">
@@ -154,7 +154,7 @@ function generateUniqueId() {
   var firstName = document.querySelector('input[name="firstName"]').value.trim();
   var flatNumber = document.querySelector('input[name="flat"]').value.trim();
   var uniqueIdField = document.querySelector('input[name="uniqueId"]');
-  
+
   if (firstName && flatNumber) {
     var namePrefix = '';
     if (firstName.length >= 4) {
@@ -172,17 +172,17 @@ function generateUniqueId() {
 function calculateAge() {
   var dobInput = document.querySelector('input[name="dob"]');
   var ageInput = document.querySelector('input[name="age"]');
-  
+
   if (dobInput.value) {
     var dob = new Date(dobInput.value);
     var today = new Date();
     var age = today.getFullYear() - dob.getFullYear();
     var monthDiff = today.getMonth() - dob.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
       age--;
     }
-    
+
     ageInput.value = age >= 0 ? age : '';
   } else {
     ageInput.value = '';
@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", function() {
   var msg = document.getElementById('formMessage');
   var dobInput = form.querySelector('input[name="dob"]');
   var submitButton = form.querySelector('button[type="submit"]');
-  
+
   // Get all input elements
   var firstNameInput = form.querySelector('input[name="firstName"]');
   var lastNameInput = form.querySelector('input[name="lastName"]');
@@ -344,9 +344,9 @@ document.addEventListener("DOMContentLoaded", function() {
   // Form submission handler
   form.addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     var isValid = true;
-    
+
     // Validate required fields
     if (firstNameInput) {
       isValid = validateRequiredName(firstNameInput, 'firstNameError') && isValid;
@@ -357,7 +357,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (emailInput) {
       isValid = validateEmail(emailInput, 'emailError') && isValid;
     }
-    
+
     // Validate optional fields only if they have values
     if (lastNameInput && lastNameInput.value.trim()) {
       isValid = validateOptionalName(lastNameInput, 'lastNameError') && isValid;
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Submit form data
     var formData = new FormData(form);
-    
+
     fetch(scriptURL, { method: 'POST', body: formData })
       .then(function(response) {
         return response.text();
@@ -393,6 +393,12 @@ document.addEventListener("DOMContentLoaded", function() {
         spinner.classList.add("hidden");
 
         if (responseText.includes("Success")) {
+          // Get the unique ID value before resetting the form
+          var submittedUniqueId = document.querySelector('input[name="uniqueId"]').value;
+
+          // Show success popup with unique ID
+          alert('Registration successful! Your unique ID is: ' + submittedUniqueId);
+
           msg.classList.remove("hidden");
           form.reset();
           document.querySelector('input[name="uniqueId"]').value = '';
