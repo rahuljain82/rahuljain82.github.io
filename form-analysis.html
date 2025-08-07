@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Running Form Analysis - Running Ninjas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    html, body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .form-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+      overflow: hidden;
+    }
+    .form-header {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    .form-content {
+      padding: 2rem;
+    }
+    .upload-section {
+      margin-bottom: 2rem;
+      padding: 2rem;
+      background: #f8fafc;
+      border-radius: 1rem;
+      border-left: 4px solid #6366f1;
+    }
+    .upload-section h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #312e81;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .upload-zone {
+      border: 2px dashed #d1d5db;
+      border-radius: 1rem;
+      padding: 3rem 2rem;
+      text-align: center;
+      transition: border-color 0.2s, background-color 0.2s;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    .upload-zone:hover {
+      border-color: #6366f1;
+      background-color: #f9fafb;
+    }
+    .upload-zone.dragover {
+      border-color: #6366f1;
+      background-color: #eef2ff;
+    }
+    .upload-icon {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1rem;
+      color: #9ca3af;
+    }
+    .uploaded-files {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .file-preview {
+      position: relative;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      background: #f3f4f6;
+      aspect-ratio: 1;
+    }
+    .file-preview img, .file-preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .file-preview .remove-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .file-info {
+      padding: 0.75rem;
+      background: white;
+      border-radius: 0 0 0.5rem 0.5rem;
+    }
+    .file-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.25rem;
+    }
+    .file-type {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #5b5bf6 0%, #0891b2 100%);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-right: 1rem;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .help-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+    .spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #6366f1;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .back-button {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-button:hover {
+      background: white;
+    }
+    .guidelines {
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .guidelines h4 {
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .guidelines ul {
+      list-style: disc;
+      margin-left: 1.5rem;
+      color: #1e40af;
+    }
+    .guidelines li {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Back Button -->
+  <button class="back-button" onclick="window.location.href='index.html'" title="Back to Home">
+    <i data-feather="arrow-left" class="w-5 h-5 text-indigo-600"></i>
+  </button>
+
+  <div class="form-container">
+    <!-- Form Header -->
+    <div class="form-header">
+      <h1 class="text-2xl font-bold mb-2">Running Form Analysis</h1>
+      <p class="text-indigo-100">Upload photos or videos of your running form to get AI-powered analysis and improvement recommendations</p>
+    </div>
+
+    <!-- Form Content -->
+    <div class="form-content">
+      
+      <!-- Guidelines -->
+      <div class="guidelines">
+        <h4>
+          <i data-feather="info" class="w-5 h-5"></i>
+          Photo/Video Guidelines for Best Analysis
+        </h4>
+        <ul>
+          <li>Take side-view photos/videos showing your full body while running</li>
+          <li>Include foot strike and mid-stance phases for gait analysis</li>
+          <li>Ensure good lighting and clear visibility of your posture</li>
+          <li>Videos should be 5-10 seconds long for complete gait cycle analysis</li>
+          <li>Include both left and right side views if possible</li>
+        </ul>
+      </div>
+
+      <form id="formAnalysisForm">
+        
+        <!-- Side View Upload -->
+        <div class="upload-section">
+          <h3>
+            <i data-feather="camera" class="w-5 h-5 text-indigo-600"></i>
+            Side View Running Form
+          </h3>
+          <div class="upload-zone" id="sideViewUpload" onclick="document.getElementById('sideViewInput').click()">
+            <div class="upload-icon">
+              <i data-feather="upload-cloud" class="w-16 h-16 mx-auto"></i>
+            </div>
+            <p class="text-lg font-semibold text-gray-700 mb-2">Upload Side View Photos/Videos</p>
+            <p class="text-gray-500">Click to browse or drag and drop files here</p>
+            <p class="text-sm text-gray-400 mt-2">Supports: JPG, PNG, MP4, MOV (Max 50MB per file)</p>
+          </div>
+          <input type="file" id="sideViewInput" multiple accept="image/*,video/*" style="display: none;">
+          <div id="sideViewPreviews" class="uploaded-files"></div>
+        </div>
+
+        <!-- Front/Back View Upload -->
+        <div class="upload-section">
+          <h3>
+            <i data-feather="video" class="w-5 h-5 text-indigo-600"></i>
+            Front/Back View (Optional)
+          </h3>
+          <div class="upload-zone" id="frontBackUpload" onclick="document.getElementById('frontBackInput').click()">
+            <div class="upload-icon">
+              <i data-feather="upload-cloud" class="w-16 h-16 mx-auto"></i>
+            </div>
+            <p class="text-lg font-semibold text-gray-700 mb-2">Upload Front/Back View Photos/Videos</p>
+            <p class="text-gray-500">Click to browse or drag and drop files here</p>
+            <p class="text-sm text-gray-400 mt-2">Helps analyze arm swing and body alignment</p>
+          </div>
+          <input type="file" id="frontBackInput" multiple accept="image/*,video/*" style="display: none;">
+          <div id="frontBackPreviews" class="uploaded-files"></div>
+        </div>
+
+        <!-- Foot Landing Photos -->
+        <div class="upload-section">
+          <h3>
+            <i data-feather="target" class="w-5 h-5 text-indigo-600"></i>
+            Foot Landing Analysis
+          </h3>
+          <div class="upload-zone" id="footLandingUpload" onclick="document.getElementById('footLandingInput').click()">
+            <div class="upload-icon">
+              <i data-feather="upload-cloud" class="w-16 h-16 mx-auto"></i>
+            </div>
+            <p class="text-lg font-semibold text-gray-700 mb-2">Upload Foot Landing Photos</p>
+            <p class="text-gray-500">Click to browse or drag and drop files here</p>
+            <p class="text-sm text-gray-400 mt-2">Close-up shots of foot strike for gait analysis</p>
+          </div>
+          <input type="file" id="footLandingInput" multiple accept="image/*,video/*" style="display: none;">
+          <div id="footLandingPreviews" class="uploaded-files"></div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="upload-section">
+          <h3>
+            <i data-feather="edit-3" class="w-5 h-5 text-indigo-600"></i>
+            Additional Information
+          </h3>
+          
+          <div class="form-group">
+            <label for="runningPace">Typical Running Pace (per km)</label>
+            <input type="text" id="runningPace" name="runningPace" placeholder="e.g., 5:30" pattern="[0-9]+:[0-9]{2}">
+            <div class="help-text">Your usual easy run pace (mm:ss format)</div>
+          </div>
+
+          <div class="form-group">
+            <label for="runningExperience">Running Experience</label>
+            <select id="runningExperience" name="runningExperience">
+              <option value="">Select Experience Level</option>
+              <option value="beginner">Beginner (< 1 year)</option>
+              <option value="intermediate">Intermediate (1-3 years)</option>
+              <option value="advanced">Advanced (3-5 years)</option>
+              <option value="expert">Expert (5+ years)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="injuryHistory">Injury History (Optional)</label>
+            <textarea id="injuryHistory" name="injuryHistory" placeholder="Describe any past or current running-related injuries..."></textarea>
+            <div class="help-text">Helps us provide more targeted form analysis</div>
+          </div>
+
+          <div class="form-group">
+            <label for="specificConcerns">Specific Form Concerns (Optional)</label>
+            <textarea id="specificConcerns" name="specificConcerns" placeholder="Any specific aspects of your form you'd like us to focus on..."></textarea>
+            <div class="help-text">e.g., heel striking, cadence, posture, arm swing</div>
+          </div>
+
+          <div class="form-group">
+            <label for="runningGoals">Running Goals</label>
+            <select id="runningGoals" name="runningGoals">
+              <option value="">Select Primary Goal</option>
+              <option value="injury-prevention">Injury Prevention</option>
+              <option value="speed-improvement">Speed Improvement</option>
+              <option value="efficiency">Running Efficiency</option>
+              <option value="endurance">Endurance Building</option>
+              <option value="form-correction">Form Correction</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-between items-center mt-8">
+          <button type="button" class="btn-secondary" onclick="window.location.href='index.html'">
+            Cancel
+          </button>
+          <button type="submit" class="btn-primary" style="width: auto; min-width: 200px;">
+            Analyze Running Form
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Analyzing Your Running Form</h3>
+        <p class="text-gray-600">Our AI is analyzing your photos/videos and generating personalized recommendations...</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Initialize feather icons
+    feather.replace();
+
+    // File upload handling
+    const uploadSections = [
+      { uploadZone: 'sideViewUpload', input: 'sideViewInput', previews: 'sideViewPreviews' },
+      { uploadZone: 'frontBackUpload', input: 'frontBackInput', previews: 'frontBackPreviews' },
+      { uploadZone: 'footLandingUpload', input: 'footLandingInput', previews: 'footLandingPreviews' }
+    ];
+
+    let uploadedFiles = {
+      sideView: [],
+      frontBack: [],
+      footLanding: []
+    };
+
+    uploadSections.forEach((section, index) => {
+      const uploadZone = document.getElementById(section.uploadZone);
+      const input = document.getElementById(section.input);
+      const previews = document.getElementById(section.previews);
+      const fileType = Object.keys(uploadedFiles)[index];
+
+      // Drag and drop handlers
+      uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+      });
+
+      uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+      });
+
+      uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files, fileType, previews);
+      });
+
+      // File input change handler
+      input.addEventListener('change', (e) => {
+        handleFiles(e.target.files, fileType, previews);
+      });
+    });
+
+    function handleFiles(files, fileType, previewContainer) {
+      Array.from(files).forEach(file => {
+        if (file.size > 50 * 1024 * 1024) { // 50MB limit
+          alert(`File ${file.name} is too large. Maximum size is 50MB.`);
+          return;
+        }
+
+        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+          alert(`File ${file.name} is not a supported format.`);
+          return;
+        }
+
+        uploadedFiles[fileType].push(file);
+        createFilePreview(file, fileType, previewContainer);
+      });
+    }
+
+    function createFilePreview(file, fileType, container) {
+      const fileDiv = document.createElement('div');
+      fileDiv.className = 'file-preview';
+      
+      const fileId = Date.now() + Math.random();
+      fileDiv.dataset.fileId = fileId;
+
+      const isVideo = file.type.startsWith('video/');
+      const mediaElement = document.createElement(isVideo ? 'video' : 'img');
+      
+      if (isVideo) {
+        mediaElement.controls = true;
+        mediaElement.muted = true;
+      }
+      
+      mediaElement.src = URL.createObjectURL(file);
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.innerHTML = '<i data-feather="x" class="w-4 h-4"></i>';
+      removeBtn.onclick = () => removeFile(fileId, fileType, fileDiv);
+      
+      const fileInfo = document.createElement('div');
+      fileInfo.className = 'file-info';
+      fileInfo.innerHTML = `
+        <div class="file-name">${file.name}</div>
+        <div class="file-type">${isVideo ? 'Video' : 'Image'} • ${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+      `;
+      
+      fileDiv.appendChild(mediaElement);
+      fileDiv.appendChild(removeBtn);
+      fileDiv.appendChild(fileInfo);
+      
+      container.appendChild(fileDiv);
+      feather.replace();
+    }
+
+    function removeFile(fileId, fileType, element) {
+      // Remove from uploadedFiles array
+      uploadedFiles[fileType] = uploadedFiles[fileType].filter(f => f.lastModified !== fileId);
+      // Remove from DOM
+      element.remove();
+    }
+
+    // Form submission
+    document.getElementById('formAnalysisForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Check if at least one file is uploaded
+      const totalFiles = Object.values(uploadedFiles).reduce((sum, files) => sum + files.length, 0);
+      if (totalFiles === 0) {
+        alert('Please upload at least one photo or video for analysis.');
+        return;
+      }
+      
+      // Show loading state
+      document.getElementById('formAnalysisForm').style.display = 'none';
+      document.getElementById('loadingState').style.display = 'block';
+      
+      // Collect form data
+      const formData = new FormData(this);
+      const data = {
+        runningPace: formData.get('runningPace'),
+        runningExperience: formData.get('runningExperience'),
+        injuryHistory: formData.get('injuryHistory'),
+        specificConcerns: formData.get('specificConcerns'),
+        runningGoals: formData.get('runningGoals'),
+        uploadedFiles: {
+          sideView: uploadedFiles.sideView.length,
+          frontBack: uploadedFiles.frontBack.length,
+          footLanding: uploadedFiles.footLanding.length
+        }
+      };
+      
+      // Store data for results page
+      localStorage.setItem('formAnalysisData', JSON.stringify(data));
+      
+      // Simulate processing time
+      setTimeout(() => {
+        window.location.href = 'form-results.html';
+      }, 4000);
+    });
+  </script>
+</body>
+</html>
