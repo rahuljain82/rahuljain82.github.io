@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runner Analysis App - Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .demo-step {
+      transition: all 0.3s ease;
+    }
+    
+    .demo-step.active {
+      transform: scale(1.02);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+        Runner Analysis App Demo
+      </h1>
+      <p class="text-xl text-white/90 max-w-3xl mx-auto">
+        See how AI-powered running analysis works in action
+      </p>
+    </div>
+
+    <!-- Demo Steps -->
+    <div class="space-y-8">
+      <!-- Step 1: Data Input -->
+      <div class="demo-step glass-card rounded-2xl p-8" id="step1">
+        <div class="flex items-center mb-6">
+          <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg mr-4">1</div>
+          <h2 class="text-2xl font-bold text-gray-800">Data Input</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Personal Information</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Age</label>
+                <input type="number" id="demoAge" value="28" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                <select id="demoGender" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="male" selected>Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Performance Data</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">5K PB</label>
+                <input type="text" id="demo5k" value="20:30" placeholder="mm:ss" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">10K PB</label>
+                <input type="text" id="demo10k" value="42:15" placeholder="mm:ss" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">VO2 Max</label>
+                <input type="number" id="demoVo2" value="55.2" step="0.1" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex justify-center">
+          <button onclick="startAnalysis()" class="btn-primary text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center space-x-2">
+            <i data-feather="zap" class="w-5 h-5"></i>
+            <span>Start Analysis</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Processing -->
+      <div class="demo-step glass-card rounded-2xl p-8 hidden" id="step2">
+        <div class="flex items-center mb-6">
+          <div class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg mr-4">2</div>
+          <h2 class="text-2xl font-bold text-gray-800">AI Processing</h2>
+        </div>
+        
+        <div class="text-center py-8">
+          <div class="loading-spinner w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-6"></div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2" id="processingStep">Initializing Analysis...</h3>
+          <p class="text-gray-600 mb-4" id="processingDescription">Setting up AI models for comprehensive analysis</p>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" id="progressBar" style="width: 0%"></div>
+          </div>
+          <p class="text-sm text-gray-500 mt-2" id="progressText">0% Complete</p>
+        </div>
+      </div>
+
+      <!-- Step 3: Results -->
+      <div class="demo-step glass-card rounded-2xl p-8 hidden" id="step3">
+        <div class="flex items-center mb-6">
+          <div class="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg mr-4">3</div>
+          <h2 class="text-2xl font-bold text-gray-800">Analysis Results</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="text-center p-6 bg-blue-50 rounded-xl">
+            <div class="text-3xl font-bold text-blue-600 mb-2" id="globalPercentile">85%</div>
+            <div class="text-sm text-gray-600">Global Runners</div>
+          </div>
+          <div class="text-center p-6 bg-green-50 rounded-xl">
+            <div class="text-3xl font-bold text-green-600 mb-2" id="regionalPercentile">78%</div>
+            <div class="text-sm text-gray-600">Regional Runners</div>
+          </div>
+          <div class="text-center p-6 bg-purple-50 rounded-xl">
+            <div class="text-3xl font-bold text-purple-600 mb-2" id="ageGroupPercentile">82%</div>
+            <div class="text-sm text-gray-600">Age Group</div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800">Strengths</h3>
+            <ul class="space-y-2 text-sm text-gray-600" id="strengthsList">
+              <li>• Excellent aerobic capacity</li>
+              <li>• Strong threshold pace</li>
+              <li>• Good recovery ability</li>
+            </ul>
+          </div>
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800">Areas for Improvement</h3>
+            <ul class="space-y-2 text-sm text-gray-600" id="weaknessesList">
+              <li>• Limited speed work</li>
+              <li>• Could improve running economy</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Training Plan Preview</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-2">Week 1-4: Base Building</h4>
+              <ul class="space-y-1 text-sm text-gray-600">
+                <li>• 3-4 easy runs per week (30-45 min)</li>
+                <li>• 1 long run (60-90 min)</li>
+                <li>• Focus on building aerobic base</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-2">Week 5-8: Speed Development</h4>
+              <ul class="space-y-1 text-sm text-gray-600">
+                <li>• Add 1 tempo run per week</li>
+                <li>• Include interval training</li>
+                <li>• Maintain long runs (90-120 min)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex justify-center space-x-4">
+          <button onclick="resetDemo()" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+            Try Again
+          </button>
+          <button onclick="viewFullApp()" class="btn-primary text-white px-6 py-3 rounded-lg">
+            View Full App
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Overview -->
+    <div class="mt-16 glass-card rounded-2xl p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Key Features</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-feather="activity" class="w-8 h-8 text-blue-600"></i>
+          </div>
+          <h3 class="font-semibold text-gray-800 mb-2">Performance Analysis</h3>
+          <p class="text-sm text-gray-600">Comprehensive analysis of your running performance using AI</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-feather="target" class="w-8 h-8 text-green-600"></i>
+          </div>
+          <h3 class="font-semibold text-gray-800 mb-2">Training Plans</h3>
+          <p class="text-sm text-gray-600">Personalized 8-week training programs tailored to your goals</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-feather="eye" class="w-8 h-8 text-purple-600"></i>
+          </div>
+          <h3 class="font-semibold text-gray-800 mb-2">Form Analysis</h3>
+          <p class="text-sm text-gray-600">AI-powered analysis of your running form and posture</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-feather="award" class="w-8 h-8 text-orange-600"></i>
+          </div>
+          <h3 class="font-semibold text-gray-800 mb-2">Global Benchmarking</h3>
+          <p class="text-sm text-gray-600">Compare your performance against runners worldwide</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    // Initialize Feather icons
+    feather.replace();
+
+    let currentStep = 1;
+    let progress = 0;
+    let processingSteps = [
+      "Initializing Analysis...",
+      "Analyzing Performance Data...",
+      "Processing Photos...",
+      "Generating Training Plan...",
+      "Creating Benchmark Report...",
+      "Finalizing Results..."
+    ];
+    let currentStepIndex = 0;
+
+    function startAnalysis() {
+      // Hide step 1, show step 2
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+      document.getElementById('step2').classList.add('active');
+      
+      // Start progress simulation
+      simulateProgress();
+    }
+
+    function simulateProgress() {
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      const processingStep = document.getElementById('processingStep');
+      const processingDescription = document.getElementById('processingDescription');
+      
+      const interval = setInterval(() => {
+        progress += 2;
+        
+        if (progress <= 100) {
+          progressBar.style.width = progress + '%';
+          progressText.textContent = progress + '% Complete';
+          
+          // Update processing step
+          if (progress % 16 === 0 && currentStepIndex < processingSteps.length - 1) {
+            currentStepIndex++;
+            processingStep.textContent = processingSteps[currentStepIndex];
+            
+            // Update description
+            const descriptions = [
+              "Setting up AI models for comprehensive analysis",
+              "Analyzing your performance metrics and comparing to global databases",
+              "Processing uploaded photos for form analysis",
+              "Creating personalized training program based on your profile",
+              "Comparing your performance against regional and age-group runners",
+              "Compiling comprehensive analysis report"
+            ];
+            processingDescription.textContent = descriptions[currentStepIndex];
+          }
+        } else {
+          clearInterval(interval);
+          showResults();
+        }
+      }, 100);
+    }
+
+    function showResults() {
+      // Hide step 2, show step 3
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+      document.getElementById('step3').classList.add('active');
+      
+      // Animate results
+      setTimeout(() => {
+        document.getElementById('globalPercentile').style.opacity = '1';
+        document.getElementById('regionalPercentile').style.opacity = '1';
+        document.getElementById('ageGroupPercentile').style.opacity = '1';
+      }, 500);
+    }
+
+    function resetDemo() {
+      // Reset to step 1
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+      
+      // Reset progress
+      progress = 0;
+      currentStepIndex = 0;
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressText').textContent = '0% Complete';
+      document.getElementById('processingStep').textContent = processingSteps[0];
+      document.getElementById('processingDescription').textContent = 'Setting up AI models for comprehensive analysis';
+    }
+
+    function viewFullApp() {
+      // Navigate to the full app
+      window.location.href = 'runner-analysis-app.html';
+    }
+
+    // Add some interactivity to the demo
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add hover effects to demo steps
+      const demoSteps = document.querySelectorAll('.demo-step');
+      demoSteps.forEach(step => {
+        step.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-2px)';
+        });
+        step.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0)';
+        });
+      });
+    });
+  </script>
+</body>
+</html>
