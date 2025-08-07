@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runner Analysis App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .upload-area {
+      border: 2px dashed #cbd5e0;
+      transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+      border-color: #667eea;
+      background-color: #f7fafc;
+    }
+    
+    .upload-area.dragover {
+      border-color: #667eea;
+      background-color: #edf2f7;
+    }
+    
+    .progress-bar {
+      transition: width 0.3s ease;
+    }
+    
+    .result-card {
+      transition: all 0.3s ease;
+    }
+    
+    .result-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Navigation -->
+  <nav class="glass-card sticky top-0 z-50 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <i data-feather="activity" class="w-5 h-5 text-white"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800">Runner Analysis</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <button id="profileBtn" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors">
+            <i data-feather="user" class="w-5 h-5"></i>
+            <span class="hidden md:block">Profile</span>
+          </button>
+          <button id="stravaBtn" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors">
+            <i data-feather="link" class="w-5 h-5"></i>
+            <span class="hidden md:block">Connect Strava</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Section -->
+    <div class="text-center mb-12 fade-in">
+      <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+        Analyze Your Running Performance
+      </h1>
+      <p class="text-xl text-white/90 max-w-3xl mx-auto">
+        Get personalized insights, training plans, and posture analysis powered by AI
+      </p>
+    </div>
+
+    <!-- Main Tabs -->
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+      <div class="flex border-b border-gray-200">
+        <button id="inputTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-300 active-tab">
+          <i data-feather="edit-3" class="w-5 h-5 inline mr-2"></i>
+          Input Data
+        </button>
+        <button id="resultsTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-300">
+          <i data-feather="bar-chart-2" class="w-5 h-5 inline mr-2"></i>
+          Analysis Results
+        </button>
+        <button id="historyTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-300">
+          <i data-feather="clock" class="w-5 h-5 inline mr-2"></i>
+          History
+        </button>
+      </div>
+
+      <!-- Input Data Tab -->
+      <div id="inputContent" class="p-8">
+        <form id="runnerAnalysisForm" class="space-y-8">
+          <!-- Personal Information -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Age</label>
+              <input type="number" name="age" min="10" max="100" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <select name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Performance Data -->
+          <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Performance Data</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">5K PB (mm:ss)</label>
+                <input type="text" name="pb5k" placeholder="20:30" pattern="[0-9]{1,2}:[0-5][0-9]" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">10K PB (mm:ss)</label>
+                <input type="text" name="pb10k" placeholder="42:15" pattern="[0-9]{1,2}:[0-5][0-9]" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Half Marathon PB (hh:mm:ss)</label>
+                <input type="text" name="pbHalf" placeholder="1:35:20" pattern="[0-9]:[0-5][0-9]:[0-5][0-9]" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Full Marathon PB (hh:mm:ss)</label>
+                <input type="text" name="pbFull" placeholder="3:15:45" pattern="[0-9]:[0-5][0-9]:[0-5][0-9]" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">VO2 Max (ml/kg/min)</label>
+                <input type="number" name="vo2max" min="20" max="80" step="0.1" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Threshold Pace (min/km)</label>
+                <input type="text" name="thresholdPace" placeholder="4:15" pattern="[0-9]:[0-5][0-9]" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Threshold Heart Rate (bpm)</label>
+                <input type="number" name="thresholdHR" min="120" max="200" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Current Weekly Mileage (km)</label>
+                <input type="number" name="weeklyMileage" min="0" max="200" step="0.1" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+            </div>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Running Form Analysis</h3>
+            <p class="text-sm text-gray-600 mb-4">Upload photos of your running form for posture analysis</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="upload-area rounded-lg p-6 text-center cursor-pointer" id="footLandingUpload">
+                <i data-feather="camera" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                <h4 class="font-medium text-gray-700 mb-2">Foot Landing</h4>
+                <p class="text-sm text-gray-500 mb-4">Upload photo showing your foot strike pattern</p>
+                <input type="file" accept="image/*" class="hidden" id="footLandingInput">
+                <button type="button" class="btn-primary text-white px-4 py-2 rounded-lg">Choose Photo</button>
+              </div>
+              
+              <div class="upload-area rounded-lg p-6 text-center cursor-pointer" id="postureUpload">
+                <i data-feather="camera" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                <h4 class="font-medium text-gray-700 mb-2">Running Posture</h4>
+                <p class="text-sm text-gray-500 mb-4">Upload photo showing your running form</p>
+                <input type="file" accept="image/*" class="hidden" id="postureInput">
+                <button type="button" class="btn-primary text-white px-4 py-2 rounded-lg">Choose Photo</button>
+              </div>
+            </div>
+
+            <div id="uploadPreview" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+              <div id="footLandingPreview" class="hidden">
+                <img id="footLandingImg" class="w-full h-48 object-cover rounded-lg" alt="Foot landing preview">
+                <button type="button" class="mt-2 text-red-500 text-sm" onclick="removeImage('footLanding')">Remove</button>
+              </div>
+              <div id="posturePreview" class="hidden">
+                <img id="postureImg" class="w-full h-48 object-cover rounded-lg" alt="Posture preview">
+                <button type="button" class="mt-2 text-red-500 text-sm" onclick="removeImage('posture')">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strava Integration -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Strava Integration (Optional)</h3>
+            <div class="flex items-center space-x-4">
+              <button type="button" id="connectStrava" class="btn-primary text-white px-6 py-3 rounded-lg flex items-center space-x-2">
+                <i data-feather="link" class="w-5 h-5"></i>
+                <span>Connect Strava Account</span>
+              </button>
+              <span class="text-sm text-gray-600">Auto-import your recent activities</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="flex justify-center pt-6">
+            <button type="submit" id="analyzeBtn" class="btn-primary text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center space-x-2">
+              <i data-feather="zap" class="w-5 h-5"></i>
+              <span>Analyze Performance</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results Tab -->
+      <div id="resultsContent" class="p-8 hidden">
+        <div id="loadingResults" class="text-center py-12">
+          <div class="loading-spinner w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+          <p class="text-gray-600">Analyzing your performance data...</p>
+        </div>
+
+        <div id="resultsDisplay" class="space-y-8 hidden">
+          <!-- Fitness Level Benchmark -->
+          <div class="result-card glass-card rounded-xl p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <i data-feather="award" class="w-6 h-6 mr-2 text-blue-600"></i>
+              Fitness Level Benchmark
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="text-center">
+                <div class="text-3xl font-bold text-blue-600 mb-2" id="globalPercentile">85%</div>
+                <div class="text-sm text-gray-600">Global Runners</div>
+              </div>
+              <div class="text-center">
+                <div class="text-3xl font-bold text-green-600 mb-2" id="regionalPercentile">78%</div>
+                <div class="text-sm text-gray-600">Regional Runners</div>
+              </div>
+              <div class="text-center">
+                <div class="text-3xl font-bold text-purple-600 mb-2" id="ageGroupPercentile">82%</div>
+                <div class="text-sm text-gray-600">Age Group</div>
+              </div>
+            </div>
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+              <p class="text-sm text-gray-700" id="benchmarkDescription">
+                Your performance places you in the top 15% of global runners and top 22% of regional runners in your age group.
+              </p>
+            </div>
+          </div>
+
+          <!-- Performance Chart -->
+          <div class="result-card glass-card rounded-xl p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <i data-feather="bar-chart-2" class="w-6 h-6 mr-2 text-green-600"></i>
+              Performance Analysis
+            </h3>
+            <canvas id="performanceChart" class="w-full h-64"></canvas>
+          </div>
+
+          <!-- Training Plan -->
+          <div class="result-card glass-card rounded-xl p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <i data-feather="target" class="w-6 h-6 mr-2 text-purple-600"></i>
+              Personalized Training Plan
+            </h3>
+            <div id="trainingPlan" class="space-y-4">
+              <!-- Training plan content will be populated here -->
+            </div>
+          </div>
+
+          <!-- Posture Analysis -->
+          <div class="result-card glass-card rounded-xl p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <i data-feather="eye" class="w-6 h-6 mr-2 text-orange-600"></i>
+              Running Form Analysis
+            </h3>
+            <div id="postureAnalysis" class="space-y-4">
+              <!-- Posture analysis content will be populated here -->
+            </div>
+          </div>
+
+          <!-- Save Results -->
+          <div class="flex justify-center space-x-4">
+            <button id="saveResults" class="btn-primary text-white px-6 py-3 rounded-lg flex items-center space-x-2">
+              <i data-feather="save" class="w-5 h-5"></i>
+              <span>Save to Profile</span>
+            </button>
+            <button id="exportResults" class="bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-gray-700 transition-colors">
+              <i data-feather="download" class="w-5 h-5"></i>
+              <span>Export Report</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Tab -->
+      <div id="historyContent" class="p-8 hidden">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6">Analysis History</h3>
+        <div id="historyList" class="space-y-4">
+          <!-- History items will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="glass-card rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-800">Profile Settings</h3>
+          <button id="closeProfileModal" class="text-gray-400 hover:text-gray-600">
+            <i data-feather="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+            <input type="text" id="profileName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input type="email" id="profileEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Units</label>
+            <select id="profileUnits" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="metric">Metric (km, min/km)</option>
+              <option value="imperial">Imperial (miles, min/mile)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-4 mt-6">
+          <button id="saveProfile" class="btn-primary text-white px-4 py-2 rounded-lg">Save</button>
+          <button id="cancelProfile" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Feather icons
+    feather.replace();
+
+    // Tab functionality
+    const tabs = ['inputTab', 'resultsTab', 'historyTab'];
+    const contents = ['inputContent', 'resultsContent', 'historyContent'];
+
+    tabs.forEach(tab => {
+      document.getElementById(tab).addEventListener('click', () => {
+        // Remove active class from all tabs
+        tabs.forEach(t => {
+          document.getElementById(t).classList.remove('active-tab', 'border-blue-500', 'text-blue-600');
+          document.getElementById(t).classList.add('border-transparent', 'text-gray-600');
+        });
+        
+        // Hide all contents
+        contents.forEach(c => {
+          document.getElementById(c).classList.add('hidden');
+        });
+        
+        // Add active class to clicked tab
+        document.getElementById(tab).classList.add('active-tab', 'border-blue-500', 'text-blue-600');
+        document.getElementById(tab).classList.remove('border-transparent', 'text-gray-600');
+        
+        // Show corresponding content
+        const contentId = tab.replace('Tab', 'Content');
+        document.getElementById(contentId).classList.remove('hidden');
+      });
+    });
+
+    // File upload functionality
+    function setupFileUpload(uploadAreaId, inputId, previewId, imgId) {
+      const uploadArea = document.getElementById(uploadAreaId);
+      const input = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+      const img = document.getElementById(imgId);
+
+      uploadArea.addEventListener('click', () => input.click());
+      
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFileSelect(files[0], preview, img);
+        }
+      });
+      
+      input.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleFileSelect(e.target.files[0], preview, img);
+        }
+      });
+    }
+
+    function handleFileSelect(file, preview, img) {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target.result;
+          preview.classList.remove('hidden');
+          document.getElementById('uploadPreview').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeImage(type) {
+      const preview = document.getElementById(type + 'Preview');
+      const input = document.getElementById(type + 'Input');
+      preview.classList.add('hidden');
+      input.value = '';
+      
+      // Hide upload preview if no images
+      const footPreview = document.getElementById('footLandingPreview');
+      const posturePreview = document.getElementById('posturePreview');
+      if (footPreview.classList.contains('hidden') && posturePreview.classList.contains('hidden')) {
+        document.getElementById('uploadPreview').classList.add('hidden');
+      }
+    }
+
+    // Setup file uploads
+    setupFileUpload('footLandingUpload', 'footLandingInput', 'footLandingPreview', 'footLandingImg');
+    setupFileUpload('postureUpload', 'postureInput', 'posturePreview', 'postureImg');
+
+    // Form submission
+    document.getElementById('runnerAnalysisForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Switch to results tab
+      document.getElementById('resultsTab').click();
+      
+      // Show loading
+      document.getElementById('loadingResults').classList.remove('hidden');
+      document.getElementById('resultsDisplay').classList.add('hidden');
+      
+      // Simulate API call
+      setTimeout(() => {
+        document.getElementById('loadingResults').classList.add('hidden');
+        document.getElementById('resultsDisplay').classList.remove('hidden');
+        
+        // Populate results
+        populateResults();
+      }, 3000);
+    });
+
+    function populateResults() {
+      // Populate training plan
+      const trainingPlan = document.getElementById('trainingPlan');
+      trainingPlan.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <h4 class="font-semibold text-gray-800">Week 1-4: Base Building</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>• 3-4 easy runs per week (30-45 min)</li>
+              <li>• 1 long run (60-90 min)</li>
+              <li>• Focus on building aerobic base</li>
+              <li>• Include 2-3 strength sessions</li>
+            </ul>
+          </div>
+          <div class="space-y-4">
+            <h4 class="font-semibold text-gray-800">Week 5-8: Speed Development</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>• Add 1 tempo run per week</li>
+              <li>• Include interval training</li>
+              <li>• Maintain long runs (90-120 min)</li>
+              <li>• Continue strength training</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-green-50 rounded-lg">
+          <h4 class="font-semibold text-green-800 mb-2">Target Improvements</h4>
+          <p class="text-sm text-green-700">Based on your current fitness level, you can expect to improve your 5K time by 2-3 minutes and 10K time by 4-5 minutes within 8 weeks of consistent training.</p>
+        </div>
+      `;
+
+      // Populate posture analysis
+      const postureAnalysis = document.getElementById('postureAnalysis');
+      postureAnalysis.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <h4 class="font-semibold text-gray-800">Strengths</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>• Good forward lean (5-7 degrees)</li>
+              <li>• Proper arm swing mechanics</li>
+              <li>• Consistent cadence (170-180 spm)</li>
+            </ul>
+          </div>
+          <div class="space-y-4">
+            <h4 class="font-semibold text-gray-800">Areas for Improvement</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>• Slight overstriding detected</li>
+              <li>• Could improve hip extension</li>
+              <li>• Consider increasing stride frequency</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+          <h4 class="font-semibold text-blue-800 mb-2">Recommendations</h4>
+          <p class="text-sm text-blue-700">Focus on shorter, quicker strides and incorporate drills to improve hip mobility and core strength. Consider working with a running coach for personalized form improvement.</p>
+        </div>
+      `;
+
+      // Initialize performance chart
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['5K Speed', '10K Endurance', 'Half Marathon', 'VO2 Max', 'Threshold Pace', 'Recovery'],
+          datasets: [{
+            label: 'Your Performance',
+            data: [85, 78, 72, 80, 75, 70],
+            backgroundColor: 'rgba(102, 126, 234, 0.2)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+
+    // Profile modal functionality
+    document.getElementById('profileBtn').addEventListener('click', () => {
+      document.getElementById('profileModal').classList.remove('hidden');
+    });
+
+    document.getElementById('closeProfileModal').addEventListener('click', () => {
+      document.getElementById('profileModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelProfile').addEventListener('click', () => {
+      document.getElementById('profileModal').classList.add('hidden');
+    });
+
+    // Strava integration
+    document.getElementById('stravaBtn').addEventListener('click', () => {
+      // Simulate Strava OAuth
+      alert('Strava integration would open OAuth flow here');
+    });
+
+    document.getElementById('connectStrava').addEventListener('click', () => {
+      // Simulate Strava OAuth
+      alert('Connecting to Strava... This would open OAuth flow');
+    });
+
+    // Save results functionality
+    document.getElementById('saveResults').addEventListener('click', () => {
+      alert('Results saved to your profile!');
+    });
+
+    // Export results functionality
+    document.getElementById('exportResults').addEventListener('click', () => {
+      alert('Generating PDF report...');
+    });
+
+    // Initialize with input tab active
+    document.getElementById('inputTab').classList.add('active-tab', 'border-blue-500', 'text-blue-600');
+    document.getElementById('inputTab').classList.remove('border-transparent', 'text-gray-600');
+  </script>
+</body>
+</html>
