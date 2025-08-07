@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Running Form Analysis Results - Running Ninjas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    html, body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .results-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .results-header {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .result-card {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+      border-left: 4px solid #6366f1;
+    }
+    .result-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #312e81;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .analysis-score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .score-indicator {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 1.1rem;
+    }
+    .score-excellent { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .score-good { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+    .score-average { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .score-needs-work { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    
+    .recommendation {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .recommendation h4 {
+      font-weight: 600;
+      color: #0c4a6e;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .recommendation p {
+      color: #0c4a6e;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .exercise-list {
+      list-style: none;
+      padding: 0;
+    }
+    .exercise-list li {
+      padding: 0.75rem;
+      background: #f8fafc;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .exercise-number {
+      background: #6366f1;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 1rem;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #5b5bf6 0%, #0891b2 100%);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .back-button {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-button:hover {
+      background: white;
+    }
+    .form-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .form-image {
+      background: #f3f4f6;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .priority-high { color: #dc2626; }
+    .priority-medium { color: #f59e0b; }
+    .priority-low { color: #10b981; }
+    .video-analysis {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 2rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Back Button -->
+  <button class="back-button" onclick="window.location.href='form-analysis.html'" title="Back to Form">
+    <i data-feather="arrow-left" class="w-5 h-5 text-indigo-600"></i>
+  </button>
+
+  <div class="results-container">
+    <!-- Results Header -->
+    <div class="results-header">
+      <h1 class="text-3xl font-bold mb-2">Your Running Form Analysis Results</h1>
+      <p class="text-indigo-100" id="analysisDate"></p>
+    </div>
+
+    <!-- Overall Form Assessment -->
+    <div class="result-card">
+      <h3>
+        <i data-feather="activity" class="w-6 h-6 text-indigo-600"></i>
+        Overall Form Assessment
+      </h3>
+      <div class="analysis-score">
+        <div>
+          <div class="font-semibold text-lg text-gray-800">Running Form Score</div>
+          <div class="text-gray-600">Based on AI analysis of your uploaded media</div>
+        </div>
+        <div class="score-indicator score-good">7.2/10</div>
+      </div>
+      <p class="text-gray-600">Your running form shows good fundamentals with some areas for optimization. Focus on the recommendations below to improve efficiency and reduce injury risk.</p>
+    </div>
+
+    <!-- Detailed Analysis -->
+    <div class="results-grid">
+      
+      <!-- Posture Analysis -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="user" class="w-6 h-6 text-indigo-600"></i>
+          Posture & Body Alignment
+        </h3>
+        <div class="analysis-score">
+          <div>
+            <div class="font-medium">Upper Body Posture</div>
+            <div class="text-sm text-gray-600">Torso lean and head position</div>
+          </div>
+          <div class="score-indicator score-good">8/10</div>
+        </div>
+        <div class="recommendation">
+          <h4>
+            <i data-feather="check-circle" class="w-4 h-4 text-green-600"></i>
+            Strengths
+          </h4>
+          <p>• Good forward lean from ankles<br>• Relaxed shoulders<br>• Stable head position</p>
+        </div>
+        <div class="recommendation">
+          <h4>
+            <i data-feather="alert-triangle" class="w-4 h-4 text-orange-600"></i>
+            Minor Issues
+          </h4>
+          <p>Slight tendency to look down - try focusing 10-15 meters ahead for better posture alignment.</p>
+        </div>
+      </div>
+
+      <!-- Foot Strike Analysis -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="target" class="w-6 h-6 text-indigo-600"></i>
+          Foot Strike & Gait
+        </h3>
+        <div class="analysis-score">
+          <div>
+            <div class="font-medium">Foot Landing Pattern</div>
+            <div class="text-sm text-gray-600">Strike pattern and cadence</div>
+          </div>
+          <div class="score-indicator score-average">6/10</div>
+        </div>
+        <div class="form-comparison">
+          <div class="form-image">
+            <i data-feather="user" class="w-16 h-16 text-gray-400 mb-2"></i>
+            <div class="text-sm font-medium">Your Form</div>
+            <div class="text-xs text-gray-600">Heel strike detected</div>
+          </div>
+          <div class="form-image">
+            <i data-feather="check" class="w-16 h-16 text-green-600 mb-2"></i>
+            <div class="text-sm font-medium">Optimal Form</div>
+            <div class="text-xs text-gray-600">Midfoot strike</div>
+          </div>
+        </div>
+        <div class="recommendation">
+          <h4>
+            <i data-feather="alert-circle" class="w-4 h-4 text-red-600"></i>
+            Areas for Improvement
+          </h4>
+          <p>You're showing a heel strike pattern which can increase impact forces. Work on landing with your foot closer to your center of gravity.</p>
+        </div>
+      </div>
+
+      <!-- Arm Swing Analysis -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="wind" class="w-6 h-6 text-indigo-600"></i>
+          Arm Swing & Coordination
+        </h3>
+        <div class="analysis-score">
+          <div>
+            <div class="font-medium">Arm Movement</div>
+            <div class="text-sm text-gray-600">Swing pattern and coordination</div>
+          </div>
+          <div class="score-indicator score-good">7.5/10</div>
+        </div>
+        <div class="recommendation">
+          <h4>
+            <i data-feather="thumbs-up" class="w-4 h-4 text-green-600"></i>
+            Good Technique
+          </h4>
+          <p>• Arms swinging naturally forward-back<br>• Good elbow angle (~90 degrees)<br>• Minimal crossing across body</p>
+        </div>
+        <div class="recommendation">
+          <h4>
+            <i data-feather="info" class="w-4 h-4 text-blue-600"></i>
+            Optimization Tip
+          </h4>
+          <p>Try to keep your hands slightly more relaxed - avoid clenching fists to reduce upper body tension.</p>
+        </div>
+      </div>
+
+      <!-- Cadence Analysis -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="clock" class="w-6 h-6 text-indigo-600"></i>
+          Cadence & Rhythm
+        </h3>
+        <div class="analysis-score">
+          <div>
+            <div class="font-medium">Step Rate</div>
+            <div class="text-sm text-gray-600">Steps per minute analysis</div>
+          </div>
+          <div class="score-indicator score-average">6.5/10</div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div>
+              <div class="font-semibold">Current Cadence</div>
+              <div class="text-sm text-gray-600">Estimated from video</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-orange-600">162 spm</div>
+              <div class="text-sm text-gray-500">Below optimal</div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div>
+              <div class="font-semibold">Target Cadence</div>
+              <div class="text-sm text-gray-600">Recommended range</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-green-600">175-180 spm</div>
+              <div class="text-sm text-gray-500">Optimal range</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Improvement Plan -->
+    <div class="video-analysis">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <i data-feather="trending-up" class="w-6 h-6 text-indigo-600"></i>
+        Personalized Improvement Plan
+      </h3>
+      <p class="text-gray-600 mb-6">Based on your form analysis, here are prioritized recommendations to improve your running efficiency:</p>
+      
+      <!-- High Priority -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2">
+          <i data-feather="alert-circle" class="w-5 h-5"></i>
+          High Priority - Focus First
+        </h4>
+        <ul class="exercise-list">
+          <li>
+            <div class="exercise-number">1</div>
+            <div>
+              <div class="font-semibold">Improve Foot Strike Pattern</div>
+              <div class="text-sm text-gray-600 mt-1">Practice running with shorter, quicker steps. Focus on landing with your foot under your hip rather than out in front.</div>
+              <div class="text-xs text-blue-600 mt-2">🎯 Target: Reduce heel striking by 50% in 4 weeks</div>
+            </div>
+          </li>
+          <li>
+            <div class="exercise-number">2</div>
+            <div>
+              <div class="font-semibold">Increase Cadence</div>
+              <div class="text-sm text-gray-600 mt-1">Use a metronome app set to 175 BPM. Practice running to this rhythm for 10 minutes during easy runs.</div>
+              <div class="text-xs text-blue-600 mt-2">🎯 Target: Achieve 175+ spm consistently</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Medium Priority -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-orange-600 mb-3 flex items-center gap-2">
+          <i data-feather="clock" class="w-5 h-5"></i>
+          Medium Priority - Address Next
+        </h4>
+        <ul class="exercise-list">
+          <li>
+            <div class="exercise-number">3</div>
+            <div>
+              <div class="font-semibold">Head Position Awareness</div>
+              <div class="text-sm text-gray-600 mt-1">Practice looking 10-15 meters ahead rather than down. This will improve overall posture alignment.</div>
+            </div>
+          </li>
+          <li>
+            <div class="exercise-number">4</div>
+            <div>
+              <div class="font-semibold">Hand Relaxation</div>
+              <div class="text-sm text-gray-600 mt-1">Focus on keeping hands loose - imagine holding a butterfly or potato chip without crushing it.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Exercises & Drills -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-green-600 mb-3 flex items-center gap-2">
+          <i data-feather="play-circle" class="w-5 h-5"></i>
+          Recommended Drills & Exercises
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="recommendation">
+            <h4>
+              <i data-feather="repeat" class="w-4 h-4"></i>
+              Cadence Drills
+            </h4>
+            <p>• 30-second strides at 180 spm<br>• Metronome runs (2-3x per week)<br>• High knees and butt kicks</p>
+          </div>
+          <div class="recommendation">
+            <h4>
+              <i data-feather="target" class="w-4 h-4"></i>
+              Foot Strike Drills
+            </h4>
+            <p>• Barefoot running on grass<br>• Downhill strides (gentle slope)<br>• Wall lean drill</p>
+          </div>
+          <div class="recommendation">
+            <h4>
+              <i data-feather="zap" class="w-4 h-4"></i>
+              Strength Training
+            </h4>
+            <p>• Single-leg calf raises<br>• Glute bridges<br>• Core stability exercises</p>
+          </div>
+          <div class="recommendation">
+            <h4>
+              <i data-feather="wind" class="w-4 h-4"></i>
+              Flexibility Work
+            </h4>
+            <p>• Hip flexor stretches<br>• Calf and Achilles stretches<br>• Thoracic spine mobility</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-4 justify-center mb-8">
+      <a href="performance-analysis.html" class="btn-primary">
+        <i data-feather="trending-up" class="w-4 h-4 inline mr-2"></i>
+        Analyze Performance Data
+      </a>
+      <button onclick="saveToProfile()" class="btn-secondary">
+        <i data-feather="save" class="w-4 h-4 inline mr-2"></i>
+        Save Analysis
+      </button>
+      <button onclick="scheduleFollowUp()" class="btn-secondary">
+        <i data-feather="calendar" class="w-4 h-4 inline mr-2"></i>
+        Schedule Follow-up
+      </button>
+      <a href="index.html" class="btn-secondary">
+        <i data-feather="home" class="w-4 h-4 inline mr-2"></i>
+        Back to Home
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Initialize feather icons
+    feather.replace();
+
+    // Set analysis date
+    document.getElementById('analysisDate').textContent = `Analysis completed on ${new Date().toLocaleDateString()}`;
+
+    // Load user form data
+    function loadFormData() {
+      const data = localStorage.getItem('formAnalysisData');
+      if (data) {
+        const formData = JSON.parse(data);
+        updateResultsWithFormData(formData);
+      }
+    }
+
+    function updateResultsWithFormData(formData) {
+      // In a real app, this would be processed by AI
+      // For demo, we show sample results based on uploaded files
+      
+      console.log('Form analysis data:', formData);
+      
+      // Adjust recommendations based on user goals
+      if (formData.runningGoals === 'injury-prevention') {
+        // Emphasize form corrections that reduce injury risk
+        console.log('Focusing on injury prevention recommendations');
+      } else if (formData.runningGoals === 'speed-improvement') {
+        // Emphasize efficiency improvements
+        console.log('Focusing on speed improvement recommendations');
+      }
+    }
+
+    // Save to profile function
+    function saveToProfile() {
+      const analysisData = {
+        type: 'form-analysis',
+        date: new Date().toISOString(),
+        score: '7.2/10',
+        formData: localStorage.getItem('formAnalysisData')
+      };
+      
+      // Save to localStorage (in real app, this would save to backend)
+      let savedAnalyses = JSON.parse(localStorage.getItem('savedAnalyses') || '[]');
+      savedAnalyses.push(analysisData);
+      localStorage.setItem('savedAnalyses', JSON.stringify(savedAnalyses));
+      
+      alert('Form analysis saved to your profile successfully!');
+    }
+
+    // Schedule follow-up function
+    function scheduleFollowUp() {
+      const followUpDate = new Date();
+      followUpDate.setDate(followUpDate.getDate() + 28); // 4 weeks from now
+      
+      alert(`Follow-up analysis scheduled for ${followUpDate.toLocaleDateString()}. We'll remind you to upload new form videos to track your improvement!`);
+      
+      // In a real app, this would integrate with calendar/notification system
+      localStorage.setItem('formAnalysisFollowUp', followUpDate.toISOString());
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadFormData();
+    });
+  </script>
+</body>
+</html>

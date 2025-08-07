@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Running Ninjas</title>
+  <title>Running Ninjas - Performance Analysis</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
@@ -59,8 +59,8 @@
     .floating-buttons button:active {
       background: #e0e7ff;
     }
-    /* Card styles */
-    .marathon-card {
+    /* Feature Card styles */
+    .feature-card {
       width: 100%;
       margin: 0 auto 1.1rem auto;
       border-radius: 1.2rem;
@@ -69,63 +69,48 @@
       overflow: hidden;
       position: relative;
       border: none;
-      transition: box-shadow 0.2s;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
     }
-    .marathon-card:active {
+    .feature-card:hover {
       box-shadow: 0 8px 32px 0 rgba(102,126,234,0.18);
+      transform: translateY(-2px);
     }
-    .marathon-card .accent-bar {
+    .feature-card .accent-bar {
       height: 5px;
       width: 100%;
       background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
       display: block;
     }
-    .marathon-card .card-inner {
-      padding: 1.1rem 1.2rem 1.2rem 1.2rem;
+    .feature-card .card-inner {
+      padding: 1.5rem 1.2rem;
     }
-    .marathon-card h3 {
-      font-size: 1.15rem;
+    .feature-card h3 {
+      font-size: 1.25rem;
       font-weight: 700;
       color: #312e81;
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.5rem;
       letter-spacing: -0.01em;
     }
-    .marathon-card .info-btn {
-      margin-left: 0.5rem;
-      color: #6366f1;
-      background: #f1f5f9;
-      border-radius: 9999px;
-      padding: 0.35rem;
-      display: flex;
-      align-items: center;
-      transition: background 0.2s;
-    }
-    .marathon-card .info-btn:active {
-      background: #e0e7ff;
-    }
-    /* Ensure feather icons are visible and inherit color */
-    .marathon-card i.feather,
-    .marathon-card svg.feather {
-      display: inline-block !important;
-      stroke: currentColor !important;
-      color: inherit !important;
-      width: 1.1em !important;
-      height: 1.1em !important;
-      vertical-align: middle !important;
-    }
-    .marathon-card .meta {
-      font-size: 0.98rem;
-      color: #64748b;
-      margin-bottom: 0.15rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .marathon-card .desc {
+    .feature-card .desc {
       font-size: 0.97rem;
       color: #334155;
-      margin-bottom: 0.7rem;
-      margin-top: 0.2rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .feature-card .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      border-radius: 50%;
+      margin-bottom: 1rem;
+    }
+    .feature-card .icon-container i {
+      color: #6366f1;
+      stroke-width: 2;
     }
     .btn-primary {
       background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
@@ -138,53 +123,53 @@
       margin-bottom: 0.3rem;
       box-shadow: 0 2px 8px rgba(102,126,234,0.10);
       transition: background 0.2s, transform 0.1s;
+      text-decoration: none;
+      display: block;
+      text-align: center;
     }
-    .btn-primary:active {
-      background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
-      transform: scale(0.98);
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #5b5bf6 0%, #0891b2 100%);
+      transform: translateY(-1px);
     }
-    .marathon-card .card-actions a {
-      font-size: 0.97rem;
-      padding: 0.7rem 0;
-      border-radius: 0.7rem;
-      width: 100%;
-      margin-bottom: 0.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+    .hero-section {
+      text-align: center;
+      padding: 2rem 1rem;
+      max-width: 600px;
+      margin: 0 auto;
     }
-    .marathon-card .bus-btn {
-      background: #22c55e;
-      color: #fff;
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #312e81;
+      margin-bottom: 1rem;
+      line-height: 1.2;
     }
-    .marathon-card .bus-btn:active {
-      background: #16a34a;
-    }
-    .marathon-card .bib-btn {
-      background: #f59e42;
-      color: #fff;
-    }
-    .marathon-card .bib-btn:active {
-      background: #ea580c;
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+      line-height: 1.6;
     }
     @media (min-width: 640px) {
-      .marathon-card {
+      .feature-card {
         max-width: 420px;
       }
-      .marathon-list-wrap {
+      .feature-list-wrap {
         display: flex;
         flex-direction: column;
         align-items: center;
       }
     }
     @media (max-width: 639px) {
-      .container, .marathon-list-wrap {
+      .container, .feature-list-wrap {
         padding-left: 0.2rem !important;
         padding-right: 0.2rem !important;
       }
-      .marathon-card {
+      .feature-card {
         max-width: 100vw;
+      }
+      .hero-title {
+        font-size: 2rem;
       }
     }
   </style>
@@ -197,123 +182,111 @@
   </div>
 
   <!-- Floating Buttons -->
-<!-- Toggle visibility by setting showAddRunnerButton = true or false -->
-<script>
-  const showAddRunnerButton = true; // Set false to hide the button
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    if (showAddRunnerButton) {
-      const btn = document.createElement("button");
-      btn.id = "addRunnerBtn";
-      btn.title = "Add Runner Details";
-      btn.innerHTML = '<i data-feather="user-plus" class="w-5 h-5 text-indigo-600"></i>';
-      document.querySelector(".floating-buttons").prepend(btn);
-      feather.replace();
-
-      document.getElementById("addRunnerBtn").addEventListener("click", () => {
-        window.location.href = "add-runner-form.html";
-      });
-    }
-  });
-</script>
-
-
-
   <div class="floating-buttons">
-    <button id="toggleSearch" title="Search">
-      <i data-feather="search" class="w-5 h-5 text-indigo-600"></i>
+    <button id="profileBtn" title="Profile">
+      <i data-feather="user" class="w-5 h-5 text-indigo-600"></i>
     </button>
-    <button id="toggleFilters" title="Filter">
-      <i data-feather="filter" class="w-5 h-5 text-indigo-600"></i>
+    <button id="historyBtn" title="Analysis History">
+      <i data-feather="clock" class="w-5 h-5 text-indigo-600"></i>
     </button>
     <div class="relative">
       <button id="toggleMenu" title="Menu">
         <i data-feather="menu" class="w-5 h-5 text-indigo-600"></i>
       </button>
       <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50">
-        <a href="https://aashutosh.net/" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl transition-colors">
-          <i data-feather="book-open" class="w-4 h-4 inline mr-2"></i>Aashu's Blog
+        <a href="#" id="stravaConnect" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl transition-colors">
+          <i data-feather="activity" class="w-4 h-4 inline mr-2"></i>Connect Strava
         </a>
-        <a href="https://www.strava.com/training-plans/running" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-          <i data-feather="target" class="w-4 h-4 inline mr-2"></i>Sundar's Trng. plan
+        <a href="#" id="exportData" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <i data-feather="download" class="w-4 h-4 inline mr-2"></i>Export Data
         </a>
-        <a href="https://aashutosh.net/?s=race+report" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-b-xl transition-colors">
-          <i data-feather="award" class="w-4 h-4 inline mr-2"></i>Race Reports
+        <a href="#" id="settings" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-b-xl transition-colors">
+          <i data-feather="settings" class="w-4 h-4 inline mr-2"></i>Settings
         </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search Box -->
-  <div id="searchBox" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden animate-fade-in">
-    <div class="relative">
-      <input
-        id="searchInput"
-        type="text"
-        placeholder="Search marathons, cities, or descriptions..."
-        class="w-full p-4 pl-12 pr-4 bg-white rounded-xl shadow-lg border-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 search-focus text-gray-800 placeholder-gray-500 text-base"
-      />
-      <i data-feather="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-    </div>
-  </div>
-
-  <!-- Filter Panel -->
-  <div id="filterPanel" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden animate-fade-in">
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-        <i data-feather="sliders" class="w-5 h-5 mr-2 text-indigo-600"></i>
-        Filter Events
-      </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Race Type</label>
-          <select id="raceFilter" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
-            <option value="">All Races</option>
-            <option value="Stonehill">Stonehill</option>
-            <option value="Wipro">Wipro</option>
-            <option value="Malnad">Malnad</option>
-            <option value="Ladakh">Ladakh</option>
-            <option value="Goa">Goa</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-          <input id="fromDate" type="date" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-          <input id="toDate" type="date" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
       </div>
     </div>
   </div>
 
   <!-- Hero Section -->
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-0">
-    <!-- Removed hero section text -->
+  <div class="hero-section">
+    <h1 class="hero-title">Runner Performance Analysis</h1>
+    <p class="hero-subtitle">
+      Analyze your running performance, get personalized training plans, and improve your form with AI-powered insights
+    </p>
   </div>
 
-  <!-- Marathon Cards -->
-  <main class="marathon-list-wrap container mx-auto px-0 sm:px-0 lg:px-0 pb-12 mt-0">
-    <div id="marathonList" class="flex flex-col gap-0 w-full">
-      <!-- Cards will be inserted by JavaScript -->
-    </div>
+  <!-- Feature Cards -->
+  <main class="feature-list-wrap container mx-auto px-0 sm:px-0 lg:px-0 pb-12 mt-0">
+    <div id="featureList" class="flex flex-col gap-0 w-full">
+      
+      <!-- Performance Analysis Card -->
+      <div class="feature-card" onclick="window.location.href='performance-analysis.html'">
+        <div class="accent-bar"></div>
+        <div class="card-inner">
+          <div class="icon-container">
+            <i data-feather="trending-up" class="w-6 h-6"></i>
+          </div>
+          <h3>Performance Analysis</h3>
+          <div class="desc">
+            Enter your running stats (5K, 10K, Marathon PBs, VO2 max) and get comprehensive performance benchmarking against global and regional runners.
+          </div>
+          <a href="performance-analysis.html" class="btn-primary">
+            Start Analysis
+          </a>
+        </div>
+      </div>
 
-    <!-- Show More Button -->
-    <div id="showMoreContainer" class="flex justify-center mt-8 hidden">
-      <button id="showMoreButton" class="btn-primary text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg">
-        <i data-feather="chevron-down" class="w-5 h-5"></i>
-        <span>Show More</span>
-      </button>
-    </div>
+      <!-- Form Analysis Card -->
+      <div class="feature-card" onclick="window.location.href='form-analysis.html'">
+        <div class="accent-bar"></div>
+        <div class="card-inner">
+          <div class="icon-container">
+            <i data-feather="camera" class="w-6 h-6"></i>
+          </div>
+          <h3>Running Form Analysis</h3>
+          <div class="desc">
+            Upload photos or videos of your running posture and foot landing to get AI-powered analysis and improvement recommendations.
+          </div>
+          <a href="form-analysis.html" class="btn-primary">
+            Analyze Form
+          </a>
+        </div>
+      </div>
 
-    <!-- Empty State -->
-    <div id="emptyState" class="hidden text-center py-16">
-      <div class="text-6xl mb-4">🏃‍♂️</div>
-      <h3 class="text-2xl font-semibold text-gray-800 mb-2">No events found</h3>
-      <p class="text-gray-600">Try adjusting your search or filter criteria</p>
+      <!-- Training Plan Card -->
+      <div class="feature-card" onclick="window.location.href='training-plan.html'">
+        <div class="accent-bar"></div>
+        <div class="card-inner">
+          <div class="icon-container">
+            <i data-feather="target" class="w-6 h-6"></i>
+          </div>
+          <h3>Personalized Training Plan</h3>
+          <div class="desc">
+            Get AI-generated training plans tailored to your current fitness level, goals, and time availability to improve your race times.
+          </div>
+          <a href="training-plan.html" class="btn-primary">
+            Get Training Plan
+          </a>
+        </div>
+      </div>
+
+      <!-- Complete Analysis Card -->
+      <div class="feature-card" onclick="window.location.href='complete-analysis.html'">
+        <div class="accent-bar"></div>
+        <div class="card-inner">
+          <div class="icon-container">
+            <i data-feather="zap" class="w-6 h-6"></i>
+          </div>
+          <h3>Complete Runner Analysis</h3>
+          <div class="desc">
+            Comprehensive analysis combining performance data, form analysis, and personalized recommendations in one detailed report.
+          </div>
+          <a href="complete-analysis.html" class="btn-primary">
+            Full Analysis
+          </a>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -321,234 +294,13 @@
   <footer class="bg-white border-t border-gray-200 mt-16">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div class="text-center text-gray-600 text-sm">
-        <p>&copy; 2025 Running Ninjas Calendar. Made with ❤️ for runners.</p>
+        <p>&copy; 2025 Running Ninjas Performance Analysis. Made with ❤️ for runners.</p>
       </div>
     </div>
   </footer>
 
   <script>
-    const marathons = [
-      {
-        name: "Stonehill Marathon 2025",
-        date: "2025-09-07",
-        city: "Bangalore",
-        description: "5k, 10k and Half Marathon",
-        registrationLink: "https://raadiantsports.com/registration/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Wipro Bengaluru Marathon",
-        date: "2025-09-21",
-        city: "Bengaluru",
-        description: "Early bird ended",
-        registrationLink: "https://mysamay.in/public/event/info/22de74cf-e15d-4b56-8556-871a041ad251%3Fcmeta%3DLngs9BwHcs",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Malnad Ultra",
-        date: "2025-11-22",
-        city: "Bengaluru",
-        description: "30k, 50k and 100k",
-        registrationLink: "https://malnadultra.com",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Goa River Marathon",
-        date: "2025-12-14",
-        city: "Goa",
-        description: "Scenic route by the river",
-        registrationLink: "https://www.skfgoarivermarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      },
-      {
-        name: "Ladakh Marathon",
-        date: "2025-09-14",
-        city: "Leh",
-        description: "For Brave and Resilient",
-        registrationLink: "https://ladakhmarathon.com/",
-        busAvailable: false,
-        bibdetails: false
-      }
-    ];
-
-    // DOM elements
-    const marathonList = document.getElementById("marathonList");
-    const showMoreContainer = document.getElementById("showMoreContainer");
-    const showMoreButton = document.getElementById("showMoreButton");
-    const emptyState = document.getElementById("emptyState");
-    const searchInput = document.getElementById("searchInput");
-    const raceFilter = document.getElementById("raceFilter");
-    const fromDate = document.getElementById("fromDate");
-    const toDate = document.getElementById("toDate");
-
-    let filteredMarathons = [];
-    let showAll = false;
-
-    // Utility functions
-    function formatDate(dateStr) {
-      const options = {
-        weekday: 'short',
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      };
-      return new Date(dateStr).toLocaleDateString(undefined, options);
-    }
-
-    function isFutureDate(dateStr) {
-      return new Date(dateStr) >= new Date().setHours(0, 0, 0, 0);
-    }
-
-    function getTimeUntilEvent(dateStr) {
-      const now = new Date();
-      const eventDate = new Date(dateStr);
-      const diffTime = eventDate - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) return "Today";
-      if (diffDays === 1) return "Tomorrow";
-      if (diffDays <= 7) return `${diffDays} days`;
-      if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks`;
-      return `${Math.ceil(diffDays / 30)} months`;
-    }
-
-    function displayMarathons(data) {
-      marathonList.innerHTML = "";
-
-      if (data.length === 0) {
-        emptyState.classList.remove("hidden");
-        showMoreContainer.classList.add("hidden");
-        return;
-      }
-
-      emptyState.classList.add("hidden");
-      // Show only 3 by default, all if showAll is true
-      const eventsToShow = showAll ? data : data.slice(0, 3);
-
-      eventsToShow.forEach((marathon, index) => {
-        const card = document.createElement("div");
-        card.className = "marathon-card animate-fade-in";
-        card.style.animationDelay = `${index * 0.1}s`;
-
-        const busButton = marathon.busAvailable ? `
-          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
-             target="_blank"
-             class="bus-btn card-action">
-            <i data-feather="truck" class="w-4 h-4"></i>
-            <span>Bus Available</span>
-          </a>` : "";
-
-        const bibButton = marathon.bibdetails ? `
-          <a href="https://script.google.com/macros/s/AKfycbwdn9bawk3GTHu355L-WHMHbwkHMmalVc4zgzltTGA/dev"
-             target="_blank"
-             class="bib-btn card-action">
-            <i data-feather="user" class="w-4 h-4"></i>
-            <span>Bib Details</span>
-          </a>` : "";
-
-        card.innerHTML = `
-          <div class="accent-bar"></div>
-          <div class="card-inner">
-            <div class="flex items-center justify-between mb-1">
-              <h3>${marathon.name}</h3>
-              <a href="#" class="info-btn" title="Route Info">
-                <i data-feather="info" class="w-5 h-5"></i>
-              </a>
-            </div>
-            <div class="meta">
-              <i data-feather="calendar" class="w-4 h-4"></i>
-              <span>${formatDate(marathon.date)}</span>
-            </div>
-            <div class="meta mb-2">
-              <i data-feather="map-pin" class="w-4 h-4"></i>
-              <span>${marathon.city}</span>
-            </div>
-            <div class="desc">${marathon.description}</div>
-            <a href="${marathon.registrationLink}"
-               target="_blank"
-               class="btn-primary block text-center">
-              Register Now
-            </a>
-            <div class="card-actions flex flex-col gap-2 mt-1">
-              ${busButton}
-              ${bibButton}
-            </div>
-          </div>
-        `;
-
-        marathonList.appendChild(card);
-      });
-
-      // Update show more button
-      if (data.length > 3) {
-        showMoreContainer.classList.remove("hidden");
-        const buttonText = showMoreButton.querySelector("span");
-        const buttonIcon = showMoreButton.querySelector("i");
-
-        buttonText.textContent = showAll ? "Show Less" : "Show More";
-        if (showMoreButton) {
-        const buttonIcon = showMoreButton.querySelector("i");
-        if (buttonIcon) {
-        buttonIcon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
-        }
-        }
-
-      } else {
-        showMoreContainer.classList.add("hidden");
-      }
-
-      // Ensure Feather icons are rendered after DOM updates
-      feather.replace();
-    }
-
-    function filterAndDisplay() {
-      const searchText = searchInput?.value.toLowerCase() || "";
-      const selectedRace = raceFilter?.value.toLowerCase() || "";
-      const from = fromDate?.value;
-      const to = toDate?.value;
-
-      filteredMarathons = marathons.filter((marathon) => {
-        const isUpcoming = isFutureDate(marathon.date);
-        const matchesSearch = !searchText ||
-          marathon.name.toLowerCase().includes(searchText) ||
-          marathon.city.toLowerCase().includes(searchText) ||
-          marathon.description.toLowerCase().includes(searchText);
-        const matchesRace = !selectedRace || marathon.name.toLowerCase().includes(selectedRace);
-        const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
-        const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
-
-        return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
-      });
-
-      // Sort by soonest event first
-      filteredMarathons.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      showAll = false;
-      displayMarathons(filteredMarathons);
-    }
-
-    // Event listeners
-    showMoreButton.addEventListener("click", () => {
-      showAll = !showAll;
-      displayMarathons(filteredMarathons);
-    });
-
-    document.getElementById("toggleSearch").addEventListener("click", () => {
-      const searchBox = document.getElementById("searchBox");
-      searchBox.classList.toggle("hidden");
-      if (!searchBox.classList.contains("hidden")) {
-        searchInput.focus();
-      }
-    });
-
-    document.getElementById("toggleFilters").addEventListener("click", () => {
-      document.getElementById("filterPanel").classList.toggle("hidden");
-    });
-
+    // Menu functionality
     document.getElementById("toggleMenu").addEventListener("click", () => {
       document.getElementById("dropdownMenu").classList.toggle("hidden");
     });
@@ -562,15 +314,36 @@
       }
     });
 
-    // Search and filter event listeners
-    searchInput?.addEventListener("input", filterAndDisplay);
-    raceFilter?.addEventListener("change", filterAndDisplay);
-    fromDate?.addEventListener("change", filterAndDisplay);
-    toDate?.addEventListener("change", filterAndDisplay);
+    // Profile button functionality
+    document.getElementById("profileBtn").addEventListener("click", () => {
+      window.location.href = "profile.html";
+    });
 
-    // Initialize
+    // History button functionality
+    document.getElementById("historyBtn").addEventListener("click", () => {
+      window.location.href = "history.html";
+    });
+
+    // Strava connect functionality
+    document.getElementById("stravaConnect").addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("Strava integration coming soon! You'll be able to sync your activities automatically.");
+    });
+
+    // Export data functionality
+    document.getElementById("exportData").addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("Export functionality coming soon! You'll be able to download your analysis reports.");
+    });
+
+    // Settings functionality
+    document.getElementById("settings").addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("Settings page coming soon! Customize your analysis preferences.");
+    });
+
+    // Initialize feather icons
     feather.replace();
-    filterAndDisplay();
   </script>
 </body>
 </html>

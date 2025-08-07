@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance Analysis Results - Running Ninjas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    html, body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .results-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .results-header {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .result-card {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+      border-left: 4px solid #6366f1;
+    }
+    .result-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #312e81;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .score-display {
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+    }
+    .score-excellent { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .score-good { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+    .score-average { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .score-needs-improvement { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    
+    .benchmark-bar {
+      background: #f1f5f9;
+      border-radius: 1rem;
+      height: 2rem;
+      position: relative;
+      margin: 0.5rem 0;
+      overflow: hidden;
+    }
+    .benchmark-fill {
+      height: 100%;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 1rem;
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .benchmark-excellent { background: linear-gradient(90deg, #10b981 0%, #059669 100%); }
+    .benchmark-good { background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%); }
+    .benchmark-average { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%); }
+    .benchmark-poor { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); }
+    
+    .training-plan {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 2rem;
+      box-shadow: 0 4px 24px 0 rgba(102,126,234,0.10);
+      margin-bottom: 2rem;
+    }
+    .training-week {
+      background: #f8fafc;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid #6366f1;
+    }
+    .training-day {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .training-day:last-child {
+      border-bottom: none;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 1rem;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #5b5bf6 0%, #0891b2 100%);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .back-button {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-button:hover {
+      background: white;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: 1rem 0;
+    }
+    .improvement-list {
+      list-style: none;
+      padding: 0;
+    }
+    .improvement-list li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .improvement-list li:last-child {
+      border-bottom: none;
+    }
+    .priority-high { color: #dc2626; }
+    .priority-medium { color: #f59e0b; }
+    .priority-low { color: #10b981; }
+  </style>
+</head>
+<body>
+  <!-- Back Button -->
+  <button class="back-button" onclick="window.location.href='performance-analysis.html'" title="Back to Form">
+    <i data-feather="arrow-left" class="w-5 h-5 text-indigo-600"></i>
+  </button>
+
+  <div class="results-container">
+    <!-- Results Header -->
+    <div class="results-header">
+      <h1 class="text-3xl font-bold mb-2">Your Performance Analysis Results</h1>
+      <p class="text-indigo-100" id="analysisDate"></p>
+    </div>
+
+    <!-- Overall Score -->
+    <div class="result-card">
+      <h3>
+        <i data-feather="award" class="w-6 h-6 text-indigo-600"></i>
+        Overall Performance Score
+      </h3>
+      <div class="score-display">
+        <div id="overallScore" class="score-circle score-good">
+          78/100
+        </div>
+        <p class="text-lg font-semibold text-gray-800" id="scoreDescription">Good Performance</p>
+        <p class="text-gray-600">You're performing well compared to your age group and experience level</p>
+      </div>
+    </div>
+
+    <!-- Performance Benchmarks -->
+    <div class="results-grid">
+      
+      <!-- Age Group Comparison -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="users" class="w-6 h-6 text-indigo-600"></i>
+          Age Group Benchmarking
+        </h3>
+        <div id="ageGroupBenchmarks">
+          <div class="mb-3">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-medium">5K Performance</span>
+              <span class="text-sm text-gray-600">Top 25%</span>
+            </div>
+            <div class="benchmark-bar">
+              <div class="benchmark-fill benchmark-good" style="width: 75%;">75th percentile</div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-medium">10K Performance</span>
+              <span class="text-sm text-gray-600">Top 35%</span>
+            </div>
+            <div class="benchmark-bar">
+              <div class="benchmark-fill benchmark-average" style="width: 65%;">65th percentile</div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-medium">VO2 Max</span>
+              <span class="text-sm text-gray-600">Top 20%</span>
+            </div>
+            <div class="benchmark-bar">
+              <div class="benchmark-fill benchmark-excellent" style="width: 80%;">80th percentile</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regional Comparison -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="map-pin" class="w-6 h-6 text-indigo-600"></i>
+          Regional Comparison
+        </h3>
+        <div class="chart-container">
+          <canvas id="regionalChart"></canvas>
+        </div>
+        <p class="text-sm text-gray-600 mt-2">Compared to runners in your region, you rank in the top 30% overall</p>
+      </div>
+
+      <!-- Strengths & Weaknesses -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="trending-up" class="w-6 h-6 text-indigo-600"></i>
+          Strengths & Areas for Improvement
+        </h3>
+        <div class="mb-4">
+          <h4 class="font-semibold text-green-700 mb-2">💪 Your Strengths</h4>
+          <ul class="text-sm space-y-1">
+            <li>• Excellent VO2 Max for your age group</li>
+            <li>• Strong 5K performance</li>
+            <li>• Good heart rate efficiency</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold text-orange-700 mb-2">🎯 Focus Areas</h4>
+          <ul class="improvement-list">
+            <li>
+              <i data-feather="alert-circle" class="w-4 h-4 priority-high mt-0.5"></i>
+              <div>
+                <div class="font-medium">Marathon Endurance</div>
+                <div class="text-sm text-gray-600">Your marathon pace suggests room for aerobic base improvement</div>
+              </div>
+            </li>
+            <li>
+              <i data-feather="clock" class="w-4 h-4 priority-medium mt-0.5"></i>
+              <div>
+                <div class="font-medium">Threshold Pace</div>
+                <div class="text-sm text-gray-600">Could benefit from tempo run training</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Predicted Times -->
+      <div class="result-card">
+        <h3>
+          <i data-feather="target" class="w-6 h-6 text-indigo-600"></i>
+          Race Time Predictions
+        </h3>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div>
+              <div class="font-semibold">5K Goal</div>
+              <div class="text-sm text-gray-600">With 3 months training</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-indigo-600">21:45</div>
+              <div class="text-sm text-gray-500">(-45 seconds)</div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div>
+              <div class="font-semibold">10K Goal</div>
+              <div class="text-sm text-gray-600">With 4 months training</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-indigo-600">44:30</div>
+              <div class="text-sm text-gray-500">(-1:45)</div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div>
+              <div class="font-semibold">Half Marathon Goal</div>
+              <div class="text-sm text-gray-600">With 6 months training</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-indigo-600">1:38:00</div>
+              <div class="text-sm text-gray-500">(-4:30)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Training Plan -->
+    <div class="training-plan">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <i data-feather="calendar" class="w-6 h-6 text-indigo-600"></i>
+        Personalized 12-Week Training Plan
+      </h3>
+      <p class="text-gray-600 mb-6">Based on your performance analysis, here's a customized training plan to help you achieve your goals:</p>
+      
+      <!-- Week 1-4: Base Building -->
+      <div class="training-week">
+        <h4 class="font-semibold text-lg text-gray-800 mb-3">Weeks 1-4: Aerobic Base Building</h4>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Monday</span>
+            <span class="text-sm text-gray-600 ml-2">Easy Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">6-8 km @ 5:45/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Tuesday</span>
+            <span class="text-sm text-gray-600 ml-2">Cross Training</span>
+          </div>
+          <span class="text-indigo-600 font-medium">45 min cycling/swimming</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Wednesday</span>
+            <span class="text-sm text-gray-600 ml-2">Tempo Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">5 km @ 4:45/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Thursday</span>
+            <span class="text-sm text-gray-600 ml-2">Rest or Easy Walk</span>
+          </div>
+          <span class="text-gray-500 font-medium">Rest Day</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Friday</span>
+            <span class="text-sm text-gray-600 ml-2">Easy Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">5-6 km @ 5:45/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Saturday</span>
+            <span class="text-sm text-gray-600 ml-2">Long Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">10-12 km @ 6:00/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Sunday</span>
+            <span class="text-sm text-gray-600 ml-2">Recovery</span>
+          </div>
+          <span class="text-gray-500 font-medium">Rest or light yoga</span>
+        </div>
+      </div>
+
+      <!-- Week 5-8: Speed Work -->
+      <div class="training-week">
+        <h4 class="font-semibold text-lg text-gray-800 mb-3">Weeks 5-8: Speed Development</h4>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Monday</span>
+            <span class="text-sm text-gray-600 ml-2">Easy Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">7-9 km @ 5:30/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Tuesday</span>
+            <span class="text-sm text-gray-600 ml-2">Interval Training</span>
+          </div>
+          <span class="text-indigo-600 font-medium">6 x 800m @ 4:10/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Wednesday</span>
+            <span class="text-sm text-gray-600 ml-2">Recovery Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">5 km @ 6:00/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Thursday</span>
+            <span class="text-sm text-gray-600 ml-2">Tempo Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">6 km @ 4:35/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Friday</span>
+            <span class="text-sm text-gray-600 ml-2">Easy Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">6 km @ 5:30/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Saturday</span>
+            <span class="text-sm text-gray-600 ml-2">Long Run</span>
+          </div>
+          <span class="text-indigo-600 font-medium">14-16 km @ 5:45/km</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Sunday</span>
+            <span class="text-sm text-gray-600 ml-2">Recovery</span>
+          </div>
+          <span class="text-gray-500 font-medium">Rest or cross training</span>
+        </div>
+      </div>
+
+      <!-- Week 9-12: Race Preparation -->
+      <div class="training-week">
+        <h4 class="font-semibold text-lg text-gray-800 mb-3">Weeks 9-12: Race Preparation & Peak</h4>
+        <p class="text-sm text-gray-600 mb-3">Focus on race pace training and tapering for your goal race.</p>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Key Sessions</span>
+            <span class="text-sm text-gray-600 ml-2">Race Pace Practice</span>
+          </div>
+          <span class="text-indigo-600 font-medium">3 x 2km @ goal race pace</span>
+        </div>
+        <div class="training-day">
+          <div>
+            <span class="font-medium">Long Runs</span>
+            <span class="text-sm text-gray-600 ml-2">Peak Distance</span>
+          </div>
+          <span class="text-indigo-600 font-medium">18-20 km with race pace segments</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-4 justify-center mb-8">
+      <a href="training-plan.html" class="btn-primary">
+        <i data-feather="download" class="w-4 h-4 inline mr-2"></i>
+        Download Full Training Plan
+      </a>
+      <a href="form-analysis.html" class="btn-secondary">
+        <i data-feather="camera" class="w-4 h-4 inline mr-2"></i>
+        Analyze Running Form
+      </a>
+      <button onclick="saveToProfile()" class="btn-secondary">
+        <i data-feather="save" class="w-4 h-4 inline mr-2"></i>
+        Save to Profile
+      </button>
+      <a href="index.html" class="btn-secondary">
+        <i data-feather="home" class="w-4 h-4 inline mr-2"></i>
+        Back to Home
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Initialize feather icons
+    feather.replace();
+
+    // Set analysis date
+    document.getElementById('analysisDate').textContent = `Analysis completed on ${new Date().toLocaleDateString()}`;
+
+    // Load and display user data
+    function loadUserData() {
+      const data = localStorage.getItem('performanceData');
+      if (data) {
+        const userData = JSON.parse(data);
+        updateResultsWithUserData(userData);
+      }
+    }
+
+    function updateResultsWithUserData(userData) {
+      // This would normally be done by the backend AI analysis
+      // For demo purposes, we'll show sample results based on the input data
+      
+      // Calculate overall score based on various factors
+      let score = 70; // Base score
+      
+      if (userData.vo2max && userData.vo2max > 50) score += 10;
+      if (userData.age && userData.age < 35) score += 5;
+      if (userData.weeklyMileage && userData.weeklyMileage > 40) score += 8;
+      
+      // Update score display
+      const scoreElement = document.getElementById('overallScore');
+      const descElement = document.getElementById('scoreDescription');
+      
+      scoreElement.textContent = `${score}/100`;
+      
+      if (score >= 85) {
+        scoreElement.className = 'score-circle score-excellent';
+        descElement.textContent = 'Excellent Performance';
+      } else if (score >= 75) {
+        scoreElement.className = 'score-circle score-good';
+        descElement.textContent = 'Good Performance';
+      } else if (score >= 60) {
+        scoreElement.className = 'score-circle score-average';
+        descElement.textContent = 'Average Performance';
+      } else {
+        scoreElement.className = 'score-circle score-needs-improvement';
+        descElement.textContent = 'Needs Improvement';
+      }
+    }
+
+    // Create regional comparison chart
+    function createRegionalChart() {
+      const ctx = document.getElementById('regionalChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['5K', '10K', 'Half Marathon', 'Marathon', 'VO2 Max', 'Weekly Mileage'],
+          datasets: [{
+            label: 'Your Performance',
+            data: [78, 65, 72, 58, 85, 70],
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            pointBackgroundColor: '#6366f1'
+          }, {
+            label: 'Regional Average',
+            data: [60, 60, 60, 60, 60, 60],
+            borderColor: '#9ca3af',
+            backgroundColor: 'rgba(156, 163, 175, 0.1)',
+            pointBackgroundColor: '#9ca3af'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // Save to profile function
+    function saveToProfile() {
+      const analysisData = {
+        date: new Date().toISOString(),
+        overallScore: document.getElementById('overallScore').textContent,
+        performanceData: localStorage.getItem('performanceData')
+      };
+      
+      // Save to localStorage (in real app, this would save to backend)
+      let savedAnalyses = JSON.parse(localStorage.getItem('savedAnalyses') || '[]');
+      savedAnalyses.push(analysisData);
+      localStorage.setItem('savedAnalyses', JSON.stringify(savedAnalyses));
+      
+      alert('Analysis saved to your profile successfully!');
+    }
+
+    // Initialize everything when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUserData();
+      createRegionalChart();
+    });
+  </script>
+</body>
+</html>
