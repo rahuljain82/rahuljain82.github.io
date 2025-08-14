@@ -285,6 +285,8 @@
     
     .runner-count .loading-dots {
       display: none;
+      font-size: 12px;
+      opacity: 0.7;
     }
     
     .runner-count.loading .loading-dots {
@@ -293,6 +295,11 @@
     
     .runner-count.loading .count-text {
       display: none;
+    }
+    
+    .runner-count.loading {
+      opacity: 0.8;
+      transform: scale(0.95);
     }
     
     @keyframes countPulse {
@@ -442,6 +449,9 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('freedomImage').style.display = 'block';
       document.getElementById('errorMessage').style.display = 'none';
+      
+      // Load runner count after image is loaded
+      setTimeout(fetchRunnerCount, 200);
     }
     
     function imageError() {
@@ -618,10 +628,16 @@
     // Function to fetch runner count
     async function fetchRunnerCount() {
       try {
-        runnerCount.classList.add('loading');
+        // Only show loading state briefly, don't interfere with image loading
+        const loadingTimeout = setTimeout(() => {
+          runnerCount.classList.add('loading');
+        }, 100);
         
         const response = await fetch(GOOGLE_SHEETS_URL);
         const data = await response.json();
+        
+        clearTimeout(loadingTimeout);
+        runnerCount.classList.remove('loading');
         
         const count = data.count || 0;
         countNumber.textContent = count;
@@ -632,9 +648,8 @@
         
       } catch (error) {
         console.error('Error fetching runner count:', error);
-        countNumber.textContent = '?';
-      } finally {
         runnerCount.classList.remove('loading');
+        countNumber.textContent = '?';
       }
     }
 
@@ -655,10 +670,7 @@
       }, 200);
     }
 
-    // Load count when page loads
-    window.addEventListener('load', () => {
-      fetchRunnerCount();
-    });
+    // Count is now loaded after image loads (see imageLoaded function)
   </script>
 </body>
 </html>
