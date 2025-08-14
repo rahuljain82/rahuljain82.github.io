@@ -17,7 +17,14 @@
       height: 100vh;
       width: 100vw;
       overflow: hidden;
-      background: #000;
+      background: linear-gradient(to bottom, 
+        #FF9933 0%,     /* Saffron */
+        #FF9933 33.33%,
+        #FFFFFF 33.33%, /* White */
+        #FFFFFF 66.66%,
+        #138808 66.66%, /* Green */
+        #138808 100%
+      );
     }
     
     .fullscreen-container {
@@ -320,9 +327,13 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: white;
+      color: #000;
       font-size: 18px;
       font-weight: 600;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
     }
     
     .error-message {
@@ -330,9 +341,13 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: white;
+      color: #000;
       text-align: center;
       padding: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     
     .error-message h2 {
@@ -344,6 +359,7 @@
     .error-message p {
       font-size: 16px;
       opacity: 0.8;
+      color: #333;
     }
     
     @media (max-width: 768px) {
