@@ -271,10 +271,14 @@
       font-size: 14px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       backdrop-filter: blur(10px);
-      display: flex;
+      display: none;
       align-items: center;
       gap: 8px;
       animation: countPulse 3s infinite;
+    }
+    
+    .runner-count.visible {
+      display: flex;
     }
     
     .runner-count .count-number {
@@ -628,16 +632,8 @@
     // Function to fetch runner count
     async function fetchRunnerCount() {
       try {
-        // Only show loading state briefly, don't interfere with image loading
-        const loadingTimeout = setTimeout(() => {
-          runnerCount.classList.add('loading');
-        }, 100);
-        
         const response = await fetch(GOOGLE_SHEETS_URL);
         const data = await response.json();
-        
-        clearTimeout(loadingTimeout);
-        runnerCount.classList.remove('loading');
         
         const count = data.count || 0;
         countNumber.textContent = count;
@@ -646,10 +642,14 @@
         const textSpan = runnerCount.querySelector('.count-text span:last-child');
         textSpan.textContent = count === 1 ? 'runner registered' : 'runners registered';
         
+        // Show the counter now that data is loaded
+        runnerCount.classList.add('visible');
+        
       } catch (error) {
         console.error('Error fetching runner count:', error);
-        runnerCount.classList.remove('loading');
         countNumber.textContent = '?';
+        // Still show the counter even if there's an error
+        runnerCount.classList.add('visible');
       }
     }
 
