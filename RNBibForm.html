@@ -47,12 +47,15 @@
         <label class="block mb-2">T-Shirt Size
           <input id="tshirtSize" type="text" class="w-full mt-1 p-2 border rounded" />
         </label>
-
+          
+        <label class="block mb-2">Enter Distance
+          <input id="distance" type="text" required class="w-full mt-1 p-2 border rounded" />
+        </label>
         <label class="block mb-2">Enter Bib Number
           <input id="bibNumber" type="text" required class="w-full mt-1 p-2 border rounded" />
         </label>
 
-        <label class="block mb-2">Comments / Email Proof (Optional)
+        <label class="block mb-2">Email Proof 
           <textarea id="comments" class="w-full mt-1 p-2 border rounded"></textarea>
         </label>
 
@@ -114,6 +117,7 @@
       formData.append("emergencyName", document.getElementById("emergencyName").value);
       formData.append("emergencyNumber", document.getElementById("emergencyNumber").value);
       formData.append("tshirtSize", document.getElementById("tshirtSize").value);
+      formData.append("distance", document.getElementById("distance").value);
       formData.append("bibNumber", document.getElementById("bibNumber").value);
       formData.append("comments", document.getElementById("comments").value);
 
