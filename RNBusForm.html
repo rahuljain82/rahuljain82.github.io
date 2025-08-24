@@ -97,6 +97,7 @@
       formData.append("name", document.getElementById("name").textContent);
       formData.append("flat", document.getElementById("flat").textContent);
       formData.append("transactionId", document.getElementById("transactionId").value.trim());
+      formData.append("businterest", document.getElementById("businterest").value.trim());
 
       const res = await fetch(scriptURL, {
         method: 'POST',
