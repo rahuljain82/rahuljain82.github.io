@@ -211,7 +211,7 @@
     async function submitBusPayment() {
       const uniqueId = document.getElementById("uniqueId").value.trim();
       const marathonName = document.getElementById("marathonName").value.trim();
-      const busTransactionId = document.getElementById("busTransactionId").value.trim();
+      const busTransactionId = document.getElementById("transactionId").value.trim();
       if (!busTransactionId) {
         alert("Please enter bus transaction ID.");
         return;
