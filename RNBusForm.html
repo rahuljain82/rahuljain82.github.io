@@ -12,7 +12,7 @@
   </div>
 
   <div class="max-w-md mx-auto bg-white rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Marathon Bus Booking</h2>
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Ninja Discount & Bus Booking</h2>
 
     <form id="busBookingForm">
       <label class="block mb-3">Select Marathon
@@ -23,25 +23,30 @@
         <input id="uniqueId" name="uniqueId" type="text" required class="w-full mt-1 p-2 border rounded" />
       </label>
 
-      <button type="button" onclick="fetchDetails()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Show payment Info</button>
+      <button type="button" onclick="fetchDetails()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Show next steps</button>
 
       <div id="runnerDetails" class="hidden">
         <p class="mb-2"></strong>Your Name:</strong> <span id="name"></span></p>
         <p class="mb-2"></strong>Your Flat No.:</strong> <span id="flat"></span></p>
+        <p class="mb-2"><strong>Discounted Ninja Registration Cost to pay:</strong> ₹<span id="ninjadiscountprice"></span></p>
         <p class="mb-2"><strong>Seat Cost to pay:</strong> ₹<span id="seatCost"></span></p>
         <p class="mb-2"><strong>Pay to UPI ID:</strong> <span id="upiId"></span></p>
-        <p class="mb-2"><strong>Seats Left:</strong> <span id="seatsLeft"></span></p>
+        <!-- <p class="mb-2"><strong>Seats Left:</strong> <span id="seatsLeft"></span></p> -->
         <p class="mb-2"></strong>Instructions:</strong> <span id="instructions"></span></p>
 
+        <label class="block mb-2 mt-4"><strong>Opting for bus?
+          <input id="businterest" name="businterest" type="text" required class="w-full mt-1 p-2 border rounded" />
+        </label>
+        
         <label class="block mb-2 mt-4"><strong>Enter Transaction ID
           <input id="transactionId" name="transactionId" type="text" required class="w-full mt-1 p-2 border rounded" />
         </label>
 
-        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Confirm My Seat</button>
+        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Count me In</button>
       </div>
     </form>
 
-    <p id="formMessage" class="text-green-600 mt-4 hidden">Seat booking successful!</p>
+    <p id="formMessage" class="text-green-600 mt-4 hidden">Entry successful!</p>
   </div>
 
   <script>
@@ -73,6 +78,7 @@
 
       document.getElementById("name").textContent = data.runner.name;
       document.getElementById("flat").textContent = data.runner.flat;
+      document.getElementById("ninjadiscountprice").textContent = data.event.ninjadiscountprice;
       document.getElementById("seatCost").textContent = data.event.seatCost;
       document.getElementById("upiId").textContent = data.event.upiId;
       document.getElementById("seatsLeft").textContent = data.event.seatsLeft;
