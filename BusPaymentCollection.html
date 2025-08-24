@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bus Payment Form</title>
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwYNRhRy8dbhwOUs3YW0o2fukvwjlakaQ9-WYuNqYot5cbccU_F0oPa598mkfZ62N9czg/exec"; // Replace with deployed script URL
+
+    async function checkEligibility() {
+      const uniqueId = document.getElementById("uniqueId").value.trim();
+      const marathonName = document.getElementById("marathonName").value.trim();
+      if (!uniqueId || !marathonName) {
+        alert("Please fill in both fields.");
+        return;
+      }
+
+      const res = await fetch(`${scriptURL}?action=check&uniqueId=${encodeURIComponent(uniqueId)}&marathonName=${encodeURIComponent(marathonName)}`);
+      const data = await res.json();
+
+      if (data.allowed) {
+        document.getElementById("eligibilityMessage").textContent = "You are eligible to submit bus payment.";
+        document.getElementById("busPaymentSection").classList.remove("hidden");
+      } else {
+        document.getElementById("eligibilityMessage").textContent = data.reason || "Not eligible.";
+        document.getElementById("busPaymentSection").classList.add("hidden");
+      }
+    }
+
+    async function submitBusPayment() {
+      const uniqueId = document.getElementById("uniqueId").value.trim();
+      const marathonName = document.getElementById("marathonName").value.trim();
+      const busTransactionId = document.getElementById("busTransactionId").value.trim();
+      if (!busTransactionId) {
+        alert("Please enter bus transaction ID.");
+        return;
+      }
+
+      const res = await fetch(`${scriptURL}?action=record&uniqueId=${encodeURIComponent(uniqueId)}&marathonName=${encodeURIComponent(marathonName)}&busTransactionId=${encodeURIComponent(busTransactionId)}`);
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Bus payment recorded successfully.");
+        document.getElementById("busPaymentSection").classList.add("hidden");
+      } else {
+        alert(data.error || "Failed to record payment.");
+      }
+    }
+  </script>
+  <style>
+    .hidden { display: none; }
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    input, button { padding: 0.5rem; margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+  <h2>Bus Payment Form</h2>
+  <label>Unique ID:<br>
+    <input type="text" id="uniqueId">
+  </label><br>
+  <label>Marathon Name:<br>
+    <input type="text" id="marathonName">
+  </label><br>
+  <button onclick="checkEligibility()">Check Eligibility</button>
+  <p id="eligibilityMessage"></p>
+
+  <div id="busPaymentSection" class="hidden">
+    <label>Bus Payment Transaction ID:<br>
+      <input type="text" id="busTransactionId">
+    </label><br>
+    <button onclick="submitBusPayment()">Submit Bus Payment</button>
+  </div>
+</body>
+</html>
