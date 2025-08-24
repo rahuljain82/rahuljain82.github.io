@@ -48,9 +48,20 @@
           <input id="tshirtSize" type="text" class="w-full mt-1 p-2 border rounded" />
         </label>
           
-        <label class="block mb-2">Enter Distance
-          <input id="distance" type="text" required class="w-full mt-1 p-2 border rounded" />
-        </label>
+        
+<label class="block mb-2">Select Distance
+  <select id="distance" required class="w-full mt-1 p-2 border rounded">
+    <option value="">-- Select Distance --</option>
+    <option value="5K">5K</option>
+    <option value="10K">10K</option>
+    <option value="21K">21K (Half Marathon)</option>
+    <option value="42K">42K (Full Marathon)</option>
+    <option value="ultra50">50k (ultra50)</option>
+    <option value="ultra70">70k (ultra70)</option>
+    <option value="ultra100">100k (ultra100)</option>
+  </select>
+</label>
+        
         <label class="block mb-2">Enter Bib Number
           <input id="bibNumber" type="text" required class="w-full mt-1 p-2 border rounded" />
         </label>
