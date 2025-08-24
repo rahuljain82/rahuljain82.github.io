@@ -34,9 +34,14 @@
         <p class="mb-2"><strong>Seats Left:</strong> <span id="seatsLeft"></span></p>
         <p class="mb-2"></strong>Instructions:</strong> <span id="instructions"></span></p>
 
-        <label class="block mb-2 mt-4"><strong>Opting for bus?
-          <input id="businterest" name="businterest" type="text" required class="w-full mt-1 p-2 border rounded" />
-        </label>
+        <label class="block mb-2">
+  Interested in bus booking?
+  <select id="businterest" name="businterest" required class="w-full mt-1 p-2 border rounded">
+    <option value="">-- Select --</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+</label>
         
         <label class="block mb-2 mt-4"><strong>Enter Transaction ID
           <input id="transactionId" name="transactionId" type="text" required class="w-full mt-1 p-2 border rounded" />
