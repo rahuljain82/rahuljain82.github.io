@@ -24,6 +24,8 @@
       </label>
 
       <button type="button" onclick="checkEligibility()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Check my bus allocation</button>
+      <p id="eligibilityMessage" class="text-blue-600 mb-4"></p>
+
 
 <!--       <div id="runnerDetails" class="hidden">
         <p class="mb-2"></strong>Your Name:</strong> <span id="name"></span></p>
@@ -42,12 +44,22 @@
     <option value="No">No</option>
   </select>
 </label> -->
-        
-        <label class="block mb-2 mt-4"><strong>Enter Bus Payment ID
+
+<div id="busPaymentSection" class="hidden">
+  <label class="block mb-2 mt-4"><strong>Enter Bus Payment ID
+    <input id="transactionId" name="transactionId" type="text" required class="w-full mt-1 p-2 border rounded" />
+  </label>
+  <button type="button" onclick="submitBusPayment()" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">
+    Submit Bus Payment
+  </button>
+</div>
+
+      
+<!--         <label class="block mb-2 mt-4"><strong>Enter Bus Payment ID
           <input id="transactionId" name="transactionId" type="text" required class="w-full mt-1 p-2 border rounded" />
         </label>
 
-        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Submit Payment details</button>
+        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Submit Payment details</button> -->
       </div>
     </form>
 
@@ -96,7 +108,7 @@
     async function submitBusPayment() {
       const uniqueId = document.getElementById("uniqueId").value.trim();
       const marathonName = document.getElementById("marathonName").value.trim();
-      const busTransactionId = document.getElementById("busTransactionId").value.trim();
+      const busTransactionId = document.getElementById("transactionId").value.trim();
       if (!busTransactionId) {
         alert("Please enter bus transaction ID.");
         return;
