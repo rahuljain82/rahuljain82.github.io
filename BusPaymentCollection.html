@@ -23,7 +23,7 @@
         <input id="uniqueId" name="uniqueId" type="text" required class="w-full mt-1 p-2 border rounded" />
       </label>
 
-      <button type="button" onclick="fetchDetails()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Check my bus allocation</button>
+      <button type="button" onclick="checkEligibility()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Check my bus allocation</button>
 
 <!--       <div id="runnerDetails" class="hidden">
         <p class="mb-2"></strong>Your Name:</strong> <span id="name"></span></p>
@@ -59,19 +59,19 @@
 
     
 
-    // Load marathon options on page load
-    window.onload = async function () {
-      const res = await fetch(`${scriptURL}?listMarathons=true`);
-      const data = await res.json();
-      const dropdown = document.getElementById("marathonName");
+    // // Load marathon options on page load
+    // window.onload = async function () {
+    //   const res = await fetch(`${scriptURL}?listMarathons=true`);
+    //   const data = await res.json();
+    //   const dropdown = document.getElementById("marathonName");
 
-      data.marathons.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        dropdown.appendChild(opt);
-      });
-    };
+    //   data.marathons.forEach(name => {
+    //     const opt = document.createElement("option");
+    //     opt.value = name;
+    //     opt.textContent = name;
+    //     dropdown.appendChild(opt);
+    //   });
+    // };
 
       async function checkEligibility() {
       const uniqueId = document.getElementById("uniqueId").value.trim();
