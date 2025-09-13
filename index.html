@@ -798,9 +798,7 @@
         const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
         const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
         
-        return matchesSearch && matchesRace && matchesFromDate && matchesToDate;
-
-        //return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
+        return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
       });
 
       // Sort by soonest event first
