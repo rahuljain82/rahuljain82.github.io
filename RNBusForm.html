@@ -33,28 +33,31 @@
         <input id="uniqueId" name="uniqueId" type="text" required class="w-full mt-1 p-2 border rounded" />
       </label>
 
-      <button type="button" onclick="fetchDetails()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Show next steps</button>
+      <button type="button" onclick="showForm()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">Show Booking Form</button>
 
       <div id="runnerDetails" class="hidden">
-        <p class="mb-2"></strong>Your Name:</strong> <span id="name"></span></p>
-        <p class="mb-2"></strong>Your Flat No.:</strong> <span id="flat"></span></p>
-        <p class="mb-2"><strong>Discounted Ninja Registration Cost to pay:</strong> ₹<span id="ninjadiscountprice"></span></p>
-        <p class="mb-2"><strong>Seat Cost to pay:</strong> ₹<span id="seatCost"></span></p>
-        <p class="mb-2"><strong>Pay to UPI ID:</strong> <span id="upiId"></span></p>
-        <p class="mb-2"><strong>Seats Left:</strong> <span id="seatsLeft"></span></p>
-        <p class="mb-2"></strong>Instructions:</strong> <span id="instructions"></span></p>
+        <label class="block mb-2">Your Name
+          <input id="name" name="name" type="text" required class="w-full mt-1 p-2 border rounded" />
+        </label>
+        
+        <label class="block mb-2">Your Flat Number  
+          <input id="flat" name="flat" type="text" required class="w-full mt-1 p-2 border rounded" />
+        </label>
 
         <label class="block mb-2">
-  Interested in bus booking?
-  <select id="businterest" name="businterest" required class="w-full mt-1 p-2 border rounded">
-    <option value="">-- Select --</option>
-    <option value="Yes">Yes</option>
-    <option value="No">No</option>
-  </select>
-</label>
+          Race Category
+          <select id="raceCategory" name="raceCategory" required class="w-full mt-1 p-2 border rounded">
+            <option value="">-- Select Race Category --</option>
+            <option value="5k">5k</option>
+            <option value="10k">10k</option>
+            <option value="HM">HM (Half Marathon)</option>
+            <option value="FM">FM (Full Marathon)</option>
+          </select>
+        </label>
         
-        <label class="block mb-2 mt-4"><strong>Enter Transaction ID
-          <input id="transactionId" name="transactionId" type="text" required class="w-full mt-1 p-2 border rounded" />
+        <label class="block mb-2 mt-4">
+          Number of Bus Seats Required
+          <input id="busSeats" name="busSeats" type="number" min="1" max="10" required class="w-full mt-1 p-2 border rounded" placeholder="Enter number of seats" />
         </label>
 
         <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Count me In</button>
@@ -65,41 +68,64 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwea_Lm7I2QpeEoZ-Jup8DdSDjB-8BhdMgeE55BZIEiKH5pBsYy3_rfI4SqO54xra9F/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxbo17aNByn1ikadvG9XCoIlNPBfVGwSLLa64mEpTxGT1pWYSRVZAtFidI-yYig7G8C3w/exec';
 
     // Load marathon options on page load
     window.onload = async function () {
-      const res = await fetch(`${scriptURL}?listMarathons=true`);
-      const data = await res.json();
-      const dropdown = document.getElementById("marathonName");
+      try {
+        const res = await fetch(`${scriptURL}?listMarathons=true`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        const dropdown = document.getElementById("marathonName");
 
-      data.marathons.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        dropdown.appendChild(opt);
-      });
+        if (data.marathons && data.marathons.length > 0) {
+          data.marathons.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            dropdown.appendChild(opt);
+          });
+        } else {
+          console.error("No marathons data received:", data);
+          console.log("Full response:", JSON.stringify(data));
+          alert("No marathons available. Check console for details and verify marathon data is in column E of your Google Sheet.");
+        }
+      } catch (error) {
+        console.error("Error loading marathons:", error);
+        alert(`Failed to load marathons: ${error.message}`);
+      }
     };
 
-    async function fetchDetails() {
+    async function showForm() {
       const uniqueId = document.getElementById("uniqueId").value.trim();
       const marathonName = document.getElementById("marathonName").value;
       if (!uniqueId || !marathonName) return alert("Please fill both fields.");
 
-      const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}&marathonName=${encodeURIComponent(marathonName)}`);
-      const data = await res.json();
+      try {
+        // Fetch runner details from running master sheet
+        const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}&marathonName=${encodeURIComponent(marathonName)}`);
+        const data = await res.json();
 
-      if (!data.success) return alert(data.error || "Runner not found.");
+        if (data.success) {
+          // Auto-fill name and flat number
+          document.getElementById("name").value = data.runner.name;
+          document.getElementById("flat").value = data.runner.flat;
+        } else {
+          alert(data.error || "Runner not found. Please enter details manually.");
+          // Clear the fields so user can enter manually
+          document.getElementById("name").value = "";
+          document.getElementById("flat").value = "";
+        }
 
-      document.getElementById("name").textContent = data.runner.name;
-      document.getElementById("flat").textContent = data.runner.flat;
-      document.getElementById("ninjadiscountprice").textContent = data.event.ninjaPrice;
-      document.getElementById("seatCost").textContent = data.event.seatCost;
-      document.getElementById("upiId").textContent = data.event.upiId;
-      document.getElementById("seatsLeft").textContent = data.event.seatsLeft;
-      document.getElementById("instructions").textContent = data.event.instructions;
-
-      document.getElementById("runnerDetails").classList.remove("hidden");
+        document.getElementById("runnerDetails").classList.remove("hidden");
+      } catch (error) {
+        alert("Error fetching runner details. Please enter details manually.");
+        document.getElementById("name").value = "";
+        document.getElementById("flat").value = "";
+        document.getElementById("runnerDetails").classList.remove("hidden");
+      }
     }
 
     document.getElementById("busBookingForm").addEventListener("submit", async (e) => {
@@ -109,10 +135,10 @@
       const formData = new FormData();
       formData.append("uniqueId", document.getElementById("uniqueId").value);
       formData.append("marathonName", document.getElementById("marathonName").value);
-      formData.append("name", document.getElementById("name").textContent);
-      formData.append("flat", document.getElementById("flat").textContent);
-      formData.append("transactionId", document.getElementById("transactionId").value.trim());
-      formData.append("businterest", document.getElementById("businterest").value.trim());
+      formData.append("name", document.getElementById("name").value);
+      formData.append("flat", document.getElementById("flat").value);
+      formData.append("raceCategory", document.getElementById("raceCategory").value);
+      formData.append("busSeats", document.getElementById("busSeats").value);
 
       const res = await fetch(scriptURL, {
         method: 'POST',
