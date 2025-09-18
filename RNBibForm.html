@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bib Collection - Running Ninjas</title>
+  
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9WH7YSXZ94');
+  </script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 py-10">
+  <div class="w-full flex justify-center mb-6">
+    <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Running Ninjas Logo" class="w-16 h-16 rounded-full" />
+  </div>
+
+  <div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Marathon Bib Collection</h2>
+
+    <form id="bibForm">
+      <label class="block mb-3">Select Marathon
+        <select id="marathonName" required class="w-full mt-1 p-2 border rounded"></select>
+      </label>
+
+      <label class="block mb-3">Enter Unique ID
+        <input id="uniqueId" type="text" required class="w-full mt-1 p-2 border rounded" />
+      </label>
+
+      <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-4">Fetch My Data</button>
+
+      <div id="runnerDetails" class="hidden">
+        <label class="block mb-2">Name
+          <input id="name" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+        <label class="block mb-2">Gender
+          <input id="gender" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+        <label class="block mb-2">Date of Birth
+          <input id="dob" type="date" class="w-full mt-1 p-2 border rounded" />
+        </label>
+        <label class="block mb-2">Blood Group
+          <input id="bloodGroup" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+        <label class="block mb-2">Emergency Contact Name
+          <input id="emergencyName" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+        <label class="block mb-2">Emergency Contact Number
+          <input id="emergencyNumber" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+        <label class="block mb-2">T-Shirt Size
+          <input id="tshirtSize" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+          
+        
+<label class="block mb-2">Select Distance
+  <select id="distance" required class="w-full mt-1 p-2 border rounded">
+    <option value="">-- Select Distance --</option>
+    <option value="5K">5K</option>
+    <option value="10K">10K</option>
+    <option value="21K">21K (Half Marathon)</option>
+    <option value="42K">42K (Full Marathon)</option>
+    <option value="ultra50">50k (ultra50)</option>
+    <option value="ultra70">70k (ultra70)</option>
+    <option value="ultra100">100k (ultra100)</option>
+  </select>
+</label>
+        
+        <label class="block mb-2">Enter Bib Number
+          <input id="bibNumber" type="text" required class="w-full mt-1 p-2 border rounded" />
+        </label>
+
+        <label class="block mb-2">Email Proof 
+          <textarea id="comments" class="w-full mt-1 p-2 border rounded"></textarea>
+        </label>
+
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded">Submit for Bib Collection</button>
+      </div>
+    </form>
+
+    <p id="formMessage" class="text-green-600 mt-4 hidden">Bib collection submitted successfully!</p>
+  </div>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby6_r8aLIKXFgc_t0l495VrMkHSocYeTgkDshHPWAElLiws1E92KbiQdOiQQSInHq4N/exec';
+
+    window.onload = async function () {
+      const res = await fetch(`${scriptURL}?listBibMarathons=true`);
+      const data = await res.json();
+      const dropdown = document.getElementById("marathonName");
+
+      data.marathons.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        dropdown.appendChild(opt);
+      });
+    };
+
+    async function fetchRunnerData() {
+      const uniqueId = document.getElementById("uniqueId").value.trim();
+      const marathonName = document.getElementById("marathonName").value;
+      if (!uniqueId || !marathonName) return alert("Please enter both fields.");
+
+      const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}&marathonName=${encodeURIComponent(marathonName)}`);
+      const data = await res.json();
+
+      if (!data.success) return alert(data.error || "Runner not found.");
+
+      const r = data.runner;
+      document.getElementById("name").value = r.name;
+      document.getElementById("gender").value = r.gender;
+      document.getElementById("dob").value = r.dob;
+      document.getElementById("bloodGroup").value = r.bloodGroup;
+      document.getElementById("emergencyName").value = r.emergencyName;
+      document.getElementById("emergencyNumber").value = r.emergencyNumber;
+      document.getElementById("tshirtSize").value = r.tshirtSize;
+
+      document.getElementById("runnerDetails").classList.remove("hidden");
+    }
+
+    document.getElementById("bibForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append("uniqueId", document.getElementById("uniqueId").value);
+      formData.append("marathonName", document.getElementById("marathonName").value);
+      formData.append("name", document.getElementById("name").value);
+      formData.append("gender", document.getElementById("gender").value);
+      formData.append("dob", document.getElementById("dob").value);
+      formData.append("bloodGroup", document.getElementById("bloodGroup").value);
+      formData.append("emergencyName", document.getElementById("emergencyName").value);
+      formData.append("emergencyNumber", document.getElementById("emergencyNumber").value);
+      formData.append("tshirtSize", document.getElementById("tshirtSize").value);
+      formData.append("distance", document.getElementById("distance").value);
+      formData.append("bibNumber", document.getElementById("bibNumber").value);
+      formData.append("comments", document.getElementById("comments").value);
+
+      const res = await fetch(scriptURL, {
+        method: 'POST',
+        body: formData
+      });
+
+      const responseText = await res.text();
+      if (responseText.includes("Success")) {
+        document.getElementById("formMessage").classList.remove("hidden");
+        document.getElementById("bibForm").reset();
+        document.getElementById("runnerDetails").classList.add("hidden");
+      } else {
+        alert("Error: " + responseText);
+      }
+    });
+  </script>
+</body>
+</html>
