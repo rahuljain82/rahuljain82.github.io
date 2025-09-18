@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bus Payment - Running Ninjas</title>
+  
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9WH7YSXZ94');
+  </script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 py-10">
+  <!-- Logo -->
+  <div class="w-full flex justify-center mb-6">
+    <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" 
+         alt="Running Ninjas Logo" class="w-16 h-16 rounded-full" />
+  </div>
+
+  <!-- Main Card -->
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Bus Payment</h2>
+
+    <form id="busPaymentForm">
+      <!-- Marathon dropdown -->
+      <label class="block mb-3">Select Marathon
+        <select id="marathonName" required class="w-full mt-1 p-2 border rounded"></select>
+      </label>
+
+      <!-- Unique ID -->
+      <label class="block mb-2">Enter Unique ID
+        <input id="uniqueId" name="uniqueId" type="text" required 
+               class="w-full mt-1 p-2 border rounded" />
+      </label>
+
+      <button type="button" onclick="fetchBusDetails()" 
+              class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">
+        Fetch Bus Payment Details
+      </button>
+
+      <!-- Section for showing bus details -->
+      <div id="busDetails" class="hidden space-y-3">
+        <!-- From BusDataCollection -->
+        <div>
+          <label class="block mb-1">Name</label>
+          <input id="name" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <div>
+          <label class="block mb-1">Flat Number</label>
+          <input id="flat" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <div>
+          <label class="block mb-1">Race Category</label>
+          <input id="raceCategory" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <div>
+          <label class="block mb-1">Bus Seats Required</label>
+          <input id="busSeats" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <!-- From Marathon Event Sheet -->
+        <div>
+          <label class="block mb-1">Per Seat Cost</label>
+          <input id="seatCost" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <div>
+          <label class="block mb-1">UPI ID for Payment</label>
+          <input id="upiId" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <div>
+          <label class="block mb-1">Event Comments</label>
+          <textarea id="eventComments" readonly rows="2" 
+                    class="w-full mt-1 p-2 border rounded bg-gray-100"></textarea>
+        </div>
+
+        <!-- User Editable Fields -->
+        <div>
+          <label class="block mb-1">Amount Paid</label>
+          <input id="amountPaid" type="number" min="0" 
+                 class="w-full mt-1 p-2 border rounded" required />
+        </div>
+
+        <div>
+          <label class="block mb-1">Transaction ID</label>
+          <input id="transactionId" type="text" 
+                 class="w-full mt-1 p-2 border rounded" required />
+        </div>
+
+        <div>
+          <label class="block mb-1">Comments</label>
+          <textarea id="userComments" rows="2" 
+                    class="w-full mt-1 p-2 border rounded"></textarea>
+        </div>
+
+        <button type="submit" 
+                class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">
+          Submit Payment Details
+        </button>
+      </div>
+    </form>
+
+    <!-- Messages -->
+    <p id="formMessage" class="text-green-600 mt-4 hidden"></p>
+    <p id="errorMessage" class="text-red-600 mt-4 hidden"></p>
+  </div>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxwGRDh3nWkty-Awe9FyDTEV2YQaL13ScqQW_cuE-NnD0jY05THAbt7prHzr5wMu3Kt/exec'; // Replace with your deployed Apps Script URL
+
+    // Load marathons with Bus Payment = TRUE
+    window.onload = async function () {
+      try {
+        const res = await fetch(`${scriptURL}?listBusMarathons=true`);
+        const data = await res.json();
+        const dropdown = document.getElementById("marathonName");
+
+        if (data.marathons && data.marathons.length > 0) {
+          data.marathons.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            dropdown.appendChild(opt);
+          });
+        } else {
+          alert("No bus-enabled marathons found.");
+        }
+      } catch (error) {
+        alert("Error loading marathons: " + error.message);
+      }
+    };
+
+    // Fetch details
+    async function fetchBusDetails() {
+      const uniqueId = document.getElementById("uniqueId").value.trim();
+      const marathonName = document.getElementById("marathonName").value;
+      if (!uniqueId || !marathonName) return alert("Please fill both fields.");
+
+      try {
+        const res = await fetch(`${scriptURL}?fetchBusDetails=true&uniqueId=${encodeURIComponent(uniqueId)}&marathonName=${encodeURIComponent(marathonName)}`);
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById("busDetails").classList.remove("hidden");
+          document.getElementById("formMessage").classList.add("hidden");
+          document.getElementById("errorMessage").classList.add("hidden");
+
+          // Fill non-editable fields
+          document.getElementById("name").value = data.runner.name;
+          document.getElementById("flat").value = data.runner.flat;
+          document.getElementById("raceCategory").value = data.runner.raceCategory;
+          document.getElementById("busSeats").value = data.runner.busSeats;
+
+          document.getElementById("seatCost").value = data.event.seatCost;
+          document.getElementById("upiId").value = data.event.upiId;
+          document.getElementById("eventComments").value = data.event.comments;
+
+        } else {
+          document.getElementById("busDetails").classList.add("hidden");
+          document.getElementById("formMessage").classList.add("hidden");
+          const errorMsg = document.getElementById("errorMessage");
+          errorMsg.textContent = data.error || "This User has not opted for the bus.";
+          errorMsg.classList.remove("hidden");
+        }
+      } catch (error) {
+        alert("Error fetching details: " + error.message);
+      }
+    }
+
+    // Save payment details
+    document.getElementById("busPaymentForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append("saveBusPayment", "true");
+      formData.append("uniqueId", document.getElementById("uniqueId").value);
+      formData.append("marathonName", document.getElementById("marathonName").value);
+      formData.append("amountPaid", document.getElementById("amountPaid").value);
+      formData.append("transactionId", document.getElementById("transactionId").value);
+      formData.append("comments", document.getElementById("userComments").value);
+
+      try {
+        const res = await fetch(scriptURL, {
+          method: 'POST',
+          body: formData
+        });
+        const text = await res.text();
+        if (text.includes("Success")) {
+          const msg = document.getElementById("formMessage");
+          msg.textContent = "Payment details saved successfully!";
+          msg.classList.remove("hidden");
+          document.getElementById("errorMessage").classList.add("hidden");
+        } else {
+          alert("Error: " + text);
+        }
+      } catch (error) {
+        alert("Submission failed: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
