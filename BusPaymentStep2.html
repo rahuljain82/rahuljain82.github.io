@@ -109,7 +109,7 @@
                     class="w-full mt-1 p-2 border rounded"></textarea>
         </div>
 
-        <button type="submit" 
+        <button id="submitBtn" type="submit" 
                 class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">
           Submit Payment Details
         </button>
@@ -119,10 +119,13 @@
     <!-- Messages -->
     <p id="formMessage" class="text-green-600 mt-4 hidden"></p>
     <p id="errorMessage" class="text-red-600 mt-4 hidden"></p>
+
+    <!-- Back Button -->
+    <a href="index.html" class="back-link">&lt; Back</a>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxwGRDh3nWkty-Awe9FyDTEV2YQaL13ScqQW_cuE-NnD0jY05THAbt7prHzr5wMu3Kt/exec'; // Replace with your deployed Apps Script URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxwGRDh3nWkty-Awe9FyDTEV2YQaL13ScqQW_cuE-NnD0jY05THAbt7prHzr5wMu3Kt/exec';
 
     // Load marathons with Bus Payment = TRUE
     window.onload = async function () {
@@ -202,9 +205,19 @@
         const text = await res.text();
         if (text.includes("Success")) {
           const msg = document.getElementById("formMessage");
-          msg.textContent = "Payment details saved successfully!";
+          msg.textContent = "✅ Payment details saved successfully!";
           msg.classList.remove("hidden");
           document.getElementById("errorMessage").classList.add("hidden");
+
+          // Hide submit button
+          document.getElementById("submitBtn").classList.add("hidden");
+
+          // Disable form fields
+          ["uniqueId", "marathonName", "amountPaid", "transactionId", "userComments"].forEach(id => {
+            document.getElementById(id).setAttribute("disabled", "true");
+            document.getElementById(id).classList.add("bg-gray-100"); // greyed out
+          });
+
         } else {
           alert("Error: " + text);
         }
@@ -212,6 +225,11 @@
         alert("Submission failed: " + error.message);
       }
     });
+
+    // Back button
+    function goBack() {
+      window.location.href = "index.html"; // adjust if index page has different path
+    }
   </script>
 </body>
 </html>
