@@ -6,7 +6,6 @@
   <title>Race Feedback - Running Ninjas</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Lighter/smaller placeholders */
     ::placeholder {
       color: #9ca3af; /* Tailwind gray-400 */
       font-size: 0.85rem;
@@ -41,8 +40,8 @@
         Enter Timing & Give Feedback
       </button>
 
-      <!-- Section for entering race timing details -->
-      <div id="runnerSection" class="hidden space-y-3">
+      <!-- Section for entering race timing + feedback -->
+      <div id="runnerSection" class="hidden space-y-4">
 
         <!-- Auto-populated -->
         <div>
@@ -77,167 +76,105 @@
           :
           <input type="number" id="seconds" min="0" max="59" placeholder="SS" class="w-16 p-2 border rounded">
         </div>
-
-        <!-- Hidden field -->
         <input type="hidden" id="duration" name="duration">
 
-        <!-- Feedback sections -->
-      
- 
-
+        <!-- Feedback Sections -->
         <div class="mt-6">
           <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Pre-Race Feedback</h3>
-           <label class="block mb-1">Registration Process</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="registrationProcess" value="1" required> 1</label>
-    <label><input type="radio" name="registrationProcess" value="2"> 2</label>
-    <label><input type="radio" name="registrationProcess" value="3"> 3</label>
-    <label><input type="radio" name="registrationProcess" value="4"> 4</label>
-    <label><input type="radio" name="registrationProcess" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">Registration Process
-            <select id="registrationProcess" name="registrationProcess" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Very Complicated to 5:Very Easy --</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label> -->
-  <label class="block mb-1">Bib Distribution Organisation</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="bibDistribution" value="1" required> 1</label>
-    <label><input type="radio" name="bibDistribution" value="2"> 2</label>
-    <label><input type="radio" name="bibDistribution" value="3"> 3</label>
-    <label><input type="radio" name="bibDistribution" value="4"> 4</label>
-    <label><input type="radio" name="bibDistribution" value="5"> 5</label>
-  </div>
-</div>
 
-          
-<!--           <label class="block mt-2">Bib Distribution Organisation
-            <select id="bibDistribution" name="bibDistribution" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Very Complicated to 5:Very Easy --</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label>
-        </div> -->
+          <label class="block mt-2">Registration Process</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="registrationProcess" value="1" required> 1</label>
+            <label><input type="radio" name="registrationProcess" value="2"> 2</label>
+            <label><input type="radio" name="registrationProcess" value="3"> 3</label>
+            <label><input type="radio" name="registrationProcess" value="4"> 4</label>
+            <label><input type="radio" name="registrationProcess" value="5"> 5</label>
+          </div>
+
+          <label class="block mt-3">Bib Distribution Organisation</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="bibDistribution" value="1" required> 1</label>
+            <label><input type="radio" name="bibDistribution" value="2"> 2</label>
+            <label><input type="radio" name="bibDistribution" value="3"> 3</label>
+            <label><input type="radio" name="bibDistribution" value="4"> 4</label>
+            <label><input type="radio" name="bibDistribution" value="5"> 5</label>
+          </div>
+        </div>
 
         <div class="mt-6">
           <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Race Feedback</h3>
- <label class="block mb-1">Holding Area Organisation</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="holdingArea" value="1" required> 1</label>
-    <label><input type="radio" name="holdingArea" value="2"> 2</label>
-    <label><input type="radio" name="holdingArea" value="3"> 3</label>
-    <label><input type="radio" name="holdingArea" value="4"> 4</label>
-    <label><input type="radio" name="holdingArea" value="5"> 5</label>
-  </div>
-</div>
-          
-<!--           <label class="block mt-2">Holding Area Organisation
-            <select id="holdingArea" name="holdingArea" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Poorly managed to 5:Very well managed --</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label> -->
-        <label class="block mb-1">Route Difficulty</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="routeDifficulty" value="1" required> 1</label>
-    <label><input type="radio" name="routeDifficulty" value="2"> 2</label>
-    <label><input type="radio" name="routeDifficulty" value="3"> 3</label>
-    <label><input type="radio" name="routeDifficulty" value="4"> 4</label>
-    <label><input type="radio" name="routeDifficulty" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">Route Difficulty
-            <select id="routeDifficulty" name="routeDifficulty" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Extremely difficult to 5:Very Easy --</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label> -->
-         <label class="block mb-1">Route Support</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="routeSupport" value="1" required> 1</label>
-    <label><input type="radio" name="routeSupport" value="2"> 2</label>
-    <label><input type="radio" name="routeSupport" value="3"> 3</label>
-    <label><input type="radio" name="routeSupport" value="4"> 4</label>
-    <label><input type="radio" name="routeSupport" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">Route Support
-            <select id="routeSupport" name="routeSupport" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Poorly managed to 5:Extremely well managed --</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label> -->
-       <label class="block mb-1">T-shirt Quality</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="tshirtQuality" value="1" required> 1</label>
-    <label><input type="radio" name="tshirtQuality" value="2"> 2</label>
-    <label><input type="radio" name="tshirtQuality" value="3"> 3</label>
-    <label><input type="radio" name="tshirtQuality" value="4"> 4</label>
-    <label><input type="radio" name="tshirtQuality" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">T-shirt Quality
-            <select id="tshirtQuality" name="tshirtQuality" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Poor Quality to 5:Excellent Quality --</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label>
-        </div> -->
+
+          <label class="block mt-2">Holding Area Organisation</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="holdingArea" value="1" required> 1</label>
+            <label><input type="radio" name="holdingArea" value="2"> 2</label>
+            <label><input type="radio" name="holdingArea" value="3"> 3</label>
+            <label><input type="radio" name="holdingArea" value="4"> 4</label>
+            <label><input type="radio" name="holdingArea" value="5"> 5</label>
+          </div>
+
+          <label class="block mt-3">Route Difficulty</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="routeDifficulty" value="1" required> 1</label>
+            <label><input type="radio" name="routeDifficulty" value="2"> 2</label>
+            <label><input type="radio" name="routeDifficulty" value="3"> 3</label>
+            <label><input type="radio" name="routeDifficulty" value="4"> 4</label>
+            <label><input type="radio" name="routeDifficulty" value="5"> 5</label>
+          </div>
+
+          <label class="block mt-3">Route Support</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="routeSupport" value="1" required> 1</label>
+            <label><input type="radio" name="routeSupport" value="2"> 2</label>
+            <label><input type="radio" name="routeSupport" value="3"> 3</label>
+            <label><input type="radio" name="routeSupport" value="4"> 4</label>
+            <label><input type="radio" name="routeSupport" value="5"> 5</label>
+          </div>
+
+          <label class="block mt-3">T-shirt Quality</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="tshirtQuality" value="1" required> 1</label>
+            <label><input type="radio" name="tshirtQuality" value="2"> 2</label>
+            <label><input type="radio" name="tshirtQuality" value="3"> 3</label>
+            <label><input type="radio" name="tshirtQuality" value="4"> 4</label>
+            <label><input type="radio" name="tshirtQuality" value="5"> 5</label>
+          </div>
+        </div>
 
         <div class="mt-6">
           <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Post-Race Feedback</h3>
-          <label class="block mb-1">Breakfast Quality</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="breakfastQuality" value="1" required> 1</label>
-    <label><input type="radio" name="breakfastQuality" value="2"> 2</label>
-    <label><input type="radio" name="breakfastQuality" value="3"> 3</label>
-    <label><input type="radio" name="breakfastQuality" value="4"> 4</label>
-    <label><input type="radio" name="breakfastQuality" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">Breakfast Quality
-            <select id="breakfastQuality" name="breakfastQuality" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Poor Quality to 5:Excellent Quality--</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label> -->
-           <label class="block mb-1">Medal Quality</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="medalQuality" value="1" required> 1</label>
-    <label><input type="radio" name="medalQuality" value="2"> 2</label>
-    <label><input type="radio" name="medalQuality" value="3"> 3</label>
-    <label><input type="radio" name="medalQuality" value="4"> 4</label>
-    <label><input type="radio" name="medalQuality" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">Medal Quality
-            <select id="medalQuality" name="medalQuality" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Poor Quality to 5:Excellent Quality--</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label>
-        </div> -->
+
+          <label class="block mt-2">Breakfast Quality</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="breakfastQuality" value="1" required> 1</label>
+            <label><input type="radio" name="breakfastQuality" value="2"> 2</label>
+            <label><input type="radio" name="breakfastQuality" value="3"> 3</label>
+            <label><input type="radio" name="breakfastQuality" value="4"> 4</label>
+            <label><input type="radio" name="breakfastQuality" value="5"> 5</label>
+          </div>
+
+          <label class="block mt-3">Medal Quality</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="medalQuality" value="1" required> 1</label>
+            <label><input type="radio" name="medalQuality" value="2"> 2</label>
+            <label><input type="radio" name="medalQuality" value="3"> 3</label>
+            <label><input type="radio" name="medalQuality" value="4"> 4</label>
+            <label><input type="radio" name="medalQuality" value="5"> 5</label>
+          </div>
+        </div>
 
         <div class="mt-6">
           <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Overall</h3>
-           <label class="block mb-1">How likely to recommend this race to others?</label>
-  <div class="flex gap-4 flex-wrap text-sm text-gray-600">
-    <label><input type="radio" name="recommend" value="1" required> 1</label>
-    <label><input type="radio" name="recommend" value="2"> 2</label>
-    <label><input type="radio" name="recommend" value="3"> 3</label>
-    <label><input type="radio" name="recommend" value="4"> 4</label>
-    <label><input type="radio" name="recommend" value="5"> 5</label>
-  </div>
-</div>
-<!--           <label class="block mt-2">How likely to recommend this race to others?
-            <select id="recommend" name="recommend" required class="w-full p-2 border rounded">
-              <option value="">-- Rate from 1:Not recommended to 5:Highly recommended--</option>
-              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
-          </label>
-        </div> -->
+
+          <label class="block mt-2">How likely to recommend this race to others?</label>
+          <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
+            <label><input type="radio" name="recommend" value="1" required> 1</label>
+            <label><input type="radio" name="recommend" value="2"> 2</label>
+            <label><input type="radio" name="recommend" value="3"> 3</label>
+            <label><input type="radio" name="recommend" value="4"> 4</label>
+            <label><input type="radio" name="recommend" value="5"> 5</label>
+          </div>
+        </div>
 
         <button id="submitBtn" type="submit" 
                 class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-4">
