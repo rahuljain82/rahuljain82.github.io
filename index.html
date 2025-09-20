@@ -498,7 +498,8 @@
             city: item["Location"],
             description: item["Summary"],
             registrationLink: item["Link to register"],
-            busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
+            busAvailable: item["Bus Available"] === true || item["Bus Available"] ===
+            busPayment: item["Bus Payment"] === true || item["Bus Payment"] === "true",
             bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
           }));
         
@@ -645,6 +646,7 @@
             description: item["Summary"],
             registrationLink: item["Link to register"],
             busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
+            busPayment: item["Bus Payment"] === true || item["Bus Payment"] === "true",
             bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
           }));
 
@@ -755,6 +757,12 @@
                 <a href="RNBusForm.html" class="bus-btn">
                   <i data-feather="truck" class="w-4 h-4"></i>
                   Ninja Discount & Bus Interest
+                </a>
+              ` : ''}
+              ${marathon.busPayment ? `
+                <a href="BusPaymentStep2.html" class="bus-btn">
+                  <i data-feather="truck" class="w-4 h-4"></i>
+                  Bus Payment
                 </a>
               ` : ''}
               ${marathon.bibdetails ? `
