@@ -501,6 +501,7 @@
             busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
             busPayment: item["Bus Payment"] === true || item["Bus Payment"] === "true",
             bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
+            feedback: item["Feedback"] === true || item["Feedback"] === "true",
           }));
         
         // Cache the fresh data
@@ -648,6 +649,7 @@
             busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
             busPayment: item["Bus Payment"] === true || item["Bus Payment"] === "true",
             bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
+            feedback: item["Feedback"] === true || item["Feedback"] === "true",
           }));
 
         // Cache the processed data
@@ -769,6 +771,12 @@
                 <a href="RNBibForm.html" class="bib-btn">
                   <i data-feather="file-text" class="w-4 h-4"></i>
                   Bib Details
+                </a>
+              ` : ''}
+              ${marathon.feedback ? `
+                <a href="FeedbackForm.html" class="bib-btn">
+                  <i data-feather="file-text" class="w-4 h-4"></i>
+                  Race Timing & Feedback
                 </a>
               ` : ''}
             </div>
