@@ -414,7 +414,7 @@
   <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-0">
     <!-- Removed hero section text -->
   </div>
-
+  
   <!-- Marathon Cards -->
   <main class="marathon-list-wrap container mx-auto px-0 sm:px-0 lg:px-0 pb-12 mt-0">
     <div id="marathonList" class="flex flex-col gap-0 w-full">
@@ -451,6 +451,71 @@
       </div>
     </div>
   </footer>
+  
+<!-- Race Report Modal -->
+<div id="raceReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative">
+    <button onclick="closeRaceReport()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800">&times;</button>
+    <h2 class="text-xl font-bold text-indigo-700 mb-4">Race Report</h2>
+    <div id="raceReportContent" class="overflow-x-auto">
+      <p class="text-gray-500 text-sm">Loading...</p>
+    </div>
+  </div>
+</div>
+
+  <script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbxornu4mtZh0t6ZO0sZBytTL2PFqLexfpJN9thYAqcrCp_gkPGZUB-2jPt05fRCJrrZuw/exec"; // same as feedback form backend
+
+// Open modal and fetch report
+async function openRaceReport(marathonName) {
+  const modal = document.getElementById("raceReportModal");
+  const content = document.getElementById("raceReportContent");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  content.innerHTML = `<p class="text-gray-500 text-sm">Loading...</p>`;
+
+  try {
+    const res = await fetch(`${scriptURL}?getRaceReport=true&marathonName=${encodeURIComponent(marathonName)}`);
+    const data = await res.json();
+
+    if (data && data.length > 0) {
+      let html = `
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-indigo-100 text-left">
+              <th class="p-2 border">Name</th>
+              <th class="p-2 border">Category</th>
+              <th class="p-2 border">Timing</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      data.forEach(r => {
+        html += `
+          <tr>
+            <td class="p-2 border">${r.name}</td>
+            <td class="p-2 border">${r.raceCategory}</td>
+            <td class="p-2 border">${r.duration}</td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      content.innerHTML = html;
+    } else {
+      content.innerHTML = `<p class="text-gray-600">No race report entries yet.</p>`;
+    }
+  } catch (err) {
+    content.innerHTML = `<p class="text-red-600">Error loading race report.</p>`;
+  }
+}
+
+// Close modal
+function closeRaceReport() {
+  const modal = document.getElementById("raceReportModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+</script>
 
   <script>
     feather.replace();
