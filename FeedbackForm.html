@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Race Feedback - Running Ninjas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 py-10">
+  <!-- Logo -->
+  <div class="w-full flex justify-center mb-6">
+    <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" 
+         alt="Running Ninjas Logo" class="w-16 h-16 rounded-full" />
+  </div>
+
+  <!-- Main Card -->
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Timing & Feedback</h2>
+
+    <form id="feedbackForm">
+      <!-- Marathon dropdown -->
+      <label class="block mb-3">Select Marathon
+        <select id="marathonName" name="marathonName" required class="w-full mt-1 p-2 border rounded"></select>
+      </label>
+
+      <!-- Unique ID -->
+      <label class="block mb-2">Enter Unique ID
+        <input id="uniqueId" name="uniqueId" type="text" required 
+               class="w-full mt-1 p-2 border rounded" />
+      </label>
+
+      <button type="button" onclick="fetchRunnerDetails()" 
+              class="w-full bg-indigo-600 text-white font-semibold py-2 rounded mb-4">
+        Enter Timing & Give Feedback
+      </button>
+
+      <!-- Section for entering race timing details -->
+      <div id="runnerSection" class="hidden space-y-3">
+
+        <!-- Auto-populated -->
+        <div>
+          <label class="block mb-1">Name</label>
+          <input id="name" name="name" type="text" readonly 
+                 class="w-full mt-1 p-2 border rounded bg-gray-100" />
+        </div>
+
+        <!-- Selectable category -->
+        <div>
+          <label class="block mb-1">Race Category</label>
+          <select id="raceCategory" name="raceCategory" required 
+                  class="w-full mt-1 p-2 border rounded">
+            <option value="">-- Select Category --</option>
+            <option>5K</option>
+            <option>10K</option>
+            <option>Half Marathon</option>
+            <option>Full Marathon</option>
+            <option>30K</option>
+            <option>32K</option>
+            <option>50K</option>
+            <option>100K</option>
+          </select>
+        </div>
+
+        <!-- Timing input -->
+        <label>Run Duration:</label>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <input type="number" id="hours" min="0" max="23" placeholder="HH" style="width:60px;">
+          :
+          <input type="number" id="minutes" min="0" max="59" placeholder="MM" style="width:60px;">
+          :
+          <input type="number" id="seconds" min="0" max="59" placeholder="SS" style="width:60px;">
+        </div>
+
+        <!-- Hidden field -->
+        <input type="hidden" id="duration" name="duration">
+
+        <button id="submitBtn" type="submit" 
+                class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">
+          Submit Timings
+        </button>
+      </div>
+    </form>
+
+    <!-- Messages -->
+    <p id="formMessage" class="text-green-600 mt-4 hidden"></p>
+    <p id="errorMessage" class="text-red-600 mt-4 hidden"></p>
+
+    <!-- Back Button -->
+    <a href="index.html" class="back-link">&lt; Back</a>
+  </div>
+
+  <script>
+    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
+
+    // Populate marathons where Feedback = TRUE
+    window.onload = async function () {
+      try {
+        const res = await fetch(`${scriptURL}?listFeedbackMarathons=true`);
+        const data = await res.json();
+        const dropdown = document.getElementById("marathonName");
+
+        if (data.marathons && data.marathons.length > 0) {
+          data.marathons.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            dropdown.appendChild(opt);
+          });
+        } else {
+          alert("No feedback-enabled marathons found.");
+        }
+      } catch (error) {
+        alert("Error loading marathons: " + error.message);
+      }
+    };
+
+    // Fetch runner details by Unique ID
+    async function fetchRunnerDetails() {
+      const uniqueId = document.getElementById("uniqueId").value.trim();
+      const marathonName = document.getElementById("marathonName").value;
+      if (!uniqueId || !marathonName) return alert("Please fill both fields.");
+
+      try {
+        const res = await fetch(`${scriptURL}?fetchRunnerDetails=true&uniqueId=${encodeURIComponent(uniqueId)}&marathonName=${encodeURIComponent(marathonName)}`);
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById("runnerSection").classList.remove("hidden");
+          document.getElementById("formMessage").classList.add("hidden");
+          document.getElementById("errorMessage").classList.add("hidden");
+
+          document.getElementById("name").value = data.runner.name;
+
+        } else {
+          document.getElementById("runnerSection").classList.add("hidden");
+          const errorMsg = document.getElementById("errorMessage");
+          errorMsg.textContent = data.error || "Runner not found.";
+          errorMsg.classList.remove("hidden");
+        }
+      } catch (error) {
+        alert("Error fetching runner details: " + error.message);
+      }
+    }
+
+    // Handle form submit
+    document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Build duration
+      const h = document.getElementById("hours").value || 0;
+      const m = document.getElementById("minutes").value || 0;
+      const s = document.getElementById("seconds").value || 0;
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const ss = String(s).padStart(2, "0");
+      document.getElementById("duration").value = `${hh}:${mm}:${ss}`;
+
+      const formData = new FormData(e.target);
+      formData.append("saveFeedback", "true");
+
+      try {
+        const res = await fetch(scriptURL, {
+          method: 'POST',
+          body: formData
+        });
+        const text = await res.text();
+        if (text.includes("Success")) {
+          const msg = document.getElementById("formMessage");
+          msg.textContent = "✅ Feedback submitted successfully!";
+          msg.classList.remove("hidden");
+          document.getElementById("errorMessage").classList.add("hidden");
+          document.getElementById("submitBtn").classList.add("hidden");
+        } else {
+          alert("Error: " + text);
+        }
+      } catch (error) {
+        alert("Submission failed: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
