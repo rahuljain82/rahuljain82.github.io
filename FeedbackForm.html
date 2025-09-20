@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Race Feedback - Running Ninjas</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Lighter/smaller placeholders */
+    ::placeholder {
+      color: #9ca3af; /* Tailwind gray-400 */
+      font-size: 0.85rem;
+    }
+  </style>
 </head>
 <body class="bg-gray-50 py-10">
   <!-- Logo -->
@@ -62,21 +69,92 @@
         </div>
 
         <!-- Timing input -->
-        <label>Run Duration:</label>
-        <div style="display:flex; gap:5px; align-items:center;">
-          <input type="number" id="hours" min="0" max="23" placeholder="HH" style="width:60px;">
+        <label class="block font-semibold text-gray-700">Enter your race timing</label>
+        <div class="flex gap-2 items-center">
+          <input type="number" id="hours" min="0" max="23" placeholder="HH" class="w-16 p-2 border rounded">
           :
-          <input type="number" id="minutes" min="0" max="59" placeholder="MM" style="width:60px;">
+          <input type="number" id="minutes" min="0" max="59" placeholder="MM" class="w-16 p-2 border rounded">
           :
-          <input type="number" id="seconds" min="0" max="59" placeholder="SS" style="width:60px;">
+          <input type="number" id="seconds" min="0" max="59" placeholder="SS" class="w-16 p-2 border rounded">
         </div>
 
         <!-- Hidden field -->
         <input type="hidden" id="duration" name="duration">
 
+        <!-- Feedback sections -->
+        <div class="mt-6">
+          <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Pre-Race Feedback</h3>
+          <label class="block mt-2">Registration Process
+            <select id="registrationProcess" name="registrationProcess" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Very Complicated to 5:Very Easy --</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+          <label class="block mt-2">Bib Distribution Organisation
+            <select id="bibDistribution" name="bibDistribution" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Very Complicated to 5:Very Easy --</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Race Feedback</h3>
+          <label class="block mt-2">Holding Area Organisation
+            <select id="holdingArea" name="holdingArea" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Poorly managed to 5:Very well managed --</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+          <label class="block mt-2">Route Difficulty
+            <select id="routeDifficulty" name="routeDifficulty" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Extremely difficult to 5:Very Easy --</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+          <label class="block mt-2">Route Support
+            <select id="routeSupport" name="routeSupport" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Poorly managed to 5:Extremely well managed --</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+          <label class="block mt-2">T-shirt Quality
+            <select id="tshirtQuality" name="tshirtQuality" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Poor Quality to 5:Excellent Quality --</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Post-Race Feedback</h3>
+          <label class="block mt-2">Breakfast Quality
+            <select id="breakfastQuality" name="breakfastQuality" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Poor Quality to 5:Excellent Quality--</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+          <label class="block mt-2">Medal Quality
+            <select id="medalQuality" name="medalQuality" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Poor Quality to 5:Excellent Quality--</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="text-lg font-bold text-indigo-700 border-b pb-1">Overall</h3>
+          <label class="block mt-2">How likely to recommend this race to others?
+            <select id="recommend" name="recommend" required class="w-full p-2 border rounded">
+              <option value="">-- Rate from 1:Not recommended to 5:Highly recommended--</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+        </div>
+
         <button id="submitBtn" type="submit" 
-                class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">
-          Submit Timings
+                class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-4">
+          Submit Timing & Feedback
         </button>
       </div>
     </form>
@@ -90,7 +168,7 @@
   </div>
 
   <script>
-    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxornu4mtZh0t6ZO0sZBytTL2PFqLexfpJN9thYAqcrCp_gkPGZUB-2jPt05fRCJrrZuw/exec';
 
     // Populate marathons where Feedback = TRUE
     window.onload = async function () {
@@ -98,16 +176,13 @@
         const res = await fetch(`${scriptURL}?listFeedbackMarathons=true`);
         const data = await res.json();
         const dropdown = document.getElementById("marathonName");
-
-        if (data.marathons && data.marathons.length > 0) {
+        if (data.marathons?.length) {
           data.marathons.forEach(name => {
             const opt = document.createElement("option");
             opt.value = name;
             opt.textContent = name;
             dropdown.appendChild(opt);
           });
-        } else {
-          alert("No feedback-enabled marathons found.");
         }
       } catch (error) {
         alert("Error loading marathons: " + error.message);
@@ -123,14 +198,10 @@
       try {
         const res = await fetch(`${scriptURL}?fetchRunnerDetails=true&uniqueId=${encodeURIComponent(uniqueId)}&marathonName=${encodeURIComponent(marathonName)}`);
         const data = await res.json();
-
         if (data.success) {
           document.getElementById("runnerSection").classList.remove("hidden");
-          document.getElementById("formMessage").classList.add("hidden");
           document.getElementById("errorMessage").classList.add("hidden");
-
           document.getElementById("name").value = data.runner.name;
-
         } else {
           document.getElementById("runnerSection").classList.add("hidden");
           const errorMsg = document.getElementById("errorMessage");
@@ -150,24 +221,19 @@
       const h = document.getElementById("hours").value || 0;
       const m = document.getElementById("minutes").value || 0;
       const s = document.getElementById("seconds").value || 0;
-      const hh = String(h).padStart(2, "0");
-      const mm = String(m).padStart(2, "0");
-      const ss = String(s).padStart(2, "0");
-      document.getElementById("duration").value = `${hh}:${mm}:${ss}`;
+      document.getElementById("duration").value = 
+        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 
       const formData = new FormData(e.target);
       formData.append("saveFeedback", "true");
 
       try {
-        const res = await fetch(scriptURL, {
-          method: 'POST',
-          body: formData
-        });
+        const res = await fetch(scriptURL, { method: 'POST', body: formData });
         const text = await res.text();
         if (text.includes("Success")) {
-          const msg = document.getElementById("formMessage");
-          msg.textContent = "✅ Feedback submitted successfully!";
-          msg.classList.remove("hidden");
+          document.querySelectorAll("input, select, button").forEach(el => el.disabled = true);
+          document.getElementById("formMessage").textContent = "✅ Feedback submitted successfully!";
+          document.getElementById("formMessage").classList.remove("hidden");
           document.getElementById("errorMessage").classList.add("hidden");
           document.getElementById("submitBtn").classList.add("hidden");
         } else {
