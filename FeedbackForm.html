@@ -6,6 +6,7 @@
   <title>Race Feedback - Running Ninjas</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Lighter/smaller placeholders */
     ::placeholder {
       color: #9ca3af; /* Tailwind gray-400 */
       font-size: 0.85rem;
@@ -40,8 +41,8 @@
         Enter Timing & Give Feedback
       </button>
 
-      <!-- Section for entering race timing + feedback -->
-      <div id="runnerSection" class="hidden space-y-4">
+      <!-- Section for entering race timing details -->
+      <div id="runnerSection" class="hidden space-y-3">
 
         <!-- Auto-populated -->
         <div>
@@ -76,6 +77,8 @@
           :
           <input type="number" id="seconds" min="0" max="59" placeholder="SS" class="w-16 p-2 border rounded">
         </div>
+
+        <!-- Hidden field -->
         <input type="hidden" id="duration" name="duration">
 
         <!-- Feedback Sections -->
@@ -90,6 +93,7 @@
             <label><input type="radio" name="registrationProcess" value="4"> 4</label>
             <label><input type="radio" name="registrationProcess" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Very Complicated, 5 = Very Easy</p>
 
           <label class="block mt-3">Bib Distribution Organisation</label>
           <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
@@ -99,6 +103,7 @@
             <label><input type="radio" name="bibDistribution" value="4"> 4</label>
             <label><input type="radio" name="bibDistribution" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Very Complicated, 5 = Very Easy</p>
         </div>
 
         <div class="mt-6">
@@ -112,6 +117,7 @@
             <label><input type="radio" name="holdingArea" value="4"> 4</label>
             <label><input type="radio" name="holdingArea" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Poorly managed, 5 = Very well managed</p>
 
           <label class="block mt-3">Route Difficulty</label>
           <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
@@ -121,6 +127,7 @@
             <label><input type="radio" name="routeDifficulty" value="4"> 4</label>
             <label><input type="radio" name="routeDifficulty" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Extremely difficult, 5 = Very Easy</p>
 
           <label class="block mt-3">Route Support</label>
           <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
@@ -130,6 +137,7 @@
             <label><input type="radio" name="routeSupport" value="4"> 4</label>
             <label><input type="radio" name="routeSupport" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Poorly managed, 5 = Extremely well managed</p>
 
           <label class="block mt-3">T-shirt Quality</label>
           <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
@@ -139,6 +147,7 @@
             <label><input type="radio" name="tshirtQuality" value="4"> 4</label>
             <label><input type="radio" name="tshirtQuality" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Poor Quality, 5 = Excellent Quality</p>
         </div>
 
         <div class="mt-6">
@@ -152,6 +161,7 @@
             <label><input type="radio" name="breakfastQuality" value="4"> 4</label>
             <label><input type="radio" name="breakfastQuality" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Poor Quality, 5 = Excellent Quality</p>
 
           <label class="block mt-3">Medal Quality</label>
           <div class="flex items-center gap-3 mt-1 flex-wrap text-gray-700">
@@ -161,6 +171,7 @@
             <label><input type="radio" name="medalQuality" value="4"> 4</label>
             <label><input type="radio" name="medalQuality" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Poor Quality, 5 = Excellent Quality</p>
         </div>
 
         <div class="mt-6">
@@ -174,6 +185,7 @@
             <label><input type="radio" name="recommend" value="4"> 4</label>
             <label><input type="radio" name="recommend" value="5"> 5</label>
           </div>
+          <p class="text-xs text-gray-500 mt-1">1 = Not recommended, 5 = Highly recommended</p>
         </div>
 
         <button id="submitBtn" type="submit" 
