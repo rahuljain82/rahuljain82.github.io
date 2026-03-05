@@ -350,6 +350,9 @@
       <button id="addRunnerBtn">
         <i data-feather="user-plus" class="w-5 h-5"></i>
       </button>
+      <button id="tshirtOrderBtn">
+        <i data-feather="user-plus" class="w-5 h-5"></i>
+      </button>
     </div>
   </div>
 
@@ -525,6 +528,7 @@ function closeRaceReport() {
     const searchInputTop = document.getElementById("searchInputTop");
     const filterBtn = document.getElementById("filterBtn");
     const addRunnerBtn = document.getElementById("addRunnerBtn");
+    const tshirtOrderBtn = document.getElementById("tshirtOrderBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const dropdownMenu = document.getElementById("dropdownMenu");
 
@@ -586,6 +590,11 @@ function closeRaceReport() {
     // Redirect to add runner form
     addRunnerBtn.addEventListener("click", () => {
       window.location.href = "add-runner-form.html";
+    });
+
+     // Redirect to add Tshirt Order form
+    tshirtOrderBtn.addEventListener("click", () => {
+      window.location.href = "TshirtDataCollection.html";
     });
 
     // Close hamburger dropdown when clicking outside
