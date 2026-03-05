@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Running Ninjas T-Shirt Order</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 py-10">
+
+<div class="w-full flex justify-center mb-6">
+<img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg"
+class="w-16 h-16 rounded-full"/>
+</div>
+
+<div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
+
+<h2 class="text-xl font-semibold text-gray-800 mb-4">
+Running Ninjas T-Shirt Order
+</h2>
+
+<form id="tshirtForm">
+
+<label class="block mb-3">
+Enter Unique ID
+<input id="uniqueId" required class="w-full mt-1 p-2 border rounded"/>
+</label>
+
+<button type="button"
+onclick="fetchRunnerData()"
+class="w-full bg-indigo-600 text-white py-2 rounded mb-4">
+Fetch My Data
+</button>
+
+<div id="runnerDetails" class="hidden">
+
+<label class="block mb-2">
+Name
+<input id="name" class="w-full mt-1 p-2 border rounded"/>
+</label>
+
+<label class="block mb-2">
+Flat
+<input id="flat" class="w-full mt-1 p-2 border rounded"/>
+</label>
+
+<label class="block mb-2">
+Gender
+<input id="gender" class="w-full mt-1 p-2 border rounded"/>
+</label>
+
+<label class="block mb-2">
+T-Shirt Size
+<select id="tshirtSize" class="w-full mt-1 p-2 border rounded">
+
+<option value="XS">XS</option>
+<option value="S">S</option>
+<option value="M">M</option>
+<option value="L">L</option>
+<option value="XL">XL</option>
+<option value="XXL">XXL</option>
+
+</select>
+</label>
+
+<label class="block mb-3">
+How Many T-Shirts Needed
+<input id="tshirtQuantity" type="number" min="1" value="1"
+class="w-full mt-1 p-2 border rounded"/>
+</label>
+
+<button type="submit"
+class="w-full bg-green-600 text-white py-2 rounded">
+Submit T-Shirt Request
+</button>
+
+</div>
+
+</form>
+
+<p id="formMessage"
+class="text-green-600 mt-4 hidden">
+T-Shirt order submitted successfully!
+</p>
+
+</div>
+
+<script>
+
+const scriptURL =
+"https://script.google.com/macros/s/AKfycby6_r8aLIKXFgc_t0l495VrMkHSocYeTgkDshHPWAElLiws1E92KbiQdOiQQSInHq4N/exec";
+
+async function fetchRunnerData(){
+
+const uniqueId = document.getElementById("uniqueId").value.trim();
+
+if(!uniqueId){
+alert("Please enter Unique ID");
+return;
+}
+
+const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}`);
+const data = await res.json();
+
+if(!data.success){
+alert(data.error || "Runner not found");
+return;
+}
+
+const r = data.runner;
+
+document.getElementById("name").value = r.name;
+document.getElementById("flat").value = r.flat;
+document.getElementById("gender").value = r.gender;
+document.getElementById("tshirtSize").value = r.tshirtSize;
+
+document.getElementById("runnerDetails").classList.remove("hidden");
+
+}
+
+document.getElementById("tshirtForm")
+.addEventListener("submit", async (e)=>{
+
+e.preventDefault();
+
+const formData = new FormData();
+
+formData.append("uniqueId",document.getElementById("uniqueId").value);
+formData.append("name",document.getElementById("name").value);
+formData.append("flat",document.getElementById("flat").value);
+formData.append("gender",document.getElementById("gender").value);
+formData.append("tshirtSize",document.getElementById("tshirtSize").value);
+formData.append("tshirtQuantity",document.getElementById("tshirtQuantity").value);
+
+const res = await fetch(scriptURL,{
+method:"POST",
+body:formData
+});
+
+const text = await res.text();
+
+if(text.includes("Success")){
+
+document.getElementById("formMessage").classList.remove("hidden");
+document.getElementById("tshirtForm").reset();
+document.getElementById("runnerDetails").classList.add("hidden");
+
+}else{
+
+alert("Error submitting form");
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
