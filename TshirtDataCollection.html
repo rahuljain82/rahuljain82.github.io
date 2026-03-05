@@ -101,14 +101,21 @@ async function fetchRunnerData(){
 
 const uniqueId = document.getElementById("uniqueId").value.trim();
 const spinner = document.getElementById("loadingSpinner");
+
 if(!uniqueId){
 alert("Please enter Unique ID");
 return;
 }
+
 spinner.classList.remove("hidden");
+
+try{
+
 const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}`);
 const data = await res.json();
+
 spinner.classList.add("hidden");
+
 if(!data.success){
 alert(data.error || "Runner not found");
 return;
@@ -123,14 +130,14 @@ document.getElementById("tshirtSize").value = r.tshirtSize;
 
 document.getElementById("runnerDetails").classList.remove("hidden");
 
-}
-catch(err){
+}catch(err){
 
 spinner.classList.add("hidden");
 alert("Error fetching runner data");
 
 }
 
+}
 
 document.getElementById("tshirtForm")
 .addEventListener("submit", async (e)=>{
