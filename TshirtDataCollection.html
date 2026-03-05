@@ -34,6 +34,11 @@ class="w-full bg-indigo-600 text-white py-2 rounded mb-4">
 Fetch My Data
 </button>
 
+  <div id="loadingSpinner" class="hidden text-center my-4">
+  <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 border-opacity-60 mx-auto"></div>
+  <p class="text-gray-500 text-sm mt-2">Fetching your details...</p>
+</div>
+
 <div id="runnerDetails" class="hidden">
 
 <label class="block mb-2">
@@ -95,15 +100,15 @@ const scriptURL =
 async function fetchRunnerData(){
 
 const uniqueId = document.getElementById("uniqueId").value.trim();
-
+const spinner = document.getElementById("loadingSpinner");
 if(!uniqueId){
 alert("Please enter Unique ID");
 return;
 }
-
+spinner.classList.remove("hidden");
 const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}`);
 const data = await res.json();
-
+spinner.classList.add("hidden");
 if(!data.success){
 alert(data.error || "Runner not found");
 return;
@@ -119,7 +124,14 @@ document.getElementById("tshirtSize").value = r.tshirtSize;
 document.getElementById("runnerDetails").classList.remove("hidden");
 
 }
+catch(err){
 
+spinner.classList.add("hidden");
+alert("Error fetching runner data");
+
+}
+
+}
 document.getElementById("tshirtForm")
 .addEventListener("submit", async (e)=>{
 
