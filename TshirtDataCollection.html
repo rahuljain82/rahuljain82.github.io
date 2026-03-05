@@ -99,6 +99,11 @@ class="w-full bg-green-600 text-white py-2 rounded">
 Submit T-Shirt Request
 </button>
 
+  <div id="submitSpinner" class="hidden text-center my-4">
+  <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-green-500 border-opacity-60 mx-auto"></div>
+  <p class="text-gray-500 text-sm mt-2">Submitting your order...</p>
+</div>
+
 </div>
 
 </form>
@@ -159,10 +164,14 @@ spinner.classList.add("hidden");
 
 }
 }
-document.getElementById("tshirtForm")
+
+  document.getElementById("tshirtForm")
 .addEventListener("submit", async (e)=>{
 
 e.preventDefault();
+
+const spinner = document.getElementById("submitSpinner");
+spinner.classList.remove("hidden");
 
 const formData = new FormData();
 
@@ -173,12 +182,16 @@ formData.append("gender",document.getElementById("gender").value);
 formData.append("tshirtSize",document.getElementById("tshirtSize").value);
 formData.append("tshirtQuantity",document.getElementById("tshirtQuantity").value);
 
+try{
+
 const res = await fetch(scriptURL,{
 method:"POST",
 body:formData
 });
 
 const text = await res.text();
+
+spinner.classList.add("hidden");
 
 if(text.includes("Success")){
 
@@ -192,7 +205,48 @@ alert("Error submitting form");
 
 }
 
+}catch(err){
+
+spinner.classList.add("hidden");
+alert("Submission failed");
+
+}
+
 });
+//document.getElementById("tshirtForm")
+//.addEventListener("submit", async (e)=>{
+
+//e.preventDefault();
+
+//const formData = new FormData();
+
+//formData.append("uniqueId",document.getElementById("uniqueId").value);
+//formData.append("name",document.getElementById("name").value);
+//formData.append("flat",document.getElementById("flat").value);
+//formData.append("gender",document.getElementById("gender").value);
+//formData.append("tshirtSize",document.getElementById("tshirtSize").value);
+//formData.append("tshirtQuantity",document.getElementById("tshirtQuantity").value);
+
+//const res = await fetch(scriptURL,{
+//method:"POST",
+//body:formData
+//});
+
+//const text = await res.text();
+
+//if(text.includes("Success")){
+
+//document.getElementById("formMessage").classList.remove("hidden");
+//document.getElementById("tshirtForm").reset();
+//document.getElementById("runnerDetails").classList.add("hidden");
+
+//}else{
+
+//alert("Error submitting form");
+
+//}
+
+//});
 
 </script>
 
