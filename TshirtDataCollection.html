@@ -301,7 +301,7 @@ function goBack(){
 window.location.href = "index.html";
 }
 
-function addTshirtRow(personName=""){
+function addTshirtRow(printName="", size="", qty="1"){
 
 const container = document.getElementById("tshirtRows");
 
@@ -312,6 +312,7 @@ row.innerHTML = `
 
 <input 
 placeholder="Name to Print"
+value="${printName}"
 class="p-2 border rounded"/>
 
 <select class="p-2 border rounded" required>
@@ -329,13 +330,30 @@ class="p-2 border rounded"/>
 <input 
 type="number"
 min="1"
-value="1"
+value="${qty}"
 class="p-2 border rounded"/>
 
+<button type="button"
+class="bg-red-500 text-white px-2 py-1 rounded"
+onclick="removeRow(this)">
+🗑
+</button>
 `;
 
 container.appendChild(row);
+// pre-select size if available
+if(size){
+row.querySelector("select").value = size;
 }
+}
+
+function removeRow(button){
+
+const row = button.parentElement;
+row.remove();
+
+}
+  
 </script>
 
 </body>
