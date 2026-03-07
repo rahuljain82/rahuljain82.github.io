@@ -232,8 +232,14 @@ for(const row of rows){
 
 const inputs = row.querySelectorAll("input,select");
 /* VALIDATION */
+if(!inputs[0].value.trim()){
+alert("Please enter a name to print on the shirt");
+spinner.classList.add("hidden");
+return;
+}
 if(!inputs[1].value){
 alert("Please select T-shirt size for all rows");
+spinner.classList.add("hidden");
 return;
 }
 orders.push({
