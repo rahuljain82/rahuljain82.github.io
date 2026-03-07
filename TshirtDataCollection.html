@@ -67,7 +67,12 @@ class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
 <div class="mt-4">
 
 <h3 class="font-semibold mb-2">T-Shirt Orders</h3>
-
+<div id="tshirtHeader" class="hidden grid grid-cols-4 gap-2 text-sm font-semibold mb-2">
+<div>Print Name</div>
+<div>Size</div>
+<div>Qty</div>
+<div></div>
+</div>
 <div id="tshirtRows"></div>
 
 <button type="button"
@@ -128,6 +133,7 @@ document.getElementById("gender").value = r.gender;
 //document.getElementById("tshirtSize").value = r.tshirtSize;
 
 document.getElementById("runnerDetails").classList.remove("hidden");
+document.getElementById("tshirtHeader").classList.remove("hidden");
 
   /* Create first T-shirt row for the runner */
 document.getElementById("tshirtRows").innerHTML="";
