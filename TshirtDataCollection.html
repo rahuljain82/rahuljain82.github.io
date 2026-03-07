@@ -176,8 +176,25 @@ document.getElementById("gender").value = r.gender;
 document.getElementById("runnerDetails").classList.remove("hidden");
 
   /* Create first T-shirt row for the runner */
-document.getElementById("tshirtRows").innerHTML = "";
+document.getElementById("tshirtRows").innerHTML="";
+
+if(data.orders && data.orders.length > 0){
+
+data.orders.forEach(order=>{
+
+addTshirtRow(
+order.printName,
+order.size,
+order.qty
+);
+
+});
+
+}else{
+
 addTshirtRow(r.name);
+
+}
 }catch(err){
 
 spinner.classList.add("hidden");
