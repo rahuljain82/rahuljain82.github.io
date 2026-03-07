@@ -230,11 +230,11 @@ const rows = document.querySelectorAll("#tshirtRows > div");
 
 let orders = [];
 
-rows.forEach(row=>{
+for(const row of rows){
 
 const inputs = row.querySelectorAll("input,select");
 /* VALIDATION */
-if(!inputs[2].value){
+if(!inputs[1].value){
 alert("Please select T-shirt size for all rows");
 return;
 }
