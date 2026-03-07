@@ -1,0 +1,10 @@
+# SQL files contain schema + seed data with runner PII — keep off repo
+supabase/
+
+# Supabase credentials — injected via GitHub Actions secrets in CI
+js/config.js
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
