@@ -79,8 +79,22 @@ Gender
 <input id="gender" readonly
 class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
 </label>
+<div class="mt-4">
 
-<label class="block mb-2">
+<h3 class="font-semibold mb-2">T-Shirt Orders</h3>
+
+<div id="tshirtRows"></div>
+
+<button type="button"
+onclick="addTshirtRow()"
+class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">
++ Add Another T-Shirt
+</button>
+
+</div>
+
+  
+<!-- <label class="block mb-2">
 T-Shirt Size
 <select id="tshirtSize" required class="w-full mt-1 p-2 border rounded">
 
@@ -100,7 +114,7 @@ T-Shirt Size
 How Many T-Shirts Needed
 <input id="tshirtQuantity" type="number" min="1" value="1"
 class="w-full mt-1 p-2 border rounded"/>
-</label>
+</label> -->
 
 <button type="submit"
 class="w-full bg-green-600 text-white py-2 rounded">
@@ -157,10 +171,13 @@ const r = data.runner;
 document.getElementById("name").value = r.name;
 document.getElementById("flat").value = r.flat;
 document.getElementById("gender").value = r.gender;
-document.getElementById("tshirtSize").value = r.tshirtSize;
+//document.getElementById("tshirtSize").value = r.tshirtSize;
 
 document.getElementById("runnerDetails").classList.remove("hidden");
 
+  /* Create first T-shirt row for the runner */
+document.getElementById("tshirtRows").innerHTML = "";
+addTshirtRow(r.name);
 }catch(err){
 
 spinner.classList.add("hidden");
@@ -187,8 +204,33 @@ formData.append("uniqueId",document.getElementById("uniqueId").value);
 formData.append("name",document.getElementById("name").value);
 formData.append("flat",document.getElementById("flat").value);
 formData.append("gender",document.getElementById("gender").value);
-formData.append("tshirtSize",document.getElementById("tshirtSize").value);
-formData.append("tshirtQuantity",document.getElementById("tshirtQuantity").value);
+//formData.append("tshirtSize",document.getElementById("tshirtSize").value);
+//formData.append("tshirtQuantity",document.getElementById("tshirtQuantity").value);
+
+/* -------- COLLECT ALL TSHIRT ROWS -------- */
+
+const rows = document.querySelectorAll("#tshirtRows > div");
+
+let orders = [];
+
+rows.forEach(row=>{
+
+const inputs = row.querySelectorAll("input,select");
+/* VALIDATION */
+if(!inputs[2].value){
+alert("Please select T-shirt size for all rows");
+return;
+}
+orders.push({
+personName: inputs[0].value,
+printName: inputs[1].value,
+size: inputs[2].value,
+qty: inputs[3].value
+});
+
+});
+
+formData.append("orders", JSON.stringify(orders));  
 
 try{
 
@@ -260,6 +302,46 @@ function goBack(){
 window.location.href = "index.html";
 }
 
+function addTshirtRow(personName=""){
+
+const container = document.getElementById("tshirtRows");
+
+const row = document.createElement("div");
+row.className = "grid grid-cols-4 gap-2 mb-2";
+
+row.innerHTML = `
+
+<input 
+placeholder="Person Name"
+value="${personName}"
+class="p-2 border rounded"/>
+
+<input 
+placeholder="Name to Print"
+class="p-2 border rounded"/>
+
+<select class="p-2 border rounded" required>
+
+<option value="">Size</option>
+<option value="XS">XS</option>
+<option value="S">S</option>
+<option value="M">M</option>
+<option value="L">L</option>
+<option value="XL">XL</option>
+<option value="XXL">XXL</option>
+
+</select>
+
+<input 
+type="number"
+min="1"
+value="1"
+class="p-2 border rounded"/>
+
+`;
+
+container.appendChild(row);
+}
 </script>
 
 </body>
