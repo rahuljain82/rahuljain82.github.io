@@ -47,21 +47,6 @@ Fetch My Data
 
 <div id="runnerDetails" class="hidden">
 
-<!--<label class="block mb-2">
-Name
-<input id="name" class="w-full mt-1 p-2 border rounded"/>
-</label>
-
-<label class="block mb-2">
-Flat
-<input id="flat" class="w-full mt-1 p-2 border rounded"/>
-</label>
-
-<label class="block mb-2">
-Gender
-<input id="gender" class="w-full mt-1 p-2 border rounded"/>
-</label> -->
-
   <label class="block mb-2">
 Name
 <input id="name" readonly
@@ -93,29 +78,6 @@ class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">
 
 </div>
 
-  
-<!-- <label class="block mb-2">
-T-Shirt Size
-<select id="tshirtSize" required class="w-full mt-1 p-2 border rounded">
-
-<option value="">Select Size</option>  
-<option value="kids">Kids-S</option>
-<option value="XS">XS</option>
-<option value="S">S</option>
-<option value="M">M</option>
-<option value="L">L</option>
-<option value="XL">XL</option>
-<option value="XXL">XXL</option>
-<option value="XXXL">XXXL</option>
-</select>
-</label>
-
-<label class="block mb-3">
-How Many T-Shirts Needed
-<input id="tshirtQuantity" type="number" min="1" value="1"
-class="w-full mt-1 p-2 border rounded"/>
-</label> -->
-
 <button type="submit"
 class="w-full bg-green-600 text-white py-2 rounded">
 Submit T-Shirt Request
@@ -138,29 +100,21 @@ T-Shirt order submitted successfully!
 </div>
 
 <script>
-
 const scriptURL =
 "https://script.google.com/macros/s/AKfycbwdzbxxQXdYWhBQ9bybAtZjWc79WszuHSlzvT6zOWtZA-NmOIezLOEKTKXSji-DcU3O/exec";
 
 async function fetchRunnerData(){
-
 const uniqueId = document.getElementById("uniqueId").value.trim();
 const spinner = document.getElementById("loadingSpinner");
-
 if(!uniqueId){
 alert("Please enter Unique ID");
 return;
 }
-
 spinner.classList.remove("hidden");
-
 try{
-
 const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}`);
 const data = await res.json();
-
 spinner.classList.add("hidden");
-
 if(!data.success){
 alert(data.error || "Runner not found");
 return;
@@ -179,31 +133,21 @@ document.getElementById("runnerDetails").classList.remove("hidden");
 document.getElementById("tshirtRows").innerHTML="";
 
 if(data.orders && data.orders.length > 0){
-
 data.orders.forEach(order=>{
-
 addTshirtRow(
 order.printName,
 order.size,
 order.qty
 );
-
 });
-
 }else{
-
 addTshirtRow(r.name);
-
 }
 }catch(err){
-
 spinner.classList.add("hidden");
 alert("Error fetching runner data");
-
 }finally {
-
 spinner.classList.add("hidden");
-
 }
 }
 
@@ -225,21 +169,13 @@ formData.append("gender",document.getElementById("gender").value);
 /* -------- COLLECT ALL TSHIRT ROWS -------- */
 
 const rows = document.querySelectorAll("#tshirtRows > div");
-
 let orders = [];
 
 for(const row of rows){
-
 const inputs = row.querySelectorAll("input,select");
 /* VALIDATION */
-if(!inputs[0].value.trim()){
-alert("Please enter a name to print on the shirt");
-spinner.classList.add("hidden");
-return;
-}
 if(!inputs[1].value){
 alert("Please select T-shirt size for all rows");
-spinner.classList.add("hidden");
 return;
 }
 orders.push({
@@ -249,39 +185,25 @@ qty: inputs[2].value
 });
 
 });
-
 formData.append("orders", JSON.stringify(orders));  
-
 try{
-
 const res = await fetch(scriptURL,{
 method:"POST",
 body:formData
 });
-
 const text = await res.text();
-
 spinner.classList.add("hidden");
-
 if(text.includes("Success")){
-
 document.getElementById("formMessage").classList.remove("hidden");
 document.getElementById("tshirtForm").reset();
 document.getElementById("runnerDetails").classList.add("hidden");
-
 }else{
-
 alert("Error submitting form");
-
 }
-
 }catch(err){
-
 spinner.classList.add("hidden");
 alert("Submission failed");
-
 }
-
 });
 
 function goBack(){
