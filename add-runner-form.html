@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Runner Details</title>
-  
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -13,7 +11,6 @@
     gtag('js', new Date());
     gtag('config', 'G-9WH7YSXZ94');
   </script>
-  
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 py-10">
@@ -22,57 +19,47 @@
   </div>
   <div class="max-w-md mx-auto bg-white rounded-xl shadow p-6">
     <h2 class="text-xl font-semibold text-gray-800 mb-4">Add Runner Details</h2>
-    
+
     <form id="runnerForm">
-      <!-- Unique ID - Auto-populated -->
       <label class="block mb-2">Unique ID
         <input name="uniqueId" type="text" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed" />
         <span class="text-xs text-gray-500">Auto-generated from first name (first 4 letters) + flat number</span>
       </label>
 
-      <!-- First Name - Required -->
       <label class="block mb-2">First Name *
         <input name="firstName" type="text" required class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="firstNameError">Please enter a valid first name (letters only)</span>
       </label>
 
-      <!-- Last Name - Optional -->
       <label class="block mb-2">Last Name
         <input name="lastName" type="text" class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="lastNameError">Please enter a valid last name (letters only)</span>
       </label>
 
-      <!-- Flat Number - Required -->
       <label class="block mb-2">Flat Number *
         <input name="flat" type="number" required min="1001" max="23188" class="w-full mt-1 p-2 border rounded" />
         <span class="text-xs text-gray-500">Enter your PSN flat number</span>
         <span class="text-red-500 text-xs hidden" id="flatError">Flat number must be between 1001 and 23188</span>
       </label>
 
-      <!-- Community Code - Required -->
       <label class="block mb-2">Community Code *
         <input name="community" type="password" required class="w-full mt-1 p-2 border rounded" />
         <span class="text-xs text-gray-500">Contact your running group admin for the code</span>
       </label>
 
-      <!-- Phone Number - Optional -->
       <label class="block mb-2">Phone Number
         <input name="phone" type="tel" class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="phoneError">Please enter a valid 10-digit phone number</span>
       </label>
 
-      <!-- DOB - Optional -->
       <label class="block mb-2">Date Of Birth
         <input name="dob" type="date" class="w-full mt-1 p-2 border rounded" />
       </label>
 
-      <!-- Age - Auto-calculated -->
       <label class="block mb-2">Age
         <input name="age" type="number" disabled class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed" />
-<!--        <span class="text-xs text-gray-500">Automatically calculated from DOB</span>-->
       </label>
 
-      <!-- Gender - Optional -->
       <label class="block mb-4">Gender
         <select name="gender" class="w-full mt-1 p-2 border rounded">
           <option value="">Select...</option>
@@ -82,7 +69,6 @@
         </select>
       </label>
 
-      <!-- Tshirt Size - Optional -->
       <label class="block mb-4">Tshirt Size
         <select name="teesize" class="w-full mt-1 p-2 border rounded">
           <option value="">Select...</option>
@@ -101,34 +87,26 @@
         </select>
       </label>
 
-      <!-- Email - Required -->
       <label class="block mb-2">Email Address *
         <input name="email" type="email" required class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="emailError">Please enter a valid email address</span>
       </label>
 
-      <!-- Blood Group - Optional -->
       <label class="block mb-2">Blood Group
         <select name="bloodgroup" class="w-full mt-1 p-2 border rounded">
           <option value="">Select Blood Group...</option>
-          <option value="A+">A+</option>
-          <option value="A-">A-</option>
-          <option value="B+">B+</option>
-          <option value="B-">B-</option>
-          <option value="AB+">AB+</option>
-          <option value="AB-">AB-</option>
-          <option value="O+">O+</option>
-          <option value="O-">O-</option>
+          <option value="A+">A+</option><option value="A-">A-</option>
+          <option value="B+">B+</option><option value="B-">B-</option>
+          <option value="AB+">AB+</option><option value="AB-">AB-</option>
+          <option value="O+">O+</option><option value="O-">O-</option>
         </select>
       </label>
 
-      <!-- Emergency Contact Name - Optional -->
       <label class="block mb-2">Emergency Contact Name
         <input name="emergencyname" type="text" class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="emergencyNameError">Please enter a valid contact name (letters only)</span>
       </label>
 
-      <!-- Emergency Contact Number - Optional -->
       <label class="block mb-2">Emergency Contact Number
         <input name="emergencynumber" type="tel" class="w-full mt-1 p-2 border rounded" />
         <span class="text-red-500 text-xs hidden" id="emergencyNumberError">Please enter a valid 10-digit phone number</span>
@@ -139,295 +117,136 @@
     <p id="formMessage" class="text-green-600 mt-4 hidden">Details submitted successfully!</p>
   </div>
 
-<script>
-var scriptURL = 'https://script.google.com/macros/s/AKfycbyEB4gixGjhCJKhb6LGgpqFrGQBQ_HrnzsSlSKGHS7-cTwGl0J-aNRvipcEcrlJka6eKw/exec';
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Validation patterns
-var namePattern = /^[A-Za-z\s]+$/;
-var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-var phonePattern = /^\d{10}$/;
+    const COMMUNITY_CODE = 'PSNinja';
 
-// Show/hide error messages
-function showError(elementId, show) {
-  var errorElement = document.getElementById(elementId);
-  if (errorElement) {
-    if (show) {
-      errorElement.classList.remove('hidden');
-    } else {
-      errorElement.classList.add('hidden');
-    }
-  }
-}
+    var namePattern = /^[A-Za-z\s]+$/;
+    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var phonePattern = /^\d{10}$/;
 
-// Generate unique ID
-function generateUniqueId() {
-  var firstName = document.querySelector('input[name="firstName"]').value.trim();
-  var flatNumber = document.querySelector('input[name="flat"]').value.trim();
-  var uniqueIdField = document.querySelector('input[name="uniqueId"]');
-
-  if (firstName && flatNumber) {
-    var namePrefix = '';
-    if (firstName.length >= 4) {
-      namePrefix = firstName.substring(0, 4).toUpperCase();
-    } else {
-      namePrefix = (firstName + 'XXXX').substring(0, 4).toUpperCase();
-    }
-    uniqueIdField.value = namePrefix + flatNumber;
-  } else {
-    uniqueIdField.value = '';
-  }
-}
-
-// Calculate age from DOB
-function calculateAge() {
-  var dobInput = document.querySelector('input[name="dob"]');
-  var ageInput = document.querySelector('input[name="age"]');
-
-  if (dobInput.value) {
-    var dob = new Date(dobInput.value);
-    var today = new Date();
-    var age = today.getFullYear() - dob.getFullYear();
-    var monthDiff = today.getMonth() - dob.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-      age--;
+    function showError(id, show) {
+      var el = document.getElementById(id);
+      if (el) el.classList[show ? 'remove' : 'add']('hidden');
     }
 
-    ageInput.value = age >= 0 ? age : '';
-  } else {
-    ageInput.value = '';
-  }
-}
-
-// Validate required name
-function validateRequiredName(input, errorId) {
-  var value = input.value.trim();
-  if (!value) {
-    showError(errorId, true);
-    return false;
-  }
-  if (!namePattern.test(value)) {
-    showError(errorId, true);
-    return false;
-  }
-  showError(errorId, false);
-  return true;
-}
-
-// Validate optional name
-function validateOptionalName(input, errorId) {
-  var value = input.value.trim();
-  if (!value) {
-    showError(errorId, false);
-    return true;
-  }
-  if (!namePattern.test(value)) {
-    showError(errorId, true);
-    return false;
-  }
-  showError(errorId, false);
-  return true;
-}
-
-// Validate email
-function validateEmail(input, errorId) {
-  var value = input.value.trim();
-  if (!value) {
-    showError(errorId, true);
-    return false;
-  }
-  if (!emailPattern.test(value)) {
-    showError(errorId, true);
-    return false;
-  }
-  showError(errorId, false);
-  return true;
-}
-
-// Validate optional phone
-function validateOptionalPhone(input, errorId) {
-  var value = input.value.trim();
-  if (!value) {
-    showError(errorId, false);
-    return true;
-  }
-  if (!phonePattern.test(value)) {
-    showError(errorId, true);
-    return false;
-  }
-  showError(errorId, false);
-  return true;
-}
-
-// Validate flat number
-function validateFlatNumber(input, errorId) {
-  var value = parseInt(input.value);
-  if (!input.value.trim()) {
-    showError(errorId, true);
-    return false;
-  }
-  if (isNaN(value) || value < 1001 || value > 23188) {
-    showError(errorId, true);
-    return false;
-  }
-  showError(errorId, false);
-  return true;
-}
-
-// Initialize when DOM is loaded
-document.addEventListener("DOMContentLoaded", function() {
-  var form = document.getElementById('runnerForm');
-  var msg = document.getElementById('formMessage');
-  var dobInput = form.querySelector('input[name="dob"]');
-  var submitButton = form.querySelector('button[type="submit"]');
-
-  // Get all input elements
-  var firstNameInput = form.querySelector('input[name="firstName"]');
-  var lastNameInput = form.querySelector('input[name="lastName"]');
-  var flatInput = form.querySelector('input[name="flat"]');
-  var emailInput = form.querySelector('input[name="email"]');
-  var phoneInput = form.querySelector('input[name="phone"]');
-  var emergencyNameInput = form.querySelector('input[name="emergencyname"]');
-  var emergencyNumberInput = form.querySelector('input[name="emergencynumber"]');
-
-  // Create spinner element
-  var spinner = document.createElement("div");
-  spinner.className = "mt-4 text-center hidden";
-  spinner.innerHTML = '<svg class="animate-spin h-6 w-6 text-indigo-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Submitting...';
-  form.appendChild(spinner);
-
-  // Set max date for DOB to today
-  if (dobInput) {
-    dobInput.max = new Date().toISOString().split('T')[0];
-  }
-
-  // Event listeners for real-time validation and unique ID generation
-  if (firstNameInput) {
-    firstNameInput.addEventListener('input', function() {
-      validateRequiredName(firstNameInput, 'firstNameError');
-      generateUniqueId();
-    });
-  }
-
-  if (lastNameInput) {
-    lastNameInput.addEventListener('input', function() {
-      validateOptionalName(lastNameInput, 'lastNameError');
-    });
-  }
-
-  if (flatInput) {
-    flatInput.addEventListener('input', function() {
-      validateFlatNumber(flatInput, 'flatError');
-      generateUniqueId();
-    });
-  }
-
-  if (emailInput) {
-    emailInput.addEventListener('input', function() {
-      validateEmail(emailInput, 'emailError');
-    });
-  }
-
-  if (phoneInput) {
-    phoneInput.addEventListener('input', function() {
-      validateOptionalPhone(phoneInput, 'phoneError');
-    });
-  }
-
-  if (emergencyNameInput) {
-    emergencyNameInput.addEventListener('input', function() {
-      validateOptionalName(emergencyNameInput, 'emergencyNameError');
-    });
-  }
-
-  if (emergencyNumberInput) {
-    emergencyNumberInput.addEventListener('input', function() {
-      validateOptionalPhone(emergencyNumberInput, 'emergencyNumberError');
-    });
-  }
-
-  // Auto-calculate age when DOB changes
-  if (dobInput) {
-    dobInput.addEventListener('change', calculateAge);
-  }
-
-  // Form submission handler
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    var isValid = true;
-
-    // Validate required fields
-    if (firstNameInput) {
-      isValid = validateRequiredName(firstNameInput, 'firstNameError') && isValid;
-    }
-    if (flatInput) {
-      isValid = validateFlatNumber(flatInput, 'flatError') && isValid;
-    }
-    if (emailInput) {
-      isValid = validateEmail(emailInput, 'emailError') && isValid;
+    function generateUniqueId() {
+      var fn = document.querySelector('[name="firstName"]').value.trim();
+      var flat = document.querySelector('[name="flat"]').value.trim();
+      var uid = document.querySelector('[name="uniqueId"]');
+      if (fn && flat) {
+        var prefix = fn.length >= 4 ? fn.substring(0, 4) : (fn + 'XXXX').substring(0, 4);
+        uid.value = prefix.toUpperCase() + flat;
+      } else { uid.value = ''; }
     }
 
-    // Validate optional fields only if they have values
-    if (lastNameInput && lastNameInput.value.trim()) {
-      isValid = validateOptionalName(lastNameInput, 'lastNameError') && isValid;
-    }
-    if (phoneInput && phoneInput.value.trim()) {
-      isValid = validateOptionalPhone(phoneInput, 'phoneError') && isValid;
-    }
-    if (emergencyNameInput && emergencyNameInput.value.trim()) {
-      isValid = validateOptionalName(emergencyNameInput, 'emergencyNameError') && isValid;
-    }
-    if (emergencyNumberInput && emergencyNumberInput.value.trim()) {
-      isValid = validateOptionalPhone(emergencyNumberInput, 'emergencyNumberError') && isValid;
+    function calculateAge() {
+      var dob = document.querySelector('[name="dob"]').value;
+      var ageEl = document.querySelector('[name="age"]');
+      if (dob) {
+        var d = new Date(dob), today = new Date();
+        var age = today.getFullYear() - d.getFullYear();
+        if (today.getMonth() < d.getMonth() || (today.getMonth() === d.getMonth() && today.getDate() < d.getDate())) age--;
+        ageEl.value = age >= 0 ? age : '';
+      } else { ageEl.value = ''; }
     }
 
-    if (!isValid) {
-      alert('Please fix the validation errors before submitting.');
-      return;
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('runnerForm');
+      var dobInput = form.querySelector('[name="dob"]');
+      var firstNameInput = form.querySelector('[name="firstName"]');
+      var lastNameInput = form.querySelector('[name="lastName"]');
+      var flatInput = form.querySelector('[name="flat"]');
+      var emailInput = form.querySelector('[name="email"]');
+      var phoneInput = form.querySelector('[name="phone"]');
+      var emergencyNameInput = form.querySelector('[name="emergencyname"]');
+      var emergencyNumberInput = form.querySelector('[name="emergencynumber"]');
+      var submitBtn = form.querySelector('[type="submit"]');
 
-    // Show spinner and disable submit button
-    submitButton.disabled = true;
-    spinner.classList.remove("hidden");
+      if (dobInput) dobInput.max = new Date().toISOString().split('T')[0];
 
-    // Submit form data
-    var formData = new FormData(form);
+      // Spinner
+      var spinner = document.createElement('div');
+      spinner.className = 'mt-4 text-center hidden';
+      spinner.innerHTML = '<svg class="animate-spin h-6 w-6 text-indigo-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Submitting...';
+      form.appendChild(spinner);
 
-    fetch(scriptURL, { method: 'POST', body: formData })
-      .then(function(response) {
-        return response.text();
-      })
-      .then(function(responseText) {
-        submitButton.disabled = false;
-        spinner.classList.add("hidden");
+      firstNameInput?.addEventListener('input', () => { generateUniqueId(); });
+      flatInput?.addEventListener('input', () => { generateUniqueId(); });
+      dobInput?.addEventListener('change', calculateAge);
 
-        if (responseText.includes("Success")) {
-          // Get the unique ID value before resetting the form
-          var submittedUniqueId = document.querySelector('input[name="uniqueId"]').value;
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-          // Show success popup with unique ID
-          alert('Registration successful! Your unique ID is: ' + submittedUniqueId);
-
-          msg.classList.remove("hidden");
-          form.reset();
-          document.querySelector('input[name="uniqueId"]').value = '';
-          document.querySelector('input[name="age"]').value = '';
-          setTimeout(function() {
-            msg.classList.add("hidden");
-          }, 4000);
-        } else {
-          alert("Error: " + responseText);
+        // Community code check
+        var community = form.querySelector('[name="community"]').value;
+        if (community !== COMMUNITY_CODE) {
+          alert('Invalid community code. Please contact your admin.');
+          return;
         }
-      })
-      .catch(function(error) {
-        submitButton.disabled = false;
-        spinner.classList.add("hidden");
-        alert('Error: ' + error.message);
-      });
-  });
-});
-</script>
 
+        // Basic validation
+        var fn = firstNameInput.value.trim();
+        var flat = flatInput.value.trim();
+        var email = emailInput.value.trim();
+        var flatNum = parseInt(flat);
+
+        if (!fn || !namePattern.test(fn)) { showError('firstNameError', true); return; }
+        if (!flat || isNaN(flatNum) || flatNum < 1001 || flatNum > 23188) { showError('flatError', true); return; }
+        if (!email || !emailPattern.test(email)) { showError('emailError', true); return; }
+
+        var uniqueId = document.querySelector('[name="uniqueId"]').value;
+        if (!uniqueId) { alert('Could not generate Unique ID. Please check first name and flat number.'); return; }
+
+        // Optional field validation
+        var phone = phoneInput?.value.trim();
+        if (phone && !phonePattern.test(phone)) { showError('phoneError', true); return; }
+
+        submitBtn.disabled = true;
+        spinner.classList.remove('hidden');
+
+        var dobVal = dobInput?.value || null;
+
+        const { error } = await db.from('runners').insert([{
+          unique_id: uniqueId,
+          first_name: fn,
+          last_name: lastNameInput?.value.trim() || null,
+          flat_number: flat,
+          community: COMMUNITY_CODE,
+          phone: phone || null,
+          gender: form.querySelector('[name="gender"]').value || null,
+          dob: dobVal || null,
+          tshirt_size: form.querySelector('[name="teesize"]').value || null,
+          email: email,
+          blood_group: form.querySelector('[name="bloodgroup"]').value || null,
+          emergency_contact_name: emergencyNameInput?.value.trim() || null,
+          emergency_contact_number: emergencyNumberInput?.value.trim() || null,
+        }]);
+
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+
+        if (error) {
+          if (error.code === '23505') {
+            alert('A runner with Unique ID "' + uniqueId + '" already exists. If this is you, your details are already registered.');
+          } else {
+            alert('Error: ' + error.message);
+          }
+          return;
+        }
+
+        alert('Registration successful! Your Unique ID is: ' + uniqueId);
+        document.getElementById('formMessage').classList.remove('hidden');
+        form.reset();
+        document.querySelector('[name="uniqueId"]').value = '';
+        document.querySelector('[name="age"]').value = '';
+        setTimeout(() => document.getElementById('formMessage').classList.add('hidden'), 4000);
+      });
+    });
+  </script>
 </body>
 </html>

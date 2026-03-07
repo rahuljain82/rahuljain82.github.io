@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bib Collection - Running Ninjas</title>
-  
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -13,7 +11,6 @@
     gtag('js', new Date());
     gtag('config', 'G-9WH7YSXZ94');
   </script>
-  
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 py-10">
@@ -26,7 +23,9 @@
 
     <form id="bibForm">
       <label class="block mb-3">Select Marathon
-        <select id="marathonName" required class="w-full mt-1 p-2 border rounded"></select>
+        <select id="marathonName" required class="w-full mt-1 p-2 border rounded">
+          <option value="">Loading events...</option>
+        </select>
       </label>
 
       <label class="block mb-3">Enter Unique ID
@@ -36,49 +35,29 @@
       <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-4">Fetch My Data</button>
 
       <div id="runnerDetails" class="hidden">
-        <label class="block mb-2">Name
-          <input id="name" type="text" class="w-full mt-1 p-2 border rounded" />
-        </label>
-        <label class="block mb-2">Gender
-          <input id="gender" type="text" class="w-full mt-1 p-2 border rounded" />
-        </label>
-        <label class="block mb-2">Date of Birth
-          <input id="dob" type="date" class="w-full mt-1 p-2 border rounded" />
-        </label>
-        <label class="block mb-2">Blood Group
-          <input id="bloodGroup" type="text" class="w-full mt-1 p-2 border rounded" />
-        </label>
-        <label class="block mb-2">Emergency Contact Name
-          <input id="emergencyName" type="text" class="w-full mt-1 p-2 border rounded" />
-        </label>
-        <label class="block mb-2">Emergency Contact Number
-          <input id="emergencyNumber" type="text" class="w-full mt-1 p-2 border rounded" />
-        </label>
-        <label class="block mb-2">T-Shirt Size
-          <input id="tshirtSize" type="text" class="w-full mt-1 p-2 border rounded" />
-        </label>
-          
-        
-<label class="block mb-2">Select Distance
-  <select id="distance" required class="w-full mt-1 p-2 border rounded">
-    <option value="">-- Select Distance --</option>
-    <option value="5K">5K</option>
-    <option value="10K">10K</option>
-    <option value="21K">21K (Half Marathon)</option>
-    <option value="42K">42K (Full Marathon)</option>
-    <option value="ultra50">50k (ultra50)</option>
-    <option value="ultra70">70k (ultra70)</option>
-    <option value="ultra100">100k (ultra100)</option>
-  </select>
-</label>
-        
-        <label class="block mb-2">Enter Bib Number
-          <input id="bibNumber" type="text" required class="w-full mt-1 p-2 border rounded" />
+        <label class="block mb-2">Name <input id="name" type="text" class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">Gender <input id="gender" type="text" class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">Date of Birth <input id="dob" type="date" class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">Blood Group <input id="bloodGroup" type="text" class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">Emergency Contact Name <input id="emergencyName" type="text" class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">Emergency Contact Number <input id="emergencyNumber" type="text" class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">T-Shirt Size <input id="tshirtSize" type="text" class="w-full mt-1 p-2 border rounded" /></label>
+
+        <label class="block mb-2">Select Distance
+          <select id="distance" required class="w-full mt-1 p-2 border rounded">
+            <option value="">-- Select Distance --</option>
+            <option value="5K">5K</option>
+            <option value="10K">10K</option>
+            <option value="21K">21K (Half Marathon)</option>
+            <option value="42K">42K (Full Marathon)</option>
+            <option value="ultra50">50k (ultra50)</option>
+            <option value="ultra70">70k (ultra70)</option>
+            <option value="ultra100">100k (ultra100)</option>
+          </select>
         </label>
 
-        <label class="block mb-2">Email Proof 
-          <textarea id="comments" class="w-full mt-1 p-2 border rounded"></textarea>
-        </label>
+        <label class="block mb-2">Enter Bib Number <input id="bibNumber" type="text" required class="w-full mt-1 p-2 border rounded" /></label>
+        <label class="block mb-2">Email Proof <textarea id="comments" class="w-full mt-1 p-2 border rounded"></textarea></label>
 
         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded">Submit for Bib Collection</button>
       </div>
@@ -87,74 +66,82 @@
     <p id="formMessage" class="text-green-600 mt-4 hidden">Bib collection submitted successfully!</p>
   </div>
 
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby6_r8aLIKXFgc_t0l495VrMkHSocYeTgkDshHPWAElLiws1E92KbiQdOiQQSInHq4N/exec';
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    window.onload = async function () {
-      const res = await fetch(`${scriptURL}?listBibMarathons=true`);
-      const data = await res.json();
-      const dropdown = document.getElementById("marathonName");
+    window.onload = async function() {
+      const { data, error } = await db
+        .from('events')
+        .select('event_name')
+        .eq('bib_details', true)
+        .order('event_date', { ascending: true });
 
-      data.marathons.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
+      const dropdown = document.getElementById('marathonName');
+      dropdown.innerHTML = '';
+
+      if (error || !data || data.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = ''; opt.textContent = 'No bib collection events available';
+        dropdown.appendChild(opt);
+        return;
+      }
+
+      data.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.event_name; opt.textContent = e.event_name;
         dropdown.appendChild(opt);
       });
     };
 
     async function fetchRunnerData() {
-      const uniqueId = document.getElementById("uniqueId").value.trim();
-      const marathonName = document.getElementById("marathonName").value;
-      if (!uniqueId || !marathonName) return alert("Please enter both fields.");
+      const uniqueId = document.getElementById('uniqueId').value.trim();
+      const marathonName = document.getElementById('marathonName').value;
+      if (!uniqueId || !marathonName) return alert('Please enter both fields.');
 
-      const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}&marathonName=${encodeURIComponent(marathonName)}`);
-      const data = await res.json();
+      const { data: runner, error } = await db
+        .from('runners')
+        .select('first_name, last_name, gender, dob, blood_group, emergency_contact_name, emergency_contact_number, tshirt_size')
+        .eq('unique_id', uniqueId)
+        .single();
 
-      if (!data.success) return alert(data.error || "Runner not found.");
+      if (error || !runner) { alert('Runner not found.'); return; }
 
-      const r = data.runner;
-      document.getElementById("name").value = r.name;
-      document.getElementById("gender").value = r.gender;
-      document.getElementById("dob").value = r.dob;
-      document.getElementById("bloodGroup").value = r.bloodGroup;
-      document.getElementById("emergencyName").value = r.emergencyName;
-      document.getElementById("emergencyNumber").value = r.emergencyNumber;
-      document.getElementById("tshirtSize").value = r.tshirtSize;
-
-      document.getElementById("runnerDetails").classList.remove("hidden");
+      document.getElementById('name').value = runner.first_name + ' ' + (runner.last_name || '');
+      document.getElementById('gender').value = runner.gender || '';
+      document.getElementById('dob').value = runner.dob || '';
+      document.getElementById('bloodGroup').value = runner.blood_group || '';
+      document.getElementById('emergencyName').value = runner.emergency_contact_name || '';
+      document.getElementById('emergencyNumber').value = runner.emergency_contact_number || '';
+      document.getElementById('tshirtSize').value = runner.tshirt_size || '';
+      document.getElementById('runnerDetails').classList.remove('hidden');
     }
 
-    document.getElementById("bibForm").addEventListener("submit", async (e) => {
+    document.getElementById('bibForm').addEventListener('submit', async e => {
       e.preventDefault();
 
-      const formData = new FormData();
-      formData.append("uniqueId", document.getElementById("uniqueId").value);
-      formData.append("marathonName", document.getElementById("marathonName").value);
-      formData.append("name", document.getElementById("name").value);
-      formData.append("gender", document.getElementById("gender").value);
-      formData.append("dob", document.getElementById("dob").value);
-      formData.append("bloodGroup", document.getElementById("bloodGroup").value);
-      formData.append("emergencyName", document.getElementById("emergencyName").value);
-      formData.append("emergencyNumber", document.getElementById("emergencyNumber").value);
-      formData.append("tshirtSize", document.getElementById("tshirtSize").value);
-      formData.append("distance", document.getElementById("distance").value);
-      formData.append("bibNumber", document.getElementById("bibNumber").value);
-      formData.append("comments", document.getElementById("comments").value);
+      const { error } = await db.from('bib_details').insert([{
+        unique_id:        document.getElementById('uniqueId').value.trim(),
+        event_name:       document.getElementById('marathonName').value,
+        name:             document.getElementById('name').value,
+        gender:           document.getElementById('gender').value,
+        dob:              document.getElementById('dob').value || null,
+        blood_group:      document.getElementById('bloodGroup').value,
+        emergency_name:   document.getElementById('emergencyName').value,
+        emergency_number: document.getElementById('emergencyNumber').value,
+        tshirt_size:      document.getElementById('tshirtSize').value,
+        distance:         document.getElementById('distance').value,
+        bib_number:       document.getElementById('bibNumber').value,
+        email_proof:      document.getElementById('comments').value,
+      }]);
 
-      const res = await fetch(scriptURL, {
-        method: 'POST',
-        body: formData
-      });
+      if (error) { alert('Error: ' + error.message); return; }
 
-      const responseText = await res.text();
-      if (responseText.includes("Success")) {
-        document.getElementById("formMessage").classList.remove("hidden");
-        document.getElementById("bibForm").reset();
-        document.getElementById("runnerDetails").classList.add("hidden");
-      } else {
-        alert("Error: " + responseText);
-      }
+      document.getElementById('formMessage').classList.remove('hidden');
+      document.getElementById('bibForm').reset();
+      document.getElementById('runnerDetails').classList.add('hidden');
     });
   </script>
 </body>

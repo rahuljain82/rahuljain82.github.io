@@ -4,272 +4,186 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Running Ninjas T-Shirt Order</title>
-
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-gray-100 py-10">
 
 <div class="w-full flex justify-center mb-6">
-<img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg"
-class="w-16 h-16 rounded-full"/>
+  <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" class="w-16 h-16 rounded-full"/>
 </div>
 
 <div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
-
-<h2 class="text-xl font-semibold text-gray-800 mb-4">
-Running Ninjas T-Shirt Order
-</h2>
+  <h2 class="text-xl font-semibold text-gray-800 mb-4">Running Ninjas T-Shirt Order</h2>
 
   <div class="text-center mb-4">
-<button onclick="goBack()"
-class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
-← Back
-</button>
-</div>
-<form id="tshirtForm">
+    <button onclick="window.location.href='index.html'" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">← Back</button>
+  </div>
 
-<label class="block mb-3">
-Enter Unique ID
-<input id="uniqueId" required class="w-full mt-1 p-2 border rounded"/>
-</label>
+  <form id="tshirtForm">
+    <label class="block mb-3">Enter Unique ID
+      <input id="uniqueId" required class="w-full mt-1 p-2 border rounded"/>
+    </label>
 
-<button type="button"
-onclick="fetchRunnerData()"
-class="w-full bg-indigo-600 text-white py-2 rounded mb-4">
-Fetch My Data
-</button>
+    <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-4">Fetch My Data</button>
 
-  <div id="loadingSpinner" class="hidden text-center my-4">
-  <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 border-opacity-60 mx-auto"></div>
-  <p class="text-gray-500 text-sm mt-2">Fetching your details...</p>
-</div>
+    <div id="loadingSpinner" class="hidden text-center my-4">
+      <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 border-opacity-60 mx-auto"></div>
+      <p class="text-gray-500 text-sm mt-2">Fetching your details...</p>
+    </div>
 
-<div id="runnerDetails" class="hidden">
+    <div id="runnerDetails" class="hidden">
+      <label class="block mb-2">Name
+        <input id="name" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
+      </label>
+      <label class="block mb-2">Flat
+        <input id="flat" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
+      </label>
+      <label class="block mb-2">Gender
+        <input id="gender" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
+      </label>
 
-  <label class="block mb-2">
-Name
-<input id="name" readonly
-class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
-</label>
+      <div class="mt-4">
+        <h3 class="font-semibold mb-2">T-Shirt Orders</h3>
+        <div id="tshirtHeader" class="hidden grid grid-cols-4 gap-2 text-sm font-semibold mb-2">
+          <div>Print Name</div><div>Size</div><div>Qty</div><div></div>
+        </div>
+        <div id="tshirtRows"></div>
+        <button type="button" onclick="addTshirtRow()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">+ Add Another T-Shirt</button>
+      </div>
 
-<label class="block mb-2">
-Flat
-<input id="flat" readonly
-class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
-</label>
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded mt-4">Submit T-Shirt Request</button>
 
-<label class="block mb-2">
-Gender
-<input id="gender" readonly
-class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
-</label>
-<div class="mt-4">
+      <div id="submitSpinner" class="hidden text-center my-4">
+        <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-green-500 border-opacity-60 mx-auto"></div>
+        <p class="text-gray-500 text-sm mt-2">Submitting your order...</p>
+      </div>
+    </div>
+  </form>
 
-<h3 class="font-semibold mb-2">T-Shirt Orders</h3>
-<div id="tshirtHeader" class="hidden grid grid-cols-4 gap-2 text-sm font-semibold mb-2">
-<div>Print Name</div>
-<div>Size</div>
-<div>Qty</div>
-<div></div>
-</div>
-<div id="tshirtRows"></div>
-
-<button type="button"
-onclick="addTshirtRow()"
-class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">
-+ Add Another T-Shirt
-</button>
-
+  <p id="formMessage" class="text-green-600 mt-4 hidden">T-Shirt order submitted successfully!</p>
 </div>
 
-<button type="submit"
-class="w-full bg-green-600 text-white py-2 rounded">
-Submit T-Shirt Request
-</button>
-
-  <div id="submitSpinner" class="hidden text-center my-4">
-  <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-green-500 border-opacity-60 mx-auto"></div>
-  <p class="text-gray-500 text-sm mt-2">Submitting your order...</p>
-</div>
-
-</div>
-
-</form>
-
-<p id="formMessage"
-class="text-green-600 mt-4 hidden">
-T-Shirt order submitted successfully!
-</p>
-
-</div>
-
+<script src="js/config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
-const scriptURL =
-"https://script.google.com/macros/s/AKfycbwdzbxxQXdYWhBQ9bybAtZjWc79WszuHSlzvT6zOWtZA-NmOIezLOEKTKXSji-DcU3O/exec";
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function fetchRunnerData(){
-const uniqueId = document.getElementById("uniqueId").value.trim();
-const spinner = document.getElementById("loadingSpinner");
-if(!uniqueId){
-alert("Please enter Unique ID");
-return;
-}
-spinner.classList.remove("hidden");
-try{
-const res = await fetch(`${scriptURL}?uniqueId=${uniqueId}`);
-const data = await res.json();
-spinner.classList.add("hidden");
-if(!data.success){
-alert(data.error || "Runner not found");
-return;
-}
+async function fetchRunnerData() {
+  const uniqueId = document.getElementById('uniqueId').value.trim();
+  if (!uniqueId) { alert('Please enter Unique ID'); return; }
 
-const r = data.runner;
+  const spinner = document.getElementById('loadingSpinner');
+  spinner.classList.remove('hidden');
 
-document.getElementById("name").value = r.name;
-document.getElementById("flat").value = r.flat;
-document.getElementById("gender").value = r.gender;
-//document.getElementById("tshirtSize").value = r.tshirtSize;
+  try {
+    const { data: runner, error } = await db
+      .from('runners')
+      .select('first_name, last_name, flat_number, gender')
+      .eq('unique_id', uniqueId)
+      .single();
 
-document.getElementById("runnerDetails").classList.remove("hidden");
-document.getElementById("tshirtHeader").classList.remove("hidden");
+    if (error || !runner) {
+      spinner.classList.add('hidden');
+      alert('Runner not found. Please check your Unique ID.');
+      return;
+    }
 
-  /* Create first T-shirt row for the runner */
-document.getElementById("tshirtRows").innerHTML="";
+    document.getElementById('name').value = runner.first_name + ' ' + (runner.last_name || '');
+    document.getElementById('flat').value = runner.flat_number;
+    document.getElementById('gender').value = runner.gender || '';
 
-if(data.orders && data.orders.length > 0){
-data.orders.forEach(order=>{
-addTshirtRow(
-order.printName,
-order.size,
-order.qty
-);
-});
-}else{
-addTshirtRow();
-}
-}catch(err){
-spinner.classList.add("hidden");
-alert("Error fetching runner data");
-}finally {
-spinner.classList.add("hidden");
-}
+    // Fetch existing orders
+    const { data: orders } = await db
+      .from('tshirt_orders')
+      .select('print_name, size, quantity')
+      .eq('unique_id', uniqueId);
+
+    document.getElementById('tshirtRows').innerHTML = '';
+    if (orders && orders.length > 0) {
+      orders.forEach(o => addTshirtRow(o.print_name, o.size, o.quantity));
+    } else {
+      addTshirtRow();
+    }
+
+    document.getElementById('runnerDetails').classList.remove('hidden');
+    document.getElementById('tshirtHeader').classList.remove('hidden');
+  } catch(err) {
+    alert('Error fetching runner data');
+  } finally {
+    spinner.classList.add('hidden');
+  }
 }
 
-  document.getElementById("tshirtForm")
-.addEventListener("submit", async (e)=>{
+document.getElementById('tshirtForm').addEventListener('submit', async e => {
+  e.preventDefault();
 
-e.preventDefault();
+  const spinner = document.getElementById('submitSpinner');
+  spinner.classList.remove('hidden');
 
-const spinner = document.getElementById("submitSpinner");
-spinner.classList.remove("hidden");
+  const uniqueId = document.getElementById('uniqueId').value.trim();
+  const name     = document.getElementById('name').value;
+  const flat     = document.getElementById('flat').value;
+  const gender   = document.getElementById('gender').value;
 
-const formData = new FormData();
+  const rows = document.querySelectorAll('#tshirtRows > div');
+  const orders = [];
 
-formData.append("uniqueId",document.getElementById("uniqueId").value);
-formData.append("name",document.getElementById("name").value);
-formData.append("flat",document.getElementById("flat").value);
-formData.append("gender",document.getElementById("gender").value);
+  for (const row of rows) {
+    const inputs = row.querySelectorAll('input, select');
+    if (!inputs[1].value) {
+      alert('Please select T-shirt size for all rows');
+      spinner.classList.add('hidden');
+      return;
+    }
+    orders.push({
+      unique_id:  uniqueId,
+      name:       name,
+      flat:       flat,
+      gender:     gender,
+      print_name: inputs[0].value,
+      size:       inputs[1].value,
+      quantity:   parseInt(inputs[2].value) || 1,
+    });
+  }
 
-/* -------- COLLECT ALL TSHIRT ROWS -------- */
+  try {
+    // Replace all existing orders for this runner
+    await db.from('tshirt_orders').delete().eq('unique_id', uniqueId);
+    const { error } = await db.from('tshirt_orders').insert(orders);
 
-const rows = document.querySelectorAll("#tshirtRows > div");
-let orders = [];
+    spinner.classList.add('hidden');
 
-for(const row of rows){
-const inputs = row.querySelectorAll("input,select");
-/* VALIDATION */
-if(!inputs[1].value){
-alert("Please select T-shirt size for all rows");
-return;
-}
-orders.push({
-printName: inputs[0].value,
-size: inputs[1].value,
-qty: inputs[2].value
-});
+    if (error) { alert('Error submitting: ' + error.message); return; }
 
-}
-formData.append("orders", JSON.stringify(orders));  
-try{
-const res = await fetch(scriptURL,{
-method:"POST",
-body:formData
-});
-const text = await res.text();
-spinner.classList.add("hidden");
-if(text.includes("Success")){
-document.getElementById("formMessage").classList.remove("hidden");
-document.getElementById("tshirtForm").reset();
-document.getElementById("runnerDetails").classList.add("hidden");
-}else{
-alert("Error submitting form");
-}
-}catch(err){
-spinner.classList.add("hidden");
-alert("Submission failed");
-}
+    document.getElementById('formMessage').classList.remove('hidden');
+    document.getElementById('tshirtForm').reset();
+    document.getElementById('runnerDetails').classList.add('hidden');
+    document.getElementById('tshirtHeader').classList.add('hidden');
+    setTimeout(() => document.getElementById('formMessage').classList.add('hidden'), 4000);
+  } catch(err) {
+    spinner.classList.add('hidden');
+    alert('Submission failed');
+  }
 });
 
-function goBack(){
-window.location.href = "index.html";
+function addTshirtRow(printName='', size='', qty=1) {
+  const container = document.getElementById('tshirtRows');
+  const row = document.createElement('div');
+  row.className = 'grid grid-cols-4 gap-2 mb-2';
+  row.innerHTML = `
+    <input placeholder="Print Name" value="${printName}" class="p-2 border rounded"/>
+    <select class="p-2 border rounded" required>
+      <option value="">Size</option>
+      <option value="XS">XS</option><option value="S">S</option>
+      <option value="M">M</option><option value="L">L</option>
+      <option value="XL">XL</option><option value="XXL">XXL</option>
+    </select>
+    <input type="number" min="1" value="${qty}" class="p-2 border rounded"/>
+    <button type="button" class="bg-red-500 text-white px-2 py-1 rounded" onclick="this.parentElement.remove()">🗑</button>`;
+  container.appendChild(row);
+  if (size) row.querySelector('select').value = size;
 }
-
-function addTshirtRow(printName="", size="", qty="1"){
-
-const container = document.getElementById("tshirtRows");
-
-const row = document.createElement("div");
-row.className = "grid grid-cols-4 gap-2 mb-2";
-
-row.innerHTML = `
-
-<input 
-placeholder="Enter Print Name"
-value="${printName}"
-class="p-2 border rounded"/>
-
-<select class="p-2 border rounded" required>
-
-<option value="">Size</option>
-<option value="XS">XS</option>
-<option value="S">S</option>
-<option value="M">M</option>
-<option value="L">L</option>
-<option value="XL">XL</option>
-<option value="XXL">XXL</option>
-
-</select>
-
-<input 
-type="number"
-min="1"
-value="${qty}"
-class="p-2 border rounded"/>
-
-<button type="button"
-class="bg-red-500 text-white px-2 py-1 rounded"
-onclick="removeRow(this)">
-🗑
-</button>
-`;
-
-container.appendChild(row);
-// pre-select size if available
-if(size){
-row.querySelector("select").value = size;
-}
-}
-
-function removeRow(button){
-
-const row = button.parentElement;
-row.remove();
-
-}
-  
 </script>
-
 </body>
 </html>

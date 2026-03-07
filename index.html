@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Running Ninjas</title>
-  
+
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
   <script>
@@ -13,7 +13,7 @@
     gtag('js', new Date());
     gtag('config', 'G-9WH7YSXZ94');
   </script>
-  
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
@@ -86,108 +86,44 @@
       text-decoration: none;
     }
     .dropdown-menu {
-  position: absolute;
-  top: 3.5rem;
-  left: 1rem;
-  background-color: #fff !important;
-  color: black;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 0.75rem;
-  display: none;
-  z-index: 9999;
-  min-width: 180px; /* ensures enough width */
-  box-sizing: border-box; /* includes padding in width */
-}
+      position: absolute;
+      top: 3.5rem;
+      left: 1rem;
+      background-color: #fff !important;
+      color: black;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 0.75rem;
+      display: none;
+      z-index: 9999;
+      min-width: 180px;
+      box-sizing: border-box;
+    }
     .dropdown-menu a {
       display: block;
       padding: 0.5rem 1rem;
       border-radius: 0.375rem;
       transition: background 0.2s;
-      background-color: white; /* Optional: for links specifically */
+      background-color: white;
     }
     .dropdown-menu a:hover {
       background-color: #f3f4f6;
     }
-    /* Mobile Responsive Styles */
     @media (max-width: 768px) {
-      .nav-bar-top {
-        padding: 0.5rem 0.75rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-      }
-      .nav-bar-top .search-container {
-        order: 3;
-        flex-basis: 100%;
-        margin-top: 0.5rem;
-      }
-      .nav-bar-top input {
-        max-width: 100%;
-        font-size: 0.9rem;
-        padding: 0.4rem 0.8rem;
-      }
-      .nav-bar-bottom {
-        padding: 0.4rem 0.5rem;
-        gap: 1rem;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
-      }
-      .nav-bar-bottom::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Opera */
-      }
-      .nav-bar-bottom a {
-        font-size: 0.85rem;
-        padding: 0.3rem 0.6rem;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .dropdown-menu {
-        left: 0.5rem;
-        right: 0.5rem;
-        width: auto;
-        max-width: calc(100vw - 1rem);
-      }
+      .nav-bar-top { padding: 0.5rem 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
+      .nav-bar-top .search-container { order: 3; flex-basis: 100%; margin-top: 0.5rem; }
+      .nav-bar-top input { max-width: 100%; font-size: 0.9rem; padding: 0.4rem 0.8rem; }
+      .nav-bar-bottom { padding: 0.4rem 0.5rem; gap: 1rem; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+      .nav-bar-bottom::-webkit-scrollbar { display: none; }
+      .nav-bar-bottom a { font-size: 0.85rem; padding: 0.3rem 0.6rem; white-space: nowrap; flex-shrink: 0; }
+      .dropdown-menu { left: 0.5rem; right: 0.5rem; width: auto; max-width: calc(100vw - 1rem); }
     }
     @media (max-width: 480px) {
-      .nav-bar-top {
-        padding: 0.4rem 0.5rem;
-      }
-      .nav-bar-top input {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.7rem;
-      }
-      .nav-bar-bottom {
-        padding: 0.3rem 0.4rem;
-        gap: 0.8rem;
-      }
-      .nav-bar-bottom a {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-      }
+      .nav-bar-top { padding: 0.4rem 0.5rem; }
+      .nav-bar-top input { font-size: 0.85rem; padding: 0.35rem 0.7rem; }
+      .nav-bar-bottom { padding: 0.3rem 0.4rem; gap: 0.8rem; }
+      .nav-bar-bottom a { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
     }
-    .floating-buttons {
-      position: fixed;
-      top: 1.2rem;
-      right: 1.2rem;
-      z-index: 100;
-      display: flex;
-      gap: 0.5rem;
-    }
-    .floating-buttons button {
-      background: rgba(255,255,255,0.7);
-      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
-      border: none;
-      padding: 0.7rem;
-      border-radius: 9999px;
-      transition: background 0.2s;
-    }
-    .floating-buttons button:active {
-      background: #e0e7ff;
-    }
-    /* Card styles */
     .marathon-card {
       width: 100%;
       margin: 0 auto 1.1rem auto;
@@ -199,133 +135,39 @@
       border: none;
       transition: box-shadow 0.2s;
     }
-    .marathon-card:active {
-      box-shadow: 0 8px 32px 0 rgba(102,126,234,0.18);
-    }
-    .marathon-card .accent-bar {
-      height: 5px;
-      width: 100%;
-      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
-      display: block;
-    }
-    .marathon-card .card-inner {
-      padding: 1.1rem 1.2rem 1.2rem 1.2rem;
-    }
-    .marathon-card h3 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #312e81;
-      margin-bottom: 0.2rem;
-      letter-spacing: -0.01em;
-    }
-    .marathon-card .info-btn {
-      margin-left: 0.5rem;
-      color: #6366f1;
-      background: #f1f5f9;
-      border-radius: 9999px;
-      padding: 0.35rem;
-      display: flex;
-      align-items: center;
-      transition: background 0.2s;
-    }
-    .marathon-card .info-btn:active {
-      background: #e0e7ff;
-    }
-    /* Ensure feather icons are visible and inherit color */
-    .marathon-card i.feather,
-    .marathon-card svg.feather {
-      display: inline-block !important;
-      stroke: currentColor !important;
-      color: inherit !important;
-      width: 1.1em !important;
-      height: 1.1em !important;
-      vertical-align: middle !important;
-    }
-    .marathon-card .meta {
-      font-size: 0.98rem;
-      color: #64748b;
-      margin-bottom: 0.15rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .marathon-card .desc {
-      font-size: 0.97rem;
-      color: #334155;
-      margin-bottom: 0.7rem;
-      margin-top: 0.2rem;
-    }
-    .btn-primary {
-      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
-      color: #fff;
-      font-weight: 600;
-      font-size: 1.05rem;
-      border-radius: 0.8rem;
-      padding: 0.85rem 0;
-      width: 100%;
-      margin-bottom: 0.3rem;
-      box-shadow: 0 2px 8px rgba(102,126,234,0.10);
-      transition: background 0.2s, transform 0.1s;
-    }
-    .btn-primary:active {
-      background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
-      transform: scale(0.98);
-    }
-    .marathon-card .card-actions a {
-      font-size: 0.97rem;
-      padding: 0.7rem 0;
-      border-radius: 0.7rem;
-      width: 100%;
-      margin-bottom: 0.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .marathon-card .bus-btn {
-      background: #22c55e;
-      color: #fff;
-    }
-    .marathon-card .bus-btn:active {
-      background: #16a34a;
-    }
-    .marathon-card .bib-btn {
-      background: #f59e42;
-      color: #fff;
-    }
-    .marathon-card .bib-btn:active {
-      background: #ea580c;
-    }
+    .marathon-card:active { box-shadow: 0 8px 32px 0 rgba(102,126,234,0.18); }
+    .marathon-card .accent-bar { height: 5px; width: 100%; background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%); display: block; }
+    .marathon-card .card-inner { padding: 1.1rem 1.2rem 1.2rem 1.2rem; }
+    .marathon-card h3 { font-size: 1.15rem; font-weight: 700; color: #312e81; margin-bottom: 0.2rem; letter-spacing: -0.01em; }
+    .marathon-card .info-btn { margin-left: 0.5rem; color: #6366f1; background: #f1f5f9; border-radius: 9999px; padding: 0.35rem; display: flex; align-items: center; transition: background 0.2s; }
+    .marathon-card .info-btn:active { background: #e0e7ff; }
+    .marathon-card i.feather, .marathon-card svg.feather { display: inline-block !important; stroke: currentColor !important; color: inherit !important; width: 1.1em !important; height: 1.1em !important; vertical-align: middle !important; }
+    .marathon-card .meta { font-size: 0.98rem; color: #64748b; margin-bottom: 0.15rem; display: flex; align-items: center; gap: 0.5rem; }
+    .marathon-card .desc { font-size: 0.97rem; color: #334155; margin-bottom: 0.7rem; margin-top: 0.2rem; }
+    .btn-primary { background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%); color: #fff; font-weight: 600; font-size: 1.05rem; border-radius: 0.8rem; padding: 0.85rem 0; width: 100%; margin-bottom: 0.3rem; box-shadow: 0 2px 8px rgba(102,126,234,0.10); transition: background 0.2s, transform 0.1s; }
+    .btn-primary:active { background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%); transform: scale(0.98); }
+    .marathon-card .card-actions a { font-size: 0.97rem; padding: 0.7rem 0; border-radius: 0.7rem; width: 100%; margin-bottom: 0.2rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .marathon-card .bus-btn { background: #22c55e; color: #fff; }
+    .marathon-card .bus-btn:active { background: #16a34a; }
+    .marathon-card .bib-btn { background: #f59e42; color: #fff; }
+    .marathon-card .bib-btn:active { background: #ea580c; }
     @media (min-width: 640px) {
-      .marathon-card {
-        max-width: 420px;
-      }
-      .marathon-list-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
+      .marathon-card { max-width: 420px; }
+      .marathon-list-wrap { display: flex; flex-direction: column; align-items: center; }
     }
     @media (max-width: 639px) {
-      .container, .marathon-list-wrap {
-        padding-left: 0.2rem !important;
-        padding-right: 0.2rem !important;
-      }
-      .marathon-card {
-        max-width: 100vw;
-      }
+      .container, .marathon-list-wrap { padding-left: 0.2rem !important; padding-right: 0.2rem !important; }
+      .marathon-card { max-width: 100vw; }
     }
   </style>
 </head>
 <body class="min-h-screen">
-  <!-- Logo -->
   <div class="center-logo">
     <div class="logo-bg">
       <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Running Ninjas Logo">
     </div>
   </div>
 
-  <!-- Top Nav Bar -->
   <div class="nav-bar-top">
     <div class="relative">
       <button id="hamburgerMenu">
@@ -335,6 +177,7 @@
         <a href="#">About us</a>
         <a href="https://aashutosh.net/">Aashu's Blog</a>
         <a href="https://aashutosh.net/?s=race+report">Race Reports</a>
+        <a href="admin.html">Admin Panel</a>
       </div>
     </div>
     <div class="search-container">
@@ -356,35 +199,13 @@
     </div>
   </div>
 
-  <!-- Bottom Nav Bar -->
   <div class="nav-bar-bottom">
     <a href="https://www.halhigdon.com/training-programs/5k-training/novice-5k/">Couch to 5K</a>
     <a href="https://www.halhigdon.com/training-programs/10k-training/intermediate-10k/">5K to 10K</a>
-    
-    <!--<a href="javascript:void(0)" 
-     onclick="openRaceReport('Wipro Bengaluru Marathon')" 
-     class="text-indigo-600 font-semibold underline">
-     🏁 Wipro Marathon Race Timings 🏁
-  </a> -->
     <a href="https://www.halhigdon.com/training-programs/half-marathon-training/novice-2-half-marathon/">10K to Half Marathon</a>
-    
   </div>
 
-  <!-- Search Box -->
-  <div id="searchBox" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden animate-fade-in">
-    <div class="relative">
-      <input
-        id="searchInput"
-        type="text"
-        placeholder="Search marathons, cities, or descriptions..."
-        class="w-full p-4 pl-12 pr-4 bg-white rounded-xl shadow-lg border-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 search-focus text-gray-800 placeholder-gray-500 text-base"
-      />
-      <i data-feather="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-    </div>
-  </div>
-
-  <!-- Filter Panel -->
-  <div id="filterPanel" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden animate-fade-in">
+  <div id="filterPanel" class="container mx-auto px-4 sm:px-6 lg:px-8 mt-2 hidden">
     <div class="bg-white rounded-xl shadow-lg p-6">
       <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
         <i data-feather="sliders" class="w-5 h-5 mr-2 text-indigo-600"></i>
@@ -414,18 +235,9 @@
     </div>
   </div>
 
-  <!-- Hero Section -->
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-0">
-    <!-- Removed hero section text -->
-  </div>
-  
-  <!-- Marathon Cards -->
   <main class="marathon-list-wrap container mx-auto px-0 sm:px-0 lg:px-0 pb-12 mt-0">
-    <div id="marathonList" class="flex flex-col gap-0 w-full">
-      <!-- Cards will be inserted by JavaScript -->
-    </div>
+    <div id="marathonList" class="flex flex-col gap-0 w-full"></div>
 
-    <!-- Show More Button -->
     <div id="showMoreContainer" class="flex justify-center mt-8 hidden">
       <button id="showMoreButton" class="btn-primary text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg">
         <i data-feather="chevron-down" class="w-5 h-5"></i>
@@ -433,13 +245,11 @@
       </button>
     </div>
 
-    <!-- Loading Spinner -->
-<div id="loadingState" class="text-center py-20">
-  <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-indigo-500 border-opacity-50 mx-auto mb-4"></div>
-  <p class="text-gray-600">Loading upcoming events...</p>
-</div>
+    <div id="loadingState" class="text-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-indigo-500 border-opacity-50 mx-auto mb-4"></div>
+      <p class="text-gray-600">Loading upcoming events...</p>
+    </div>
 
-    <!-- Empty State -->
     <div id="emptyState" class="hidden text-center py-16">
       <div class="text-6xl mb-4">🏃‍♂️</div>
       <h3 class="text-2xl font-semibold text-gray-800 mb-2">No events found</h3>
@@ -447,488 +257,207 @@
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-white border-t border-gray-200 mt-16">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div class="text-center text-gray-600 text-sm">
-        <p>&copy; 2025 Running Ninjas. Made by runners with ❤️ for runners.</p>
+        <p>&copy; 2025 Running Ninjas. Made by runners with love for runners.</p>
       </div>
     </div>
   </footer>
-  
-<!-- Race Report Modal -->
-<div id="raceReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative">
-    <button onclick="closeRaceReport()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800">&times;</button>
-    <h2 class="text-xl font-bold text-indigo-700 mb-4">Race Timings</h2>
-    <div id="raceReportContent" class="max-h-96 overflow-y-auto border rounded p-2">
-      <p class="text-gray-500 text-sm">Loading...</p>
-    </div>
-  </div>
-</div>
 
+  <!-- Supabase -->
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbxornu4mtZh0t6ZO0sZBytTL2PFqLexfpJN9thYAqcrCp_gkPGZUB-2jPt05fRCJrrZuw/exec"; // same as feedback form backend
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Open modal and fetch report
-async function openRaceReport(marathonName) {
-  const modal = document.getElementById("raceReportModal");
-  const content = document.getElementById("raceReportContent");
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
-  content.innerHTML = `<p class="text-gray-500 text-sm">Loading...</p>`;
-
-  try {
-    const res = await fetch(`${scriptURL}?getRaceReport=true&marathonName=${encodeURIComponent(marathonName)}`);
-    const data = await res.json();
-
-    if (data && data.length > 0) {
-      let html = `
-        <table class="w-full border-collapse">
-          <thead>
-            <tr class="bg-indigo-100 text-left">
-              <th class="p-2 border">Name</th>
-              <th class="p-2 border">Category</th>
-              <th class="p-2 border">Timing</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      data.forEach(r => {
-        html += `
-          <tr>
-            <td class="p-2 border">${r.name}</td>
-            <td class="p-2 border">${r.raceCategory}</td>
-            <td class="p-2 border">${r.duration}</td>
-          </tr>
-        `;
-      });
-      html += `</tbody></table>`;
-      content.innerHTML = html;
-    } else {
-      content.innerHTML = `<p class="text-gray-600">No race report entries yet.</p>`;
-    }
-  } catch (err) {
-    content.innerHTML = `<p class="text-red-600">Error loading race report.</p>`;
-  }
-}
-
-// Close modal
-function closeRaceReport() {
-  const modal = document.getElementById("raceReportModal");
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
-}
-</script>
-
-  <script>
     feather.replace();
 
-    // Top navigation bar functionality
-    const searchInputTop = document.getElementById("searchInputTop");
-    const filterBtn = document.getElementById("filterBtn");
-    const addRunnerBtn = document.getElementById("addRunnerBtn");
-    const tshirtOrderBtn = document.getElementById("tshirtOrderBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const dropdownMenu = document.getElementById("dropdownMenu");
+    // Cache config
+    const CACHE_KEY = 'rn_events_v2';
+    const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
-    document.getElementById("hamburgerMenu").addEventListener("click", () => {
-      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-    });
-
-    // Integrate with global search input if available
-    searchInputTop.addEventListener("input", (e) => {
-      const searchInput = document.getElementById("searchInput");
-      if (searchInput) {
-        searchInput.value = e.target.value;
-        const event = new Event("input");
-        searchInput.dispatchEvent(event);
-      }
-    });
-
-    // Toggle filter panel visibility if #filterPanel exists
-    filterBtn.addEventListener("click", () => {
-      const panel = document.getElementById("filterPanel");
-      if (panel) {
-        panel.classList.toggle("hidden");
-      }
-    });
-
-    // Refresh data manually
-    refreshBtn.addEventListener("click", async () => {
+    function setCached(key, data) {
+      try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch(e) {}
+    }
+    function getCached(key, maxAge) {
       try {
-        // Clear cache
-        clearCache(CACHE_KEY);
-        // Show loading state
-        document.getElementById("loadingState")?.classList.remove("hidden");
-        document.getElementById("emptyState")?.classList.add("hidden");
-        
-        // Fetch fresh data
-        const data = await fetchWithTimeout(API_URL);
-        marathons = data
-          .filter(item => (item["Display"] || "").toString().toLowerCase() === "yes")
-          .map(item => ({
-            name: item["Event name"],
-            date: item["Event date"],
-            city: item["Location"],
-            description: item["Summary"],
-            registrationLink: item["Link to register"],
-            busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
-            busPayment: item["Bus Payment"] === true || item["Bus Payment"] === "true",
-            bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
-            feedback: item["Feedback"] === true || item["Feedback"] === "true",
-          }));
-        
-        // Cache the fresh data
-        setCachedData(CACHE_KEY, marathons);
-        filterAndDisplay();
-      } catch (error) {
-        console.error("Failed to refresh data:", error);
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        return Date.now() - ts < maxAge ? data : null;
+      } catch(e) { return null; }
+    }
+    function clearCached(key) {
+      try { localStorage.removeItem(key); } catch(e) {}
+    }
+
+    // Nav wiring
+    document.getElementById('hamburgerMenu').addEventListener('click', () => {
+      const m = document.getElementById('dropdownMenu');
+      m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    });
+    window.addEventListener('click', e => {
+      if (!document.getElementById('hamburgerMenu').contains(e.target) &&
+          !document.getElementById('dropdownMenu').contains(e.target)) {
+        document.getElementById('dropdownMenu').style.display = 'none';
       }
     });
-
-    // Redirect to add runner form
-    addRunnerBtn.addEventListener("click", () => {
-      window.location.href = "add-runner-form.html";
+    document.getElementById('searchInputTop').addEventListener('input', e => {
+      const si = document.getElementById('searchInput');
+      if (si) { si.value = e.target.value; si.dispatchEvent(new Event('input')); }
+      filterAndDisplay();
+    });
+    document.getElementById('filterBtn').addEventListener('click', () => {
+      document.getElementById('filterPanel').classList.toggle('hidden');
+    });
+    document.getElementById('addRunnerBtn').addEventListener('click', () => {
+      window.location.href = 'add-runner-form.html';
+    });
+    document.getElementById('tshirtOrderBtn').addEventListener('click', () => {
+      window.location.href = 'TshirtDataCollection.html';
+    });
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+      clearCached(CACHE_KEY);
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('marathonList').innerHTML = '';
+      await loadEvents();
     });
 
-     // Redirect to add Tshirt Order form
-    tshirtOrderBtn.addEventListener("click", () => {
-      window.location.href = "TshirtDataCollection.html";
-    });
-
-    // Close hamburger dropdown when clicking outside
-    window.addEventListener("click", (e) => {
-      const button = document.getElementById("hamburgerMenu");
-      if (!button.contains(e.target) && !dropdownMenu.contains(e.target)) {
-        dropdownMenu.style.display = "none";
-      }
-    });
-
-    // Cache configuration
-    const CACHE_KEY = 'marathon_data_cache';
-    const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes (reduced for faster updates)
-    const API_URL = "https://script.google.com/macros/s/AKfycbybIrPBphnX54W8A6ayaAo9Rnw3kuRhoHMOQkGsPXEicj-wiL2PyGNHvaNJ-5zqOz8sxg/exec";
-
+    // Data
     let marathons = [];
-
-    // Cache utility functions
-    function setCachedData(key, data) {
-      try {
-        if (typeof Storage !== 'undefined') {
-          const cacheData = {
-            data: data,
-            timestamp: Date.now()
-          };
-          localStorage.setItem(key, JSON.stringify(cacheData));
-        }
-        if (!window.marathonCache) {
-          window.marathonCache = {};
-        }
-        window.marathonCache[key] = {
-          data: data,
-          timestamp: Date.now()
-        };
-      } catch (e) {
-        console.warn('Failed to cache data:', e);
-      }
-    }
-
-    function getCachedData(key, maxAge) {
-      try {
-        // First check memory cache
-        if (window.marathonCache && window.marathonCache[key]) {
-          const cache = window.marathonCache[key];
-          if (Date.now() - cache.timestamp < maxAge) {
-            return cache.data;
-          }
-        }
-
-        // Then check localStorage
-        if (typeof Storage !== 'undefined') {
-          const cached = localStorage.getItem(key);
-          if (cached) {
-            const cacheData = JSON.parse(cached);
-            if (Date.now() - cacheData.timestamp < maxAge) {
-              // Update memory cache
-              if (!window.marathonCache) {
-                window.marathonCache = {};
-              }
-              window.marathonCache[key] = cacheData;
-              return cacheData.data;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to retrieve cached data:', e);
-      }
-      return null;
-    }
-
-    function clearCache(key) {
-      try {
-        if (window.marathonCache && window.marathonCache[key]) {
-          delete window.marathonCache[key];
-        }
-        if (typeof Storage !== 'undefined') {
-          localStorage.removeItem(key);
-        }
-      } catch (e) {
-        console.warn('Failed to clear cached data:', e);
-      }
-    }
-
-    // Enhanced fetch with timeout
-    async function fetchWithTimeout(url, timeout = 10000) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      try {
-        const response = await fetch(url, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
-    }
-
-    window.addEventListener("DOMContentLoaded", async () => {
-      document.getElementById("loadingState")?.classList.remove("hidden");
-      document.getElementById("emptyState")?.classList.add("hidden");
-
-      try {
-        // Check for cached data first
-        const cachedData = getCachedData(CACHE_KEY, CACHE_DURATION);
-        if (cachedData && cachedData.length > 0) {
-          console.log('Loading from cache...');
-          marathons = cachedData;
-          filterAndDisplay();
-          return;
-        }
-
-        // If no cache, fetch from API
-        console.log('Loading from API...');
-        const data = await fetchWithTimeout(API_URL);
-
-        marathons = data
-          .filter(item => (item["Display"] || "").toString().toLowerCase() === "yes")
-          .map(item => ({
-            name: item["Event name"],
-            date: item["Event date"],
-            city: item["Location"],
-            description: item["Summary"],
-            registrationLink: item["Link to register"],
-            busAvailable: item["Bus Available"] === true || item["Bus Available"] === "true",
-            busPayment: item["Bus Payment"] === true || item["Bus Payment"] === "true",
-            bibdetails: item["Bib Details"] === true || item["Bib Details"] === "true",
-            feedback: item["Feedback"] === true || item["Feedback"] === "true",
-          }));
-
-        // Cache the processed data
-        setCachedData(CACHE_KEY, marathons);
-
-        filterAndDisplay();
-      } catch (error) {
-        console.error("Failed to fetch marathon data:", error);
-
-        // Try to load from localStorage as fallback (24 hour old cache)
-        const fallbackData = getCachedData(CACHE_KEY, 24 * 60 * 60 * 1000);
-        if (fallbackData && fallbackData.length > 0) {
-          console.log('Loading from fallback cache...');
-          marathons = fallbackData;
-          filterAndDisplay();
-        } else {
-          document.getElementById("loadingState")?.classList.add("hidden");
-          document.getElementById("emptyState")?.classList.remove("hidden");
-        }
-      }
-    });
-
-    // DOM elements
-    const marathonList = document.getElementById("marathonList");
-    const showMoreContainer = document.getElementById("showMoreContainer");
-    const showMoreButton = document.getElementById("showMoreButton");
-    const emptyState = document.getElementById("emptyState");
-    const searchInput = document.getElementById("searchInput");
-    const raceFilter = document.getElementById("raceFilter");
-    const fromDate = document.getElementById("fromDate");
-    const toDate = document.getElementById("toDate");
-
     let filteredMarathons = [];
     let showAll = false;
 
-    // Utility functions
-    function formatDate(dateStr) {
-      const options = {
-        weekday: 'short',
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      };
-      return new Date(dateStr).toLocaleDateString(undefined, options);
-    }
-
-    function isFutureDate(dateStr) {
-      return new Date(dateStr) >= new Date().setHours(0, 0, 0, 0);
-    }
-
-    function getTimeUntilEvent(dateStr) {
-      const now = new Date();
-      const eventDate = new Date(dateStr);
-      const diffTime = eventDate - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) return "Today";
-      if (diffDays === 1) return "Tomorrow";
-      if (diffDays < 7) return `${diffDays} days`;
-      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks`;
-      return `${Math.ceil(diffDays / 30)} months`;
-    }
-
-    function displayMarathons(data) {
-      // Hide loading and empty states
-      document.getElementById("loadingState")?.classList.add("hidden");
-      document.getElementById("emptyState")?.classList.add("hidden");
-
-      // Clear existing cards
-      marathonList.innerHTML = "";
-
-      if (data.length === 0) {
-        document.getElementById("emptyState")?.classList.remove("hidden");
+    async function loadEvents() {
+      const cached = getCached(CACHE_KEY, CACHE_TTL);
+      if (cached && cached.length > 0) {
+        marathons = cached;
+        filterAndDisplay();
         return;
       }
 
-      // Show only first 3 cards initially, or all if showAll is true
-      const cardsToShow = showAll ? data : data.slice(0, 3);
+      const { data, error } = await db
+        .from('events')
+        .select('event_name,event_date,location,summary,registration_link,bus_available,bus_payment,bib_details,feedback,display')
+        .eq('display', true)
+        .order('event_date', { ascending: true });
 
-      cardsToShow.forEach((marathon) => {
-        const card = document.createElement("div");
-        card.className = "marathon-card";
+      if (error || !data) {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('emptyState').classList.remove('hidden');
+        return;
+      }
+
+      marathons = data.map(e => ({
+        name: e.event_name,
+        date: e.event_date,
+        city: e.location,
+        description: e.summary,
+        registrationLink: e.registration_link,
+        busAvailable: e.bus_available,
+        busPayment: e.bus_payment,
+        bibdetails: e.bib_details,
+        feedback: e.feedback,
+      }));
+
+      setCached(CACHE_KEY, marathons);
+      filterAndDisplay();
+    }
+
+    function formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString(undefined, { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+    }
+    function isFutureDate(dateStr) {
+      return new Date(dateStr) >= new Date().setHours(0,0,0,0);
+    }
+
+    function displayMarathons(data) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      const list = document.getElementById('marathonList');
+      list.innerHTML = '';
+
+      if (data.length === 0) {
+        document.getElementById('emptyState').classList.remove('hidden');
+        return;
+      }
+
+      const toShow = showAll ? data : data.slice(0, 3);
+      toShow.forEach(marathon => {
+        const card = document.createElement('div');
+        card.className = 'marathon-card';
         card.innerHTML = `
           <div class="accent-bar"></div>
           <div class="card-inner">
             <div class="flex items-start justify-between">
               <h3>${marathon.name}</h3>
-              <button class="info-btn" onclick="alert('${marathon.description.replace(/'/g, "\\'")}')">
+              <button class="info-btn" onclick="alert('${(marathon.description || '').replace(/'/g, "\\'")}')">
                 <i data-feather="info" class="w-4 h-4"></i>
               </button>
             </div>
-            <div class="meta">
-              <i data-feather="calendar" class="w-4 h-4"></i>
-              <span>${formatDate(marathon.date)}</span> 
-            </div>
-            <div class="meta">
-              <i data-feather="map-pin" class="w-4 h-4"></i>
-              <span>${marathon.city}</span>
-            </div>
-            <div class="desc">${marathon.description}</div>
+            <div class="meta"><i data-feather="calendar" class="w-4 h-4"></i><span>${formatDate(marathon.date)}</span></div>
+            <div class="meta"><i data-feather="map-pin" class="w-4 h-4"></i><span>${marathon.city}</span></div>
+            <div class="desc">${marathon.description || ''}</div>
             <div class="card-actions">
-              <a href="${marathon.registrationLink}" target="_blank" class="btn-primary">
-                <i data-feather="external-link" class="w-4 h-4"></i>
-                Register Now
-              </a>
-              ${marathon.busAvailable ? `
-                <a href="RNBusForm.html" class="bus-btn">
-                  <i data-feather="truck" class="w-4 h-4"></i>
-                  Ninja Discount & Bus Interest
-                </a>
-              ` : ''}
-              ${marathon.busPayment ? `
-                <a href="BusPaymentStep2.html" class="bus-btn">
-                  <i data-feather="truck" class="w-4 h-4"></i>
-                  Bus Payment
-                </a>
-              ` : ''}
-              ${marathon.bibdetails ? `
-                <a href="RNBibForm.html" class="bib-btn">
-                  <i data-feather="file-text" class="w-4 h-4"></i>
-                  Bib Details
-                </a>
-              ` : ''}
-              ${marathon.feedback ? `
-                <a href="FeedbackForm.html" class="bib-btn">
-                  <i data-feather="file-text" class="w-4 h-4"></i>
-                  Race Timing & Feedback
-                </a>
-              ` : ''}
+              ${marathon.registrationLink ? `<a href="${marathon.registrationLink}" target="_blank" class="btn-primary"><i data-feather="external-link" class="w-4 h-4"></i>Register Now</a>` : ''}
+              ${marathon.busAvailable ? `<a href="RNBusForm.html" class="bus-btn"><i data-feather="truck" class="w-4 h-4"></i>Ninja Discount &amp; Bus Interest</a>` : ''}
+              ${marathon.busPayment ? `<a href="BusPaymentStep2.html" class="bus-btn"><i data-feather="truck" class="w-4 h-4"></i>Bus Payment</a>` : ''}
+              ${marathon.bibdetails ? `<a href="RNBibForm.html" class="bib-btn"><i data-feather="file-text" class="w-4 h-4"></i>Bib Details</a>` : ''}
+              ${marathon.feedback ? `<a href="FeedbackForm.html" class="bib-btn"><i data-feather="file-text" class="w-4 h-4"></i>Race Timing &amp; Feedback</a>` : ''}
             </div>
-          </div>
-        `;
-
-        marathonList.appendChild(card);
+          </div>`;
+        list.appendChild(card);
       });
 
-      // Update show more button
+      const showMoreContainer = document.getElementById('showMoreContainer');
+      const showMoreButton = document.getElementById('showMoreButton');
       if (data.length > 3) {
-        showMoreContainer.classList.remove("hidden");
-        const buttonText = showMoreButton.querySelector("span");
-        const buttonIcon = showMoreButton.querySelector("i");
-
-        buttonText.textContent = showAll ? "Show Less" : "Show More";
-        if (showMoreButton) {
-        const buttonIcon = showMoreButton.querySelector("i");
-        if (buttonIcon) {
-        buttonIcon.setAttribute("data-feather", showAll ? "chevron-up" : "chevron-down");
-        }
-        }
-
+        showMoreContainer.classList.remove('hidden');
+        showMoreButton.querySelector('span').textContent = showAll ? 'Show Less' : 'Show More';
+        const icon = showMoreButton.querySelector('i');
+        if (icon) icon.setAttribute('data-feather', showAll ? 'chevron-up' : 'chevron-down');
       } else {
-        showMoreContainer.classList.add("hidden");
+        showMoreContainer.classList.add('hidden');
       }
-
-      // Ensure Feather icons are rendered after DOM updates
       feather.replace();
     }
 
     function filterAndDisplay() {
-      const searchText = searchInput?.value.toLowerCase() || "";
-      const selectedRace = raceFilter?.value.toLowerCase() || "";
-      const from = fromDate?.value;
-      const to = toDate?.value;
+      const searchText = (document.getElementById('searchInputTop').value || '').toLowerCase();
+      const selectedRace = (document.getElementById('raceFilter')?.value || '').toLowerCase();
+      const from = document.getElementById('fromDate')?.value;
+      const to = document.getElementById('toDate')?.value;
 
-      filteredMarathons = marathons.filter((marathon) => {
-        const isUpcoming = isFutureDate(marathon.date);
-        const matchesSearch = !searchText ||
-          marathon.name.toLowerCase().includes(searchText) ||
-          marathon.city.toLowerCase().includes(searchText) ||
-          marathon.description.toLowerCase().includes(searchText);
-        const matchesRace = !selectedRace || marathon.name.toLowerCase().includes(selectedRace);
-        const matchesFromDate = !from || new Date(marathon.date) >= new Date(from);
-        const matchesToDate = !to || new Date(marathon.date) <= new Date(to);
-        
-        return isUpcoming && matchesSearch && matchesRace && matchesFromDate && matchesToDate;
+      filteredMarathons = marathons.filter(m => {
+        const upcoming = isFutureDate(m.date);
+        const matchSearch = !searchText ||
+          (m.name || '').toLowerCase().includes(searchText) ||
+          (m.city || '').toLowerCase().includes(searchText) ||
+          (m.description || '').toLowerCase().includes(searchText);
+        const matchRace = !selectedRace || (m.name || '').toLowerCase().includes(selectedRace);
+        const matchFrom = !from || new Date(m.date) >= new Date(from);
+        const matchTo = !to || new Date(m.date) <= new Date(to);
+        return upcoming && matchSearch && matchRace && matchFrom && matchTo;
       });
 
-      // Sort by soonest event first
       filteredMarathons.sort((a, b) => new Date(a.date) - new Date(b.date));
-
       showAll = false;
       displayMarathons(filteredMarathons);
     }
 
-    // Event listeners
-    showMoreButton.addEventListener("click", () => {
+    document.getElementById('showMoreButton').addEventListener('click', () => {
       showAll = !showAll;
       displayMarathons(filteredMarathons);
     });
 
-    // Search and filter event listeners
-    searchInput?.addEventListener("input", filterAndDisplay);
-    raceFilter?.addEventListener("change", filterAndDisplay);
-    fromDate?.addEventListener("change", filterAndDisplay);
-    toDate?.addEventListener("change", filterAndDisplay);
+    document.getElementById('raceFilter')?.addEventListener('change', filterAndDisplay);
+    document.getElementById('fromDate')?.addEventListener('change', filterAndDisplay);
+    document.getElementById('toDate')?.addEventListener('change', filterAndDisplay);
 
-    // Initialize
-    feather.replace();
-    filterAndDisplay();
+    window.addEventListener('DOMContentLoaded', loadEvents);
   </script>
 </body>
 </html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - Running Ninjas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f1f5f9; min-height: 100vh; }
+    .tab-btn { padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0; font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .tab-btn.active { background: #6366f1; color: white; }
+    .tab-btn:not(.active) { background: #e0e7ff; color: #3730a3; }
+    .tab-btn:not(.active):hover { background: #c7d2fe; }
+    .pii-cell { cursor: pointer; user-select: none; }
+    .pii-cell:hover { background: #fef9c3; }
+    .pii-cell.revealed { color: #6366f1; }
+    table { border-collapse: collapse; width: 100%; }
+    th { background: #f8fafc; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; }
+    td { padding: 0.55rem 0.75rem; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background: #f8fafc; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; }
+    .badge-admin { background: #dcfce7; color: #166534; }
+    .badge-user  { background: #f1f5f9; color: #64748b; }
+    @media (max-width: 640px) { .tab-btn { font-size: 0.75rem; padding: 0.4rem 0.6rem; } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" class="w-8 h-8 rounded-full" />
+      <span class="font-bold text-lg">Running Ninjas Admin</span>
+    </div>
+    <div id="adminInfo" class="hidden flex items-center gap-3">
+      <span id="adminName" class="text-sm text-gray-300"></span>
+      <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>
+    </div>
+  </div>
+
+  <!-- LOGIN SECTION -->
+  <div id="loginSection" class="max-w-md mx-auto mt-16 bg-white rounded-xl shadow p-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Admin Login</h2>
+    <p class="text-gray-500 text-sm mb-6">Access restricted to authorised Running Ninjas admins.</p>
+
+    <div id="stepId">
+      <label class="block mb-2 text-sm font-medium text-gray-700">Unique ID
+        <input id="loginUniqueId" type="text" placeholder="e.g. RAHU22112" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </label>
+      <button onclick="checkAdminId()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded mt-2">Continue</button>
+      <p id="loginError" class="text-red-500 text-sm mt-2 hidden"></p>
+    </div>
+
+    <!-- Set password (first login) -->
+    <div id="stepSetPassword" class="hidden">
+      <p class="text-amber-600 text-sm mb-3 bg-amber-50 p-3 rounded">First login detected. Please set your admin password.</p>
+      <label class="block mb-2 text-sm font-medium text-gray-700">New Password
+        <input id="newPassword" type="password" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </label>
+      <label class="block mb-4 text-sm font-medium text-gray-700">Confirm Password
+        <input id="confirmPassword" type="password" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </label>
+      <button onclick="setPassword()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded">Set Password &amp; Login</button>
+      <p id="setPasswordError" class="text-red-500 text-sm mt-2 hidden"></p>
+    </div>
+
+    <!-- Enter password (returning admin) -->
+    <div id="stepPassword" class="hidden">
+      <p class="text-sm text-gray-600 mb-3">Welcome back, <strong id="returningName"></strong></p>
+      <label class="block mb-4 text-sm font-medium text-gray-700">Password
+        <input id="loginPassword" type="password" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+               onkeydown="if(event.key==='Enter') verifyAndLogin()" />
+      </label>
+      <button onclick="verifyAndLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded">Login</button>
+      <p id="passwordError" class="text-red-500 text-sm mt-2 hidden"></p>
+    </div>
+
+    <a href="index.html" class="block text-center mt-4 text-sm text-indigo-600">&larr; Back to site</a>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden max-w-full mx-auto px-2 sm:px-4 py-6">
+
+    <!-- Tabs -->
+    <div class="flex gap-1 overflow-x-auto pb-0 mb-0 scrollbar-hide">
+      <button class="tab-btn active" onclick="switchTab('runners',this)">Runners</button>
+      <button class="tab-btn" onclick="switchTab('tshirt',this)">T-Shirt Orders</button>
+      <button class="tab-btn" onclick="switchTab('bus_bookings',this)">Bus Bookings</button>
+      <button class="tab-btn" onclick="switchTab('bus_payments',this)">Bus Payments</button>
+      <button class="tab-btn" onclick="switchTab('bib_details',this)">Bib Details</button>
+      <button class="tab-btn" onclick="switchTab('race_feedback',this)">Race Feedback</button>
+      <button class="tab-btn" onclick="switchTab('user_mgmt',this)">User Management</button>
+    </div>
+
+    <!-- Controls bar -->
+    <div id="controlsBar" class="bg-white border border-t-0 border-gray-200 rounded-b-none px-4 py-3 flex flex-wrap gap-3 items-center">
+      <div id="eventFilterWrap" class="hidden items-center gap-2">
+        <label class="text-sm font-medium text-gray-600">Filter by Event:</label>
+        <select id="eventFilter" onchange="loadCurrentTab()" class="p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          <option value="">All Events</option>
+        </select>
+      </div>
+      <div class="flex-1"></div>
+      <span id="rowCount" class="text-sm text-gray-500"></span>
+      <button id="exportBtn" onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded flex items-center gap-1">
+        &#8595; Export Excel
+      </button>
+    </div>
+
+    <!-- Table wrapper -->
+    <div id="tableWrap" class="bg-white border border-gray-200 rounded-b-xl shadow overflow-x-auto" style="max-height: 65vh; overflow-y: auto;">
+      <div id="tableContent" class="p-4 text-gray-400 text-sm">Select a tab to load data.</div>
+    </div>
+
+    <!-- User Management Panel -->
+    <div id="userMgmtPanel" class="hidden bg-white border border-gray-200 rounded-b-xl shadow p-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">User Management</h3>
+      <p class="text-sm text-gray-500 mb-4">Search a runner by Unique ID or name to grant/revoke admin access or reset their admin password.</p>
+
+      <div class="flex gap-2 mb-4">
+        <input id="userSearch" type="text" placeholder="Search by Unique ID or name..." class="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm" />
+        <button onclick="searchUser()" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-semibold">Search</button>
+      </div>
+
+      <div id="userSearchResult" class="hidden bg-gray-50 rounded-lg p-4">
+        <div class="flex flex-wrap gap-4 items-start justify-between">
+          <div>
+            <p class="font-semibold text-gray-800" id="srName"></p>
+            <p class="text-sm text-gray-500" id="srId"></p>
+            <p class="text-sm text-gray-500" id="srFlat"></p>
+          </div>
+          <span id="srAdminBadge" class="badge"></span>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button id="srToggleAdminBtn" onclick="toggleAdmin()" class="text-sm font-semibold px-4 py-2 rounded"></button>
+          <button id="srResetPwdBtn" onclick="resetAdminPassword()" class="hidden text-sm font-semibold px-4 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white">Reset Password</button>
+        </div>
+        <p id="userMgmtMsg" class="text-sm mt-2 hidden"></p>
+      </div>
+
+      <div id="userSearchNotFound" class="hidden text-sm text-red-500 mt-2">User not found.</div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Session stored in memory only (cleared on page refresh = logout)
+    let session = null; // { uniqueId, name, password }
+    let currentTab = 'runners';
+    let tableData = [];
+    let tableColumns = [];
+
+    // ---- Auth flow ----
+
+    async function checkAdminId() {
+      const uid = document.getElementById('loginUniqueId').value.trim().toUpperCase();
+      if (!uid) return showLoginError('Please enter your Unique ID.');
+
+      const { data, error } = await db.rpc('check_admin_status', { p_unique_id: uid });
+
+      if (error || !data || !data.found) { showLoginError('Unique ID not found in the system.'); return; }
+      if (!data.is_admin) { showLoginError('This Unique ID does not have admin access.'); return; }
+
+      if (!data.has_password) {
+        document.getElementById('stepId').classList.add('hidden');
+        document.getElementById('stepSetPassword').classList.remove('hidden');
+      } else {
+        document.getElementById('returningName').textContent = data.name;
+        document.getElementById('stepId').classList.add('hidden');
+        document.getElementById('stepPassword').classList.remove('hidden');
+      }
+    }
+
+    async function setPassword() {
+      const uid  = document.getElementById('loginUniqueId').value.trim().toUpperCase();
+      const pwd  = document.getElementById('newPassword').value;
+      const cpwd = document.getElementById('confirmPassword').value;
+      const errEl = document.getElementById('setPasswordError');
+
+      if (pwd.length < 6)     { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.remove('hidden'); return; }
+      if (pwd !== cpwd)        { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+
+      const { data, error } = await db.rpc('set_admin_password', { p_unique_id: uid, p_password: pwd });
+
+      if (error || !data?.success) {
+        errEl.textContent = data?.error || 'Failed to set password.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      // Auto-login after setting password
+      const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
+      session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
+      openDashboard();
+    }
+
+    async function verifyAndLogin() {
+      const uid = document.getElementById('loginUniqueId').value.trim().toUpperCase();
+      const pwd = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('passwordError');
+
+      const { data, error } = await db.rpc('verify_admin', { p_unique_id: uid, p_password: pwd });
+
+      if (error || !data) {
+        errEl.textContent = 'Incorrect password.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
+      session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
+      openDashboard();
+    }
+
+    function openDashboard() {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('adminInfo').classList.remove('hidden');
+      document.getElementById('adminName').textContent = session.name;
+      loadEventFilter();
+      loadCurrentTab();
+    }
+
+    function logout() {
+      session = null;
+      tableData = [];
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('adminInfo').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('stepId').classList.remove('hidden');
+      document.getElementById('stepPassword').classList.add('hidden');
+      document.getElementById('stepSetPassword').classList.add('hidden');
+      document.getElementById('loginPassword').value = '';
+    }
+
+    function showLoginError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    // ---- Tab switching ----
+
+    function switchTab(tab, btn) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const eventTabs = ['bus_bookings','bus_payments','bib_details','race_feedback'];
+      const wrap = document.getElementById('eventFilterWrap');
+      wrap.classList[eventTabs.includes(tab) ? 'remove' : 'add']('hidden');
+      if (eventTabs.includes(tab)) wrap.classList.add('flex');
+
+      const isUserMgmt = tab === 'user_mgmt';
+      document.getElementById('tableWrap').classList[isUserMgmt ? 'add' : 'remove']('hidden');
+      document.getElementById('userMgmtPanel').classList[isUserMgmt ? 'remove' : 'add']('hidden');
+      document.getElementById('exportBtn').classList[isUserMgmt ? 'add' : 'remove']('hidden');
+      document.getElementById('controlsBar').classList[isUserMgmt ? 'add' : 'remove']('hidden');
+
+      if (!isUserMgmt) loadCurrentTab();
+    }
+
+    async function loadEventFilter() {
+      const { data } = await db.from('events').select('event_name').order('event_date', { ascending: false });
+      const sel = document.getElementById('eventFilter');
+      sel.innerHTML = '<option value="">All Events</option>';
+      (data || []).forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.event_name; opt.textContent = e.event_name;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function loadCurrentTab() {
+      if (!session) return;
+      const ev = document.getElementById('eventFilter').value;
+      const args = { p_unique_id: session.uniqueId, p_password: session.password };
+      if (ev) args.p_event = ev;
+
+      showTableLoading();
+
+      let result;
+      switch (currentTab) {
+        case 'runners':
+          result = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
+          break;
+        case 'tshirt':
+          result = await db.rpc('admin_get_tshirt_orders', { p_unique_id: session.uniqueId, p_password: session.password });
+          break;
+        case 'bus_bookings':
+          result = await db.rpc('admin_get_bus_bookings', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
+          break;
+        case 'bus_payments':
+          result = await db.rpc('admin_get_bus_payments', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
+          break;
+        case 'bib_details':
+          result = await db.rpc('admin_get_bib_details', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
+          break;
+        case 'race_feedback':
+          result = await db.rpc('admin_get_race_feedback', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
+          break;
+        default:
+          return;
+      }
+
+      if (result.error || result.data?.error) {
+        document.getElementById('tableContent').innerHTML = '<p class="text-red-500 p-4">Error loading data: ' + (result.error?.message || result.data?.error) + '</p>';
+        return;
+      }
+
+      tableData = result.data || [];
+      renderTable(tableData);
+    }
+
+    // ---- Table rendering ----
+
+    const PII_FIELDS = new Set(['phone', 'email', 'dob', 'emergency_contact_number', 'emergency_number']);
+
+    function maskPhone(v)  { if (!v) return '—'; return v.slice(0,4) + '••••' + v.slice(-2); }
+    function maskEmail(v)  { if (!v) return '—'; const [l,d] = v.split('@'); return l.slice(0,3) + '•••@' + (d||''); }
+    function maskDob(v)    { if (!v) return '—'; return v.slice(0,4) + '-••-••'; }
+    function maskDefault(v){ if (!v) return '—'; return '••••••'; }
+
+    function getMask(field, value) {
+      if (!value) return '—';
+      if (field === 'phone' || field === 'emergency_contact_number' || field === 'emergency_number') return maskPhone(value);
+      if (field === 'email') return maskEmail(value);
+      if (field === 'dob')   return maskDob(value);
+      return maskDefault(value);
+    }
+
+    function renderTable(data) {
+      const wrap = document.getElementById('tableContent');
+      if (!data || data.length === 0) {
+        wrap.innerHTML = '<p class="text-gray-400 p-4">No data found.</p>';
+        document.getElementById('rowCount').textContent = '0 rows';
+        return;
+      }
+
+      const cols = Object.keys(data[0]).filter(c => c !== 'admin_password_hash');
+      tableColumns = cols;
+      document.getElementById('rowCount').textContent = data.length + ' rows';
+
+      let html = '<table><thead><tr>';
+      cols.forEach(c => { html += `<th>${c.replace(/_/g,' ')}</th>`; });
+      html += '</tr></thead><tbody>';
+
+      data.forEach((row, ri) => {
+        html += `<tr>`;
+        cols.forEach(col => {
+          const val = row[col];
+          if (PII_FIELDS.has(col) && val) {
+            html += `<td class="pii-cell" data-row="${ri}" data-col="${col}" data-val="${encodeURIComponent(val)}" title="Click to reveal">${getMask(col, val)}</td>`;
+          } else if (col === 'is_admin') {
+            html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
+          } else {
+            html += `<td>${val !== null && val !== undefined ? val : '—'}</td>`;
+          }
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+
+      // PII reveal on click
+      wrap.querySelectorAll('.pii-cell').forEach(cell => {
+        cell.addEventListener('click', function() {
+          if (this.classList.contains('revealed')) {
+            const ri = this.dataset.row;
+            const col = this.dataset.col;
+            this.textContent = getMask(col, decodeURIComponent(this.dataset.val));
+            this.classList.remove('revealed');
+          } else {
+            this.textContent = decodeURIComponent(this.dataset.val);
+            this.classList.add('revealed');
+          }
+        });
+      });
+    }
+
+    function showTableLoading() {
+      document.getElementById('tableContent').innerHTML = `
+        <div class="flex items-center gap-3 p-6 text-gray-400">
+          <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-indigo-500"></div>
+          <span>Loading data...</span>
+        </div>`;
+    }
+
+    // ---- Export ----
+
+    function exportToExcel() {
+      if (!tableData || tableData.length === 0) { alert('No data to export.'); return; }
+
+      // Export with full PII (data already in memory from the admin RPC call)
+      const exportData = tableData.map(row => {
+        const clean = {};
+        tableColumns.forEach(col => { clean[col] = row[col] ?? ''; });
+        return clean;
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const ev = document.getElementById('eventFilter').value;
+      const sheetName = (currentTab + (ev ? '_' + ev : '')).slice(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      const filename = 'RN_' + currentTab + (ev ? '_' + ev.replace(/\s+/g,'_') : '') + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
+      XLSX.writeFile(wb, filename);
+    }
+
+    // ---- User Management ----
+
+    let srTarget = null; // { uniqueId, is_admin, name }
+
+    async function searchUser() {
+      const query = document.getElementById('userSearch').value.trim().toUpperCase();
+      if (!query) return;
+
+      const notFound = document.getElementById('userSearchNotFound');
+      const result   = document.getElementById('userSearchResult');
+      notFound.classList.add('hidden');
+      result.classList.add('hidden');
+      document.getElementById('userMgmtMsg').classList.add('hidden');
+
+      // Try exact uniqueId first, then name search via admin_get_runners
+      const runnersResult = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
+      if (runnersResult.error || !runnersResult.data) { alert('Error fetching runners.'); return; }
+
+      const all = runnersResult.data;
+      const found = all.find(r =>
+        r.unique_id === query ||
+        (r.first_name + ' ' + (r.last_name || '')).toUpperCase().includes(query) ||
+        r.unique_id.toUpperCase().includes(query)
+      );
+
+      if (!found) { notFound.classList.remove('hidden'); return; }
+
+      srTarget = found;
+      document.getElementById('srName').textContent = found.first_name + ' ' + (found.last_name || '');
+      document.getElementById('srId').textContent   = 'ID: ' + found.unique_id;
+      document.getElementById('srFlat').textContent = 'Flat: ' + found.flat_number;
+
+      const badge = document.getElementById('srAdminBadge');
+      badge.textContent = found.is_admin ? 'Admin' : 'User';
+      badge.className = 'badge ' + (found.is_admin ? 'badge-admin' : 'badge-user');
+
+      const toggleBtn  = document.getElementById('srToggleAdminBtn');
+      const resetPwdBtn = document.getElementById('srResetPwdBtn');
+
+      if (found.is_admin) {
+        toggleBtn.textContent = 'Revoke Admin';
+        toggleBtn.className = 'text-sm font-semibold px-4 py-2 rounded bg-red-100 hover:bg-red-200 text-red-700';
+        resetPwdBtn.classList.remove('hidden');
+      } else {
+        toggleBtn.textContent = 'Grant Admin';
+        toggleBtn.className = 'text-sm font-semibold px-4 py-2 rounded bg-green-100 hover:bg-green-200 text-green-700';
+        resetPwdBtn.classList.add('hidden');
+      }
+
+      result.classList.remove('hidden');
+    }
+
+    async function toggleAdmin() {
+      if (!srTarget) return;
+      const newStatus = !srTarget.is_admin;
+      const action = newStatus ? 'grant admin access to' : 'revoke admin access from';
+      if (!confirm(`Are you sure you want to ${action} ${srTarget.first_name}?`)) return;
+
+      const { data, error } = await db.rpc('admin_toggle_user_admin', {
+        p_admin_id:   session.uniqueId,
+        p_password:   session.password,
+        p_target_id:  srTarget.unique_id,
+        p_new_status: newStatus,
+      });
+
+      const msgEl = document.getElementById('userMgmtMsg');
+      if (error || !data?.success) {
+        msgEl.textContent = 'Error: ' + (data?.error || error?.message);
+        msgEl.className = 'text-sm mt-2 text-red-600';
+      } else {
+        msgEl.textContent = (newStatus ? 'Admin access granted' : 'Admin access revoked') + ' for ' + srTarget.first_name + '.';
+        msgEl.className = 'text-sm mt-2 text-green-600';
+        srTarget.is_admin = newStatus;
+        // Refresh display
+        document.getElementById('userSearch').value = srTarget.unique_id;
+        searchUser();
+      }
+      msgEl.classList.remove('hidden');
+    }
+
+    async function resetAdminPassword() {
+      if (!srTarget || !srTarget.is_admin) return;
+      if (!confirm(`Reset the admin password for ${srTarget.first_name}? They will be required to set a new password on next login.`)) return;
+
+      const { data, error } = await db.rpc('admin_reset_password', {
+        p_admin_id:  session.uniqueId,
+        p_password:  session.password,
+        p_target_id: srTarget.unique_id,
+      });
+
+      const msgEl = document.getElementById('userMgmtMsg');
+      if (error || !data?.success) {
+        msgEl.textContent = 'Error: ' + (data?.error || error?.message);
+        msgEl.className = 'text-sm mt-2 text-red-600';
+      } else {
+        msgEl.textContent = 'Password reset for ' + srTarget.first_name + '. They must set a new password on next login.';
+        msgEl.className = 'text-sm mt-2 text-green-600';
+      }
+      msgEl.classList.remove('hidden');
+    }
+
+    // Enter key support for login
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (!document.getElementById('stepId').classList.contains('hidden') &&
+            document.activeElement === document.getElementById('loginUniqueId')) {
+          checkAdminId();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
