@@ -23,6 +23,18 @@
     .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; }
     .badge-admin { background: #dcfce7; color: #166534; }
     .badge-user  { background: #f1f5f9; color: #64748b; }
+    /* Toggle switch */
+    .toggle { position: relative; display: inline-block; width: 2.4rem; height: 1.35rem; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 0.95rem; height: 0.95rem; left: 0.2rem; top: 0.2rem; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .toggle input:checked + .toggle-slider { background: #6366f1; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(1.05rem); }
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-box { background: white; border-radius: 0.75rem; padding: 1.5rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    /* Event cards */
+    .event-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; }
     @media (max-width: 640px) { .tab-btn { font-size: 0.75rem; padding: 0.4rem 0.6rem; } }
   </style>
 </head>
@@ -91,10 +103,11 @@
       <button class="tab-btn" onclick="switchTab('bus_payments',this)">Bus Payments</button>
       <button class="tab-btn" onclick="switchTab('bib_details',this)">Bib Details</button>
       <button class="tab-btn" onclick="switchTab('race_feedback',this)">Race Feedback</button>
+      <button class="tab-btn" onclick="switchTab('events',this)">Events</button>
       <button class="tab-btn" onclick="switchTab('user_mgmt',this)">User Management</button>
     </div>
 
-    <!-- Controls bar -->
+    <!-- Controls bar (data tabs only) -->
     <div id="controlsBar" class="bg-white border border-t-0 border-gray-200 rounded-b-none px-4 py-3 flex flex-wrap gap-3 items-center">
       <div id="eventFilterWrap" class="hidden items-center gap-2">
         <label class="text-sm font-medium text-gray-600">Filter by Event:</label>
@@ -104,6 +117,9 @@
       </div>
       <div class="flex-1"></div>
       <span id="rowCount" class="text-sm text-gray-500"></span>
+      <button id="clearTableBtn" onclick="openClearModal()" class="bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold px-4 py-2 rounded">
+        Clear All
+      </button>
       <button id="exportBtn" onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded flex items-center gap-1">
         &#8595; Export Excel
       </button>
@@ -112,6 +128,15 @@
     <!-- Table wrapper -->
     <div id="tableWrap" class="bg-white border border-gray-200 rounded-b-xl shadow overflow-x-auto" style="max-height: 65vh; overflow-y: auto;">
       <div id="tableContent" class="p-4 text-gray-400 text-sm">Select a tab to load data.</div>
+    </div>
+
+    <!-- Events Panel -->
+    <div id="eventsPanel" class="hidden bg-white border border-gray-200 rounded-b-xl shadow p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-800">Race Events</h3>
+        <button onclick="openEventEditor(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded">+ New Event</button>
+      </div>
+      <div id="eventsContent" class="text-gray-400 text-sm">Loading...</div>
     </div>
 
     <!-- User Management Panel -->
@@ -144,6 +169,140 @@
     </div>
   </div>
 
+  <!-- ===== DELETE ROW MODAL ===== -->
+  <div id="deleteRowModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold text-gray-800 mb-2">Delete Entry</h3>
+      <p class="text-sm text-gray-500 mb-2">You are about to permanently delete:</p>
+      <div id="deleteRowLabel" class="text-sm font-semibold text-gray-800 bg-gray-50 rounded-lg p-3 mb-4 border border-gray-200"></div>
+      <p class="text-xs text-red-600 bg-red-50 rounded-lg p-3 mb-5 border border-red-100">This action cannot be undone.</p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="closeDeleteRowModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button id="confirmDeleteRowBtn" onclick="confirmDeleteRow()" class="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CLEAR TABLE MODAL ===== -->
+  <div id="clearTableModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold text-red-700 mb-2">Clear All Data</h3>
+      <p class="text-sm text-gray-600 mb-1">
+        You are about to permanently delete all <strong id="clearTableRowCount"></strong> rows from <strong id="clearTableName"></strong>.
+      </p>
+      <p class="text-xs text-red-600 bg-red-50 rounded-lg p-3 mb-4 border border-red-100 mt-3">This cannot be undone. Re-enter your admin password to confirm.</p>
+      <label class="block mb-1 text-sm font-medium text-gray-700">Admin Password</label>
+      <input id="clearTablePassword" type="password" placeholder="Your admin password" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-2" />
+      <p id="clearTableError" class="text-red-500 text-sm mb-3 hidden"></p>
+      <div class="flex gap-3 justify-end mt-4">
+        <button onclick="closeClearModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button id="confirmClearBtn" onclick="confirmClearTable()" class="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EVENT EDITOR MODAL ===== -->
+  <div id="eventEditorModal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 2rem; overflow-y: auto;">
+    <div class="modal-box" style="max-width: 640px; max-height: 88vh; overflow-y: auto;">
+      <h3 id="eventEditorTitle" class="text-lg font-bold text-gray-800 mb-4">New Event</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Event Name *</label>
+          <input id="ef_event_name" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Event Date</label>
+          <input id="ef_event_date" type="date" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Location</label>
+          <input id="ef_location" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Summary</label>
+          <textarea id="ef_summary" rows="2" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Registration Link</label>
+          <input id="ef_registration_link" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Instructions</label>
+          <textarea id="ef_instructions" rows="2" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">UPI ID</label>
+          <input id="ef_upi_id" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Ninja Price (Rs.)</label>
+          <input id="ef_ninja_price" type="number" min="0" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Seat Cost (Rs.)</label>
+          <input id="ef_seat_cost" type="number" min="0" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Total Seats</label>
+          <input id="ef_total_seats" type="number" min="0" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+      </div>
+
+      <!-- Feature flag toggles -->
+      <div class="border-t pt-4 mb-5">
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-3">Feature Flags</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <span class="toggle"><input type="checkbox" id="ef_display" /><span class="toggle-slider"></span></span>
+            <span class="text-sm text-gray-700 font-medium">Visible</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <span class="toggle"><input type="checkbox" id="ef_bus_available" /><span class="toggle-slider"></span></span>
+            <span class="text-sm text-gray-700 font-medium">Bus Available</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <span class="toggle"><input type="checkbox" id="ef_bib_details" /><span class="toggle-slider"></span></span>
+            <span class="text-sm text-gray-700 font-medium">Bib Details</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <span class="toggle"><input type="checkbox" id="ef_ninja_discount" /><span class="toggle-slider"></span></span>
+            <span class="text-sm text-gray-700 font-medium">Ninja Discount</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <span class="toggle"><input type="checkbox" id="ef_bus_payment" /><span class="toggle-slider"></span></span>
+            <span class="text-sm text-gray-700 font-medium">Bus Payment</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <span class="toggle"><input type="checkbox" id="ef_feedback" /><span class="toggle-slider"></span></span>
+            <span class="text-sm text-gray-700 font-medium">Feedback</span>
+          </label>
+        </div>
+      </div>
+
+      <p id="eventEditorError" class="text-red-500 text-sm mb-3 hidden"></p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="closeEventEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button id="saveEventBtn" onclick="saveEvent()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Event</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DELETE EVENT MODAL ===== -->
+  <div id="deleteEventModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold text-gray-800 mb-2">Delete Event</h3>
+      <p class="text-sm text-gray-500 mb-2">You are about to delete the event:</p>
+      <div id="deleteEventLabel" class="text-sm font-semibold text-gray-800 bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200"></div>
+      <p class="text-xs text-amber-700 bg-amber-50 rounded-lg p-3 mb-5 border border-amber-100">
+        This will not delete associated bookings, payments, or bib details. Clear those tables separately if needed.
+      </p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="closeDeleteEventModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button id="confirmDeleteEventBtn" onclick="confirmDeleteEvent()" class="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete Event</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/config.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
@@ -155,6 +314,7 @@
     let currentTab = 'runners';
     let tableData = [];
     let tableColumns = [];
+    let eventsData = [];
 
     // ---- Auth flow ----
 
@@ -194,7 +354,6 @@
         return;
       }
 
-      // Auto-login after setting password
       const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
       session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
       openDashboard();
@@ -230,6 +389,7 @@
     function logout() {
       session = null;
       tableData = [];
+      eventsData = [];
       document.getElementById('dashboard').classList.add('hidden');
       document.getElementById('adminInfo').classList.add('hidden');
       document.getElementById('loginSection').classList.remove('hidden');
@@ -258,12 +418,21 @@
       if (eventTabs.includes(tab)) wrap.classList.add('flex');
 
       const isUserMgmt = tab === 'user_mgmt';
-      document.getElementById('tableWrap').classList[isUserMgmt ? 'add' : 'remove']('hidden');
-      document.getElementById('userMgmtPanel').classList[isUserMgmt ? 'remove' : 'add']('hidden');
-      document.getElementById('exportBtn').classList[isUserMgmt ? 'add' : 'remove']('hidden');
-      document.getElementById('controlsBar').classList[isUserMgmt ? 'add' : 'remove']('hidden');
+      const isEvents   = tab === 'events';
+      const isData     = !isUserMgmt && !isEvents;
 
-      if (!isUserMgmt) loadCurrentTab();
+      document.getElementById('tableWrap').classList[isData ? 'remove' : 'add']('hidden');
+      document.getElementById('eventsPanel').classList[isEvents ? 'remove' : 'add']('hidden');
+      document.getElementById('userMgmtPanel').classList[isUserMgmt ? 'remove' : 'add']('hidden');
+      document.getElementById('controlsBar').classList[isData ? 'remove' : 'add']('hidden');
+
+      // Hide Clear All for runners tab (runners can't be bulk-cleared)
+      if (isData) {
+        document.getElementById('clearTableBtn').classList[tab === 'runners' ? 'add' : 'remove']('hidden');
+      }
+
+      if (isData) loadCurrentTab();
+      else if (isEvents) loadEventsTab();
     }
 
     async function loadEventFilter() {
@@ -280,8 +449,6 @@
     async function loadCurrentTab() {
       if (!session) return;
       const ev = document.getElementById('eventFilter').value;
-      const args = { p_unique_id: session.uniqueId, p_password: session.password };
-      if (ev) args.p_event = ev;
 
       showTableLoading();
 
@@ -335,6 +502,18 @@
       return maskDefault(value);
     }
 
+    function getRowLabel(row) {
+      if (currentTab === 'runners') {
+        return (row.first_name || '') + ' ' + (row.last_name || '') + ' (' + row.unique_id + ')';
+      }
+      if (currentTab === 'tshirt') {
+        return 'T-Shirt #' + row.id + (row.name ? ' — ' + row.name : '') + (row.unique_id ? ' (' + row.unique_id + ')' : '');
+      }
+      return '#' + row.id
+        + (row.event_name ? ' — ' + row.event_name : '')
+        + (row.name ? ' — ' + row.name : '');
+    }
+
     function renderTable(data) {
       const wrap = document.getElementById('tableContent');
       if (!data || data.length === 0) {
@@ -349,10 +528,10 @@
 
       let html = '<table><thead><tr>';
       cols.forEach(c => { html += `<th>${c.replace(/_/g,' ')}</th>`; });
-      html += '</tr></thead><tbody>';
+      html += '<th style="width:2.5rem;min-width:2.5rem"></th></tr></thead><tbody>';
 
       data.forEach((row, ri) => {
-        html += `<tr>`;
+        html += '<tr>';
         cols.forEach(col => {
           const val = row[col];
           if (PII_FIELDS.has(col) && val) {
@@ -360,9 +539,10 @@
           } else if (col === 'is_admin') {
             html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
           } else {
-            html += `<td>${val !== null && val !== undefined ? val : '—'}</td>`;
+            html += `<td>${val !== null && val !== undefined ? String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;') : '—'}</td>`;
           }
         });
+        html += `<td><button onclick="openDeleteRowModal(${ri})" title="Delete row" style="line-height:1" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none transition-colors">&#x1F5D1;</button></td>`;
         html += '</tr>';
       });
 
@@ -373,9 +553,7 @@
       wrap.querySelectorAll('.pii-cell').forEach(cell => {
         cell.addEventListener('click', function() {
           if (this.classList.contains('revealed')) {
-            const ri = this.dataset.row;
-            const col = this.dataset.col;
-            this.textContent = getMask(col, decodeURIComponent(this.dataset.val));
+            this.textContent = getMask(this.dataset.col, decodeURIComponent(this.dataset.val));
             this.classList.remove('revealed');
           } else {
             this.textContent = decodeURIComponent(this.dataset.val);
@@ -393,12 +571,134 @@
         </div>`;
     }
 
+    // ---- Delete Row ----
+
+    let deleteRowTarget = null;
+
+    function openDeleteRowModal(ri) {
+      const row = tableData[ri];
+      deleteRowTarget = { ri, row };
+      document.getElementById('deleteRowLabel').textContent = getRowLabel(row);
+      const btn = document.getElementById('confirmDeleteRowBtn');
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+      document.getElementById('deleteRowModal').classList.remove('hidden');
+    }
+
+    function closeDeleteRowModal() {
+      deleteRowTarget = null;
+      document.getElementById('deleteRowModal').classList.add('hidden');
+    }
+
+    async function confirmDeleteRow() {
+      if (!deleteRowTarget) return;
+      const btn = document.getElementById('confirmDeleteRowBtn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      const { row } = deleteRowTarget;
+      const tableMap = {
+        tshirt: 'tshirt_orders',
+        bus_bookings: 'bus_bookings',
+        bus_payments: 'bus_payments',
+        bib_details: 'bib_details',
+        race_feedback: 'race_feedback'
+      };
+
+      let result;
+      if (currentTab === 'runners') {
+        result = await db.rpc('admin_delete_runner', {
+          p_unique_id: session.uniqueId,
+          p_password:  session.password,
+          p_target_id: row.unique_id
+        });
+      } else {
+        result = await db.rpc('admin_delete_row', {
+          p_unique_id: session.uniqueId,
+          p_password:  session.password,
+          p_table:     tableMap[currentTab],
+          p_row_id:    row.id
+        });
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+
+      if (result.error || result.data?.error || result.data?.success === false) {
+        alert('Error: ' + (result.data?.error || result.error?.message || 'Delete failed'));
+        return;
+      }
+
+      closeDeleteRowModal();
+      loadCurrentTab();
+    }
+
+    // ---- Clear Table ----
+
+    function openClearModal() {
+      if (!tableData || tableData.length === 0) { alert('No data to clear.'); return; }
+      const tableNames = {
+        tshirt: 'T-Shirt Orders',
+        bus_bookings: 'Bus Bookings',
+        bus_payments: 'Bus Payments',
+        bib_details: 'Bib Details',
+        race_feedback: 'Race Feedback'
+      };
+      document.getElementById('clearTableRowCount').textContent = tableData.length;
+      document.getElementById('clearTableName').textContent = tableNames[currentTab] || currentTab;
+      document.getElementById('clearTablePassword').value = '';
+      document.getElementById('clearTableError').classList.add('hidden');
+      const btn = document.getElementById('confirmClearBtn');
+      btn.disabled = false;
+      btn.textContent = 'Delete All';
+      document.getElementById('clearTableModal').classList.remove('hidden');
+    }
+
+    function closeClearModal() {
+      document.getElementById('clearTableModal').classList.add('hidden');
+    }
+
+    async function confirmClearTable() {
+      const pwd = document.getElementById('clearTablePassword').value;
+      const errEl = document.getElementById('clearTableError');
+      if (!pwd) { errEl.textContent = 'Please enter your password.'; errEl.classList.remove('hidden'); return; }
+
+      const tableMap = {
+        tshirt: 'tshirt_orders',
+        bus_bookings: 'bus_bookings',
+        bus_payments: 'bus_payments',
+        bib_details: 'bib_details',
+        race_feedback: 'race_feedback'
+      };
+
+      const btn = document.getElementById('confirmClearBtn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      const { data, error } = await db.rpc('admin_clear_table', {
+        p_unique_id: session.uniqueId,
+        p_password:  pwd,
+        p_table:     tableMap[currentTab]
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Delete All';
+
+      if (error || !data?.success) {
+        errEl.textContent = data?.error || error?.message || 'Failed. Check your password.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      closeClearModal();
+      loadCurrentTab();
+    }
+
     // ---- Export ----
 
     function exportToExcel() {
       if (!tableData || tableData.length === 0) { alert('No data to export.'); return; }
 
-      // Export with full PII (data already in memory from the admin RPC call)
       const exportData = tableData.map(row => {
         const clean = {};
         tableColumns.forEach(col => { clean[col] = row[col] ?? ''; });
@@ -415,9 +715,261 @@
       XLSX.writeFile(wb, filename);
     }
 
+    // ---- Events Tab ----
+
+    async function loadEventsTab() {
+      document.getElementById('eventsContent').innerHTML = `
+        <div class="flex items-center gap-2 text-gray-400 py-4">
+          <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-indigo-500"></div>
+          <span>Loading events...</span>
+        </div>`;
+
+      const { data, error } = await db.rpc('admin_get_events', {
+        p_unique_id: session.uniqueId,
+        p_password:  session.password
+      });
+
+      if (error || data?.error) {
+        document.getElementById('eventsContent').innerHTML = '<p class="text-red-500">Error: ' + (error?.message || data?.error) + '</p>';
+        return;
+      }
+
+      eventsData = data || [];
+      renderEvents(eventsData);
+    }
+
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderEvents(events) {
+      const wrap = document.getElementById('eventsContent');
+      if (!events.length) {
+        wrap.innerHTML = '<p class="text-gray-400 py-4">No events yet. Click "+ New Event" to create one.</p>';
+        return;
+      }
+
+      const boolFields = [
+        { key: 'display',        label: 'Visible' },
+        { key: 'bus_available',  label: 'Bus Available' },
+        { key: 'bib_details',    label: 'Bib Details' },
+        { key: 'ninja_discount', label: 'Ninja Discount' },
+        { key: 'bus_payment',    label: 'Bus Payment' },
+        { key: 'feedback',       label: 'Feedback' },
+      ];
+
+      wrap.innerHTML = events.map(ev => `
+        <div class="event-card mb-4" id="ecard-${ev.id}">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="min-w-0">
+              <h4 class="font-bold text-gray-800 text-base truncate">${esc(ev.event_name)}</h4>
+              <p class="text-xs text-gray-500 mt-0.5">
+                ${ev.event_date || 'No date set'}${ev.location ? ' &middot; ' + esc(ev.location) : ''}
+              </p>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <button onclick="openEventEditor(${ev.id})" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap">Edit</button>
+              <button onclick="openDeleteEventModal(${ev.id})" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap">Delete</button>
+            </div>
+          </div>
+
+          ${ev.summary ? `<p class="text-xs text-gray-600 mb-3 leading-relaxed">${esc(ev.summary)}</p>` : ''}
+
+          <div class="flex flex-wrap gap-2 mb-3">
+            ${boolFields.map(f => `
+              <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 rounded-full px-2.5 py-1.5 border border-gray-200 select-none transition-colors">
+                <span class="toggle" style="width:2rem;height:1.2rem;">
+                  <input type="checkbox" ${ev[f.key] ? 'checked' : ''} onchange="toggleEventField(${ev.id},'${f.key}',this.checked)" />
+                  <span class="toggle-slider"></span>
+                </span>
+                <span class="text-xs font-medium text-gray-700">${f.label}</span>
+              </label>
+            `).join('')}
+          </div>
+
+          <div class="flex flex-wrap gap-2 text-xs">
+            ${ev.seat_cost   != null ? `<span class="bg-blue-50 text-blue-700 rounded px-2 py-1 font-medium">Seat: Rs.${ev.seat_cost}</span>` : ''}
+            ${ev.total_seats != null ? `<span class="bg-blue-50 text-blue-700 rounded px-2 py-1 font-medium">Seats: ${ev.total_seats}</span>` : ''}
+            ${ev.ninja_price != null ? `<span class="bg-purple-50 text-purple-700 rounded px-2 py-1 font-medium">Ninja: Rs.${ev.ninja_price}</span>` : ''}
+            ${ev.upi_id      ? `<span class="bg-gray-100 text-gray-600 rounded px-2 py-1">UPI: ${esc(ev.upi_id)}</span>` : ''}
+            ${ev.registration_link ? `<a href="${esc(ev.registration_link)}" target="_blank" class="bg-green-50 text-green-700 rounded px-2 py-1 underline hover:bg-green-100">Reg Link</a>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleEventField(eventId, field, value) {
+      const ev = eventsData.find(e => e.id === eventId);
+      if (!ev) return;
+
+      const prev = ev[field];
+      ev[field] = value; // optimistic
+
+      const { data, error } = await db.rpc('admin_upsert_event', {
+        p_unique_id:         session.uniqueId,
+        p_password:          session.password,
+        p_id:                ev.id,
+        p_event_name:        ev.event_name,
+        p_event_date:        ev.event_date || null,
+        p_location:          ev.location || null,
+        p_summary:           ev.summary || null,
+        p_registration_link: ev.registration_link || null,
+        p_bus_available:     ev.bus_available,
+        p_bib_details:       ev.bib_details,
+        p_ninja_discount:    ev.ninja_discount,
+        p_display:           ev.display,
+        p_upi_id:            ev.upi_id || null,
+        p_ninja_price:       ev.ninja_price || null,
+        p_seat_cost:         ev.seat_cost || null,
+        p_instructions:      ev.instructions || null,
+        p_total_seats:       ev.total_seats || null,
+        p_bus_payment:       ev.bus_payment,
+        p_feedback:          ev.feedback,
+      });
+
+      if (error || !data?.success) {
+        ev[field] = prev; // revert
+        alert('Failed to update: ' + (data?.error || error?.message));
+        renderEvents(eventsData);
+      }
+    }
+
+    // ---- Event Editor ----
+
+    let editingEventId = null;
+
+    function openEventEditor(eventId) {
+      editingEventId = eventId;
+      const ev = eventId ? eventsData.find(e => e.id === eventId) : null;
+
+      document.getElementById('eventEditorTitle').textContent = ev ? 'Edit Event' : 'New Event';
+      document.getElementById('ef_event_name').value          = ev?.event_name || '';
+      document.getElementById('ef_event_date').value          = ev?.event_date || '';
+      document.getElementById('ef_location').value            = ev?.location || '';
+      document.getElementById('ef_summary').value             = ev?.summary || '';
+      document.getElementById('ef_registration_link').value   = ev?.registration_link || '';
+      document.getElementById('ef_instructions').value        = ev?.instructions || '';
+      document.getElementById('ef_upi_id').value              = ev?.upi_id || '';
+      document.getElementById('ef_ninja_price').value         = ev?.ninja_price ?? '';
+      document.getElementById('ef_seat_cost').value           = ev?.seat_cost ?? '';
+      document.getElementById('ef_total_seats').value         = ev?.total_seats ?? '';
+      document.getElementById('ef_display').checked           = !!ev?.display;
+      document.getElementById('ef_bus_available').checked     = !!ev?.bus_available;
+      document.getElementById('ef_bib_details').checked       = !!ev?.bib_details;
+      document.getElementById('ef_ninja_discount').checked    = !!ev?.ninja_discount;
+      document.getElementById('ef_bus_payment').checked       = !!ev?.bus_payment;
+      document.getElementById('ef_feedback').checked          = !!ev?.feedback;
+
+      const btn = document.getElementById('saveEventBtn');
+      btn.disabled = false;
+      btn.textContent = 'Save Event';
+      document.getElementById('eventEditorError').classList.add('hidden');
+      document.getElementById('eventEditorModal').classList.remove('hidden');
+    }
+
+    function closeEventEditor() {
+      editingEventId = null;
+      document.getElementById('eventEditorModal').classList.add('hidden');
+    }
+
+    async function saveEvent() {
+      const name = document.getElementById('ef_event_name').value.trim();
+      const errEl = document.getElementById('eventEditorError');
+      if (!name) { errEl.textContent = 'Event name is required.'; errEl.classList.remove('hidden'); return; }
+
+      const btn = document.getElementById('saveEventBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const np = document.getElementById('ef_ninja_price').value;
+      const sc = document.getElementById('ef_seat_cost').value;
+      const ts = document.getElementById('ef_total_seats').value;
+
+      const { data, error } = await db.rpc('admin_upsert_event', {
+        p_unique_id:         session.uniqueId,
+        p_password:          session.password,
+        p_id:                editingEventId || null,
+        p_event_name:        name,
+        p_event_date:        document.getElementById('ef_event_date').value || null,
+        p_location:          document.getElementById('ef_location').value || null,
+        p_summary:           document.getElementById('ef_summary').value || null,
+        p_registration_link: document.getElementById('ef_registration_link').value || null,
+        p_instructions:      document.getElementById('ef_instructions').value || null,
+        p_upi_id:            document.getElementById('ef_upi_id').value || null,
+        p_ninja_price:       np ? parseInt(np) : null,
+        p_seat_cost:         sc ? parseInt(sc) : null,
+        p_total_seats:       ts ? parseInt(ts) : null,
+        p_display:           document.getElementById('ef_display').checked,
+        p_bus_available:     document.getElementById('ef_bus_available').checked,
+        p_bib_details:       document.getElementById('ef_bib_details').checked,
+        p_ninja_discount:    document.getElementById('ef_ninja_discount').checked,
+        p_bus_payment:       document.getElementById('ef_bus_payment').checked,
+        p_feedback:          document.getElementById('ef_feedback').checked,
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Save Event';
+
+      if (error || !data?.success) {
+        errEl.textContent = data?.error || error?.message || 'Save failed.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      closeEventEditor();
+      loadEventsTab();
+      loadEventFilter(); // refresh dropdown in data tabs
+    }
+
+    // ---- Delete Event ----
+
+    let deleteEventTarget = null;
+
+    function openDeleteEventModal(eventId) {
+      const ev = eventsData.find(e => e.id === eventId);
+      if (!ev) return;
+      deleteEventTarget = eventId;
+      document.getElementById('deleteEventLabel').textContent = ev.event_name + (ev.event_date ? ' (' + ev.event_date + ')' : '');
+      const btn = document.getElementById('confirmDeleteEventBtn');
+      btn.disabled = false;
+      btn.textContent = 'Delete Event';
+      document.getElementById('deleteEventModal').classList.remove('hidden');
+    }
+
+    function closeDeleteEventModal() {
+      deleteEventTarget = null;
+      document.getElementById('deleteEventModal').classList.add('hidden');
+    }
+
+    async function confirmDeleteEvent() {
+      if (!deleteEventTarget) return;
+      const btn = document.getElementById('confirmDeleteEventBtn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      const { data, error } = await db.rpc('admin_delete_event', {
+        p_unique_id: session.uniqueId,
+        p_password:  session.password,
+        p_event_id:  deleteEventTarget
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Delete Event';
+
+      if (error || !data?.success) {
+        alert('Error: ' + (data?.error || error?.message));
+        return;
+      }
+
+      closeDeleteEventModal();
+      loadEventsTab();
+      loadEventFilter();
+    }
+
     // ---- User Management ----
 
-    let srTarget = null; // { uniqueId, is_admin, name }
+    let srTarget = null;
 
     async function searchUser() {
       const query = document.getElementById('userSearch').value.trim().toUpperCase();
@@ -429,7 +981,6 @@
       result.classList.add('hidden');
       document.getElementById('userMgmtMsg').classList.add('hidden');
 
-      // Try exact uniqueId first, then name search via admin_get_runners
       const runnersResult = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
       if (runnersResult.error || !runnersResult.data) { alert('Error fetching runners.'); return; }
 
@@ -451,7 +1002,7 @@
       badge.textContent = found.is_admin ? 'Admin' : 'User';
       badge.className = 'badge ' + (found.is_admin ? 'badge-admin' : 'badge-user');
 
-      const toggleBtn  = document.getElementById('srToggleAdminBtn');
+      const toggleBtn   = document.getElementById('srToggleAdminBtn');
       const resetPwdBtn = document.getElementById('srResetPwdBtn');
 
       if (found.is_admin) {
@@ -488,7 +1039,6 @@
         msgEl.textContent = (newStatus ? 'Admin access granted' : 'Admin access revoked') + ' for ' + srTarget.first_name + '.';
         msgEl.className = 'text-sm mt-2 text-green-600';
         srTarget.is_admin = newStatus;
-        // Refresh display
         document.getElementById('userSearch').value = srTarget.unique_id;
         searchUser();
       }
@@ -516,8 +1066,15 @@
       msgEl.classList.remove('hidden');
     }
 
-    // Enter key support for login
+    // ---- Keyboard shortcuts ----
+
     document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.getElementById('deleteRowModal').classList.add('hidden');
+        document.getElementById('clearTableModal').classList.add('hidden');
+        document.getElementById('eventEditorModal').classList.add('hidden');
+        document.getElementById('deleteEventModal').classList.add('hidden');
+      }
       if (e.key === 'Enter') {
         if (!document.getElementById('stepId').classList.contains('hidden') &&
             document.activeElement === document.getElementById('loginUniqueId')) {
