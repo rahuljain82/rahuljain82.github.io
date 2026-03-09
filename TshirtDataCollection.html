@@ -24,7 +24,12 @@
       <input id="uniqueId" required class="w-full mt-1 p-2 border rounded"/>
     </label>
 
-    <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-4">Fetch My Data</button>
+    <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-2">Fetch My Data</button>
+
+    <p class="text-sm text-center text-gray-500 mb-4">
+      Haven't created your unique ID yet?
+      <a href="add-runner-form.html" class="text-indigo-600 font-medium hover:underline">Create it here</a>
+    </p>
 
     <div id="loadingSpinner" class="hidden text-center my-4">
       <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 border-opacity-60 mx-auto"></div>
