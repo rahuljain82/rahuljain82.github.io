@@ -49,8 +49,8 @@
 
       <div class="mt-4">
         <h3 class="font-semibold mb-2">T-Shirt Orders</h3>
-        <div id="tshirtHeader" class="hidden grid grid-cols-4 gap-2 text-sm font-semibold mb-2">
-          <div>Print Name</div><div>Size</div><div>Qty</div><div></div>
+        <div id="tshirtHeader" class="hidden grid grid-cols-5 gap-2 text-sm font-semibold mb-2">
+          <div>Print Name</div><div>Gender</div><div>Size</div><div>Qty</div><div></div>
         </div>
         <div id="tshirtRows"></div>
         <button type="button" onclick="addTshirtRow()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">+ Add Another T-Shirt</button>
@@ -101,12 +101,12 @@ async function fetchRunnerData() {
     // Fetch existing orders
     const { data: orders } = await db
       .from('tshirt_orders')
-      .select('print_name, size, quantity')
+      .select('print_name, gender, size, quantity')
       .eq('unique_id', uniqueId);
 
     document.getElementById('tshirtRows').innerHTML = '';
     if (orders && orders.length > 0) {
-      orders.forEach(o => addTshirtRow(o.print_name, o.size, o.quantity));
+      orders.forEach(o => addTshirtRow(o.print_name, o.gender, o.size, o.quantity));
     } else {
       addTshirtRow();
     }
@@ -123,6 +123,11 @@ async function fetchRunnerData() {
 document.getElementById('tshirtForm').addEventListener('submit', async e => {
   e.preventDefault();
 
+  if (document.getElementById('runnerDetails').classList.contains('hidden')) {
+    alert('Please fetch your data first before submitting.');
+    return;
+  }
+
   const spinner = document.getElementById('submitSpinner');
   spinner.classList.remove('hidden');
 
@@ -136,8 +141,20 @@ document.getElementById('tshirtForm').addEventListener('submit', async e => {
 
   for (const row of rows) {
     const inputs = row.querySelectorAll('input, select');
+    // inputs[0]=printName, inputs[1]=genderSelect, inputs[2]=sizeSelect, inputs[3]=qty
     if (!inputs[1].value) {
-      alert('Please select T-shirt size for all rows');
+      alert('Please select a gender for all T-shirt rows.');
+      spinner.classList.add('hidden');
+      return;
+    }
+    if (!inputs[2].value) {
+      alert('Please select a size for all T-shirt rows.');
+      spinner.classList.add('hidden');
+      return;
+    }
+    const qty = parseInt(inputs[3].value) || 1;
+    if (qty > 5) {
+      alert('Maximum quantity per T-shirt row is 5.');
       spinner.classList.add('hidden');
       return;
     }
@@ -145,10 +162,10 @@ document.getElementById('tshirtForm').addEventListener('submit', async e => {
       unique_id:  uniqueId,
       name:       name,
       flat:       flat,
-      gender:     gender,
+      gender:     inputs[1].value,
       print_name: inputs[0].value,
-      size:       inputs[1].value,
-      quantity:   parseInt(inputs[2].value) || 1,
+      size:       inputs[2].value,
+      quantity:   qty,
     });
   }
 
@@ -172,22 +189,34 @@ document.getElementById('tshirtForm').addEventListener('submit', async e => {
   }
 });
 
-function addTshirtRow(printName='', size='', qty=1) {
+function addTshirtRow(printName='', tshirtGender='', size='', qty=1) {
   const container = document.getElementById('tshirtRows');
+  if (container.children.length >= 5) {
+    alert('Maximum of 5 T-shirt orders allowed per unique ID.');
+    return;
+  }
   const row = document.createElement('div');
-  row.className = 'grid grid-cols-4 gap-2 mb-2';
+  row.className = 'grid grid-cols-5 gap-2 mb-2';
   row.innerHTML = `
-    <input placeholder="Print Name" value="${printName}" class="p-2 border rounded"/>
+    <input placeholder="Print Name" value="${printName}" maxlength="10" class="p-2 border rounded"/>
+    <select class="p-2 border rounded" required>
+      <option value="">Gender</option>
+      <option value="Kids">Kids</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
     <select class="p-2 border rounded" required>
       <option value="">Size</option>
       <option value="XS">XS</option><option value="S">S</option>
       <option value="M">M</option><option value="L">L</option>
       <option value="XL">XL</option><option value="XXL">XXL</option>
     </select>
-    <input type="number" min="1" value="${qty}" class="p-2 border rounded"/>
+    <input type="number" min="1" max="5" value="${qty}" class="p-2 border rounded"/>
     <button type="button" class="bg-red-500 text-white px-2 py-1 rounded" onclick="this.parentElement.remove()">🗑</button>`;
   container.appendChild(row);
-  if (size) row.querySelector('select').value = size;
+  const selects = row.querySelectorAll('select');
+  if (tshirtGender) selects[0].value = tshirtGender;
+  if (size) selects[1].value = size;
 }
 </script>
 </body>
