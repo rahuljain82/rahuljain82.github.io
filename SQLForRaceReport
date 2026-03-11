@@ -1,0 +1,82 @@
+Frontend is done. Now here's the SQL script you need to run in Supabase.
+    
+  Go to: Supabase Dashboard → SQL Editor → New Query → paste and run this:
+                                                                                                                                        -- 1. Create the race_reports table
+  CREATE TABLE IF NOT EXISTS race_reports (                                                                                           
+    id              SERIAL PRIMARY KEY,                                                                                               
+    title           TEXT NOT NULL,                                                                                                    
+    race_date       DATE,
+    author          TEXT,
+    report_url      TEXT,
+    summary         TEXT,
+    show_on_landing BOOLEAN DEFAULT false,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  -- 2. Enable RLS (Row Level Security)
+  ALTER TABLE race_reports ENABLE ROW LEVEL SECURITY;
+
+  -- 3. Allow anyone to read (needed for public landing page later)
+  CREATE POLICY "Public read race_reports" ON race_reports FOR SELECT USING (true);
+
+  -- 4. RPC: Get all reports (admin only)
+  CREATE OR REPLACE FUNCTION admin_get_race_reports(p_unique_id TEXT, p_password TEXT)
+  RETURNS TABLE(id INT, title TEXT, race_date DATE, author TEXT, report_url TEXT, summary TEXT, show_on_landing BOOLEAN, created_at   
+  TIMESTAMPTZ)
+  LANGUAGE plpgsql SECURITY DEFINER AS $$
+  DECLARE v_runner RECORD;
+  BEGIN
+    SELECT * INTO v_runner FROM runners WHERE runners.unique_id = p_unique_id AND is_admin = true;
+    IF NOT FOUND THEN RETURN; END IF;
+    IF v_runner.admin_password_hash IS NULL OR
+       v_runner.admin_password_hash != crypt(p_password, v_runner.admin_password_hash) THEN RETURN; END IF;
+    RETURN QUERY SELECT r.id, r.title, r.race_date, r.author, r.report_url, r.summary, r.show_on_landing, r.created_at
+                 FROM race_reports r ORDER BY r.race_date DESC NULLS LAST;
+  END;
+  $$;
+
+  -- 5. RPC: Upsert (create or update) a report
+  CREATE OR REPLACE FUNCTION admin_upsert_race_report(
+    p_unique_id TEXT, p_password TEXT,
+    p_id INT DEFAULT NULL, p_title TEXT DEFAULT NULL,
+    p_race_date DATE DEFAULT NULL, p_author TEXT DEFAULT NULL,
+    p_report_url TEXT DEFAULT NULL, p_summary TEXT DEFAULT NULL,
+    p_show_on_landing BOOLEAN DEFAULT false
+  )
+  RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER AS $$
+  DECLARE v_runner RECORD;
+  BEGIN
+    SELECT * INTO v_runner FROM runners WHERE runners.unique_id = p_unique_id AND is_admin = true;
+    IF NOT FOUND THEN RETURN json_build_object('success', false, 'error', 'Unauthorized'); END IF;
+    IF v_runner.admin_password_hash IS NULL OR
+       v_runner.admin_password_hash != crypt(p_password, v_runner.admin_password_hash) THEN
+      RETURN json_build_object('success', false, 'error', 'Invalid password');
+    END IF;
+    IF p_id IS NOT NULL THEN
+      UPDATE race_reports SET
+        title = p_title, race_date = p_race_date, author = p_author,
+        report_url = p_report_url, summary = p_summary, show_on_landing = p_show_on_landing
+      WHERE id = p_id;
+    ELSE
+      INSERT INTO race_reports (title, race_date, author, report_url, summary, show_on_landing)
+      VALUES (p_title, p_race_date, p_author, p_report_url, p_summary, p_show_on_landing);
+    END IF;
+    RETURN json_build_object('success', true);
+  END;
+  $$;
+
+  -- 6. RPC: Delete a report
+  CREATE OR REPLACE FUNCTION admin_delete_race_report(p_unique_id TEXT, p_password TEXT, p_report_id INT)
+  RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER AS $$
+  DECLARE v_runner RECORD;
+  BEGIN
+    SELECT * INTO v_runner FROM runners WHERE runners.unique_id = p_unique_id AND is_admin = true;
+    IF NOT FOUND THEN RETURN json_build_object('success', false, 'error', 'Unauthorized'); END IF;
+    IF v_runner.admin_password_hash IS NULL OR
+       v_runner.admin_password_hash != crypt(p_password, v_runner.admin_password_hash) THEN
+      RETURN json_build_object('success', false, 'error', 'Invalid password');
+    END IF;
+    DELETE FROM race_reports WHERE id = p_report_id;
+    RETURN json_build_object('success', true);
+  END;
+  $$;
