@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz - Running Ninjas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; background: #f5f7fa; }
+
+    .nav-bar-top { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background-color: #1f2937; color: white; }
+    .nav-bar-bottom { display: flex; justify-content: center; background-color: #e5e7eb; padding: 0.5rem 1rem; gap: 1.5rem; font-weight: 500; flex-wrap: wrap; }
+    .nav-bar-bottom a { color: #1f2937; text-decoration: none; font-size: 0.9rem; transition: color 0.15s; }
+    .nav-bar-bottom a:hover { color: #6366f1; }
+
+    .quiz-card { background: white; border-radius: 1rem; padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #e5e7eb; }
+    .question-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.1rem; transition: border-color 0.2s; }
+    .question-block.answered { opacity: 0.85; }
+
+    .option-label { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.12s; border: 2px solid transparent; margin-bottom: 0.35rem; }
+    .option-label:hover:not(.locked) { background: #ede9fe; }
+    .option-label input[type="radio"] { width: 1.1rem; height: 1.1rem; accent-color: #6366f1; cursor: pointer; flex-shrink: 0; }
+    .option-label.selected { background: #ede9fe; border-color: #6366f1; }
+    .option-label.correct { background: #f0fdf4; border-color: #22c55e; }
+    .option-label.wrong { background: #fef2f2; border-color: #ef4444; }
+    .option-label.show-correct { background: #f0fdf4; border-color: #22c55e; }
+    .option-label.locked { cursor: default; }
+
+    .check-btn { background: #6366f1; color: white; font-weight: 700; border: none; border-radius: 0.5rem; padding: 0.55rem 1.6rem; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; margin-top: 0.85rem; }
+    .check-btn:hover:not(:disabled) { background: #4f46e5; }
+    .check-btn:disabled { background: #c7d2fe; cursor: not-allowed; }
+
+    .feedback-msg { display: flex; align-items: flex-start; gap: 0.6rem; border-radius: 0.5rem; padding: 0.7rem 0.9rem; margin-top: 0.85rem; font-size: 0.88rem; font-weight: 600; }
+    .feedback-correct { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .feedback-wrong { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+
+    .score-banner { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-radius: 0.75rem; padding: 1.25rem 1.5rem; margin-top: 1.5rem; text-align: center; }
+
+    .spinner { border: 3px solid #e5e7eb; border-top-color: #6366f1; border-radius: 50%; width: 2rem; height: 2rem; animation: spin 0.7s linear infinite; margin: 2rem auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div style="display:flex; justify-content:center; align-items:center; padding:1.2rem 1rem 0.5rem; background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);">
+    <div style="background:linear-gradient(135deg,#e0e7ff 0%,#c7d2fe 100%); border-radius:50%; padding:1rem; width:80px; height:80px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 24px rgba(102,126,234,0.10);">
+      <img src="https://i.ibb.co/jvwQ4Zm/running-ninja-logo.png" alt="Running Ninjas" style="width:52px;height:52px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'; this.parentNode.innerHTML='🏃';" />
+    </div>
+  </div>
+  <nav class="nav-bar-top">
+    <span style="font-weight:700; font-size:1.1rem;">Running Ninjas</span>
+    <a href="landing.html" style="color:#d1d5db; font-size:0.85rem; text-decoration:none;">← Back to Home</a>
+  </nav>
+  <div class="nav-bar-bottom">
+    <a href="landing.html">Home</a>
+    <a href="index.html">Marathons</a>
+    <a href="survey.html">Survey</a>
+    <a href="quiz.html" style="color:#6366f1; font-weight:700;">Quiz</a>
+    <a href="add-runner-form.html">Join Us</a>
+  </div>
+
+  <!-- Main -->
+  <main style="max-width:720px; margin:0 auto; padding:2rem 1rem 4rem;">
+    <div style="margin-bottom:1.75rem;">
+      <h1 style="font-size:1.8rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">Knowledge Quiz</h1>
+      <p style="color:#64748b; font-size:0.95rem; margin:0;">Test your running knowledge — get instant feedback per question.</p>
+    </div>
+
+    <div id="content">
+      <div class="spinner"></div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function getSessionId() {
+      let sid = localStorage.getItem('rn_session_id');
+      if (!sid) { sid = crypto.randomUUID(); localStorage.setItem('rn_session_id', sid); }
+      return sid;
+    }
+    const SESSION_ID = getSessionId();
+
+    function alreadyDone(quizId) { return localStorage.getItem('rn_quiz_done_' + quizId) === '1'; }
+    function markDone(quizId) { localStorage.setItem('rn_quiz_done_' + quizId, '1'); }
+
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    // State per quiz: tracks answered count, correct count
+    const quizState = {};
+
+    async function loadQuizzes() {
+      const content = document.getElementById('content');
+      try {
+        const { data: quizzes, error } = await db.from('quizzes').select('*').eq('active', true).order('created_at', { ascending: false });
+        if (error) throw error;
+        if (!quizzes || quizzes.length === 0) {
+          content.innerHTML = `<div class="quiz-card" style="text-align:center; color:#94a3b8; padding:3rem;">
+            <div style="font-size:3rem; margin-bottom:1rem;">🧠</div>
+            <p style="font-size:1.1rem; font-weight:600;">No active quizzes right now</p>
+            <p style="font-size:0.9rem; margin-top:0.5rem;">Check back later for new quizzes!</p>
+          </div>`;
+          return;
+        }
+        content.innerHTML = '';
+        for (const quiz of quizzes) {
+          const el = document.createElement('div');
+          el.id = 'quiz-' + quiz.id;
+          content.appendChild(el);
+          if (alreadyDone(quiz.id)) {
+            renderAlreadyDone(quiz, el);
+          } else {
+            await renderQuizForm(quiz, el);
+          }
+        }
+      } catch (e) {
+        content.innerHTML = `<div class="quiz-card" style="color:#ef4444;">Failed to load quizzes: ${e.message}</div>`;
+      }
+    }
+
+    function renderAlreadyDone(quiz, container) {
+      container.innerHTML = `<div class="quiz-card" style="text-align:center; padding:2.5rem;">
+        <div style="font-size:2.5rem; margin-bottom:0.75rem;">🎉</div>
+        <p style="font-weight:700; font-size:1.1rem; color:#1e293b; margin:0 0 0.4rem;">${esc(quiz.title)}</p>
+        <p style="color:#64748b; font-size:0.9rem; margin:0;">You've already completed this quiz.</p>
+      </div>`;
+    }
+
+    async function renderQuizForm(quiz, container) {
+      const { data: questions } = await db
+        .from('quiz_questions')
+        .select('*, quiz_options(*)')
+        .eq('quiz_id', quiz.id)
+        .order('display_order');
+      if (!questions || questions.length === 0) return;
+
+      questions.forEach(q => {
+        if (q.quiz_options) q.quiz_options.sort((a, b) => a.display_order - b.display_order);
+      });
+
+      quizState[quiz.id] = { total: questions.length, answered: 0, correct: 0, questions };
+
+      container.innerHTML = `
+        <div class="quiz-card">
+          <h2 style="font-size:1.3rem; font-weight:700; color:#1e293b; margin:0 0 0.4rem;">${esc(quiz.title)}</h2>
+          ${quiz.description ? `<p style="color:#64748b; font-size:0.9rem; margin:0 0 1.5rem;">${esc(quiz.description)}</p>` : '<div style="margin-bottom:1.5rem;"></div>'}
+          <div id="progress-${quiz.id}" style="font-size:0.8rem; color:#94a3b8; margin-bottom:1.25rem;">Question 1 of ${questions.length}</div>
+          ${questions.map((q, idx) => `
+            <div class="question-block" id="qblock-${q.id}" style="${idx > 0 ? 'display:none;' : ''}">
+              <p style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8; margin:0 0 0.5rem;">Question ${idx + 1}</p>
+              <p style="font-weight:600; color:#1e293b; margin:0 0 1rem; font-size:0.97rem; line-height:1.5;">${esc(q.question_text)}</p>
+              <div id="options-${q.id}">
+                ${q.quiz_options.map(o => `
+                  <label class="option-label" id="opt-${o.id}" onclick="pickOption(this, '${q.id}', '${o.id}')">
+                    <input type="radio" name="q-${q.id}" value="${o.id}" />
+                    <span style="font-size:0.9rem;">${esc(o.option_text)}</span>
+                  </label>`).join('')}
+              </div>
+              <div id="feedback-${q.id}" style="display:none;"></div>
+              <button class="check-btn" id="checkbtn-${q.id}" onclick="checkAnswer('${quiz.id}', '${q.id}', '${q.correct_option_id || ''}', ${idx}, ${questions.length})" disabled>
+                Check Answer
+              </button>
+            </div>
+          `).join('')}
+          <div id="score-${quiz.id}" style="display:none;"></div>
+        </div>`;
+    }
+
+    function pickOption(label, questionId, optionId) {
+      if (label.classList.contains('locked')) return;
+      const name = 'q-' + questionId;
+      document.querySelectorAll(`[name="${name}"]`).forEach(r => r.closest('.option-label').classList.remove('selected'));
+      label.classList.add('selected');
+      document.getElementById('checkbtn-' + questionId).disabled = false;
+    }
+
+    async function checkAnswer(quizId, questionId, correctOptionId, questionIndex, totalQuestions) {
+      const btn = document.getElementById('checkbtn-' + questionId);
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+
+      const selected = document.querySelector(`input[name="q-${questionId}"]:checked`);
+      if (!selected) { btn.disabled = false; btn.textContent = 'Check Answer'; return; }
+
+      const selectedId = selected.value;
+      const isCorrect = selectedId === correctOptionId;
+      const state = quizState[quizId];
+      state.answered++;
+      if (isCorrect) state.correct++;
+
+      // Lock all options
+      document.querySelectorAll(`input[name="q-${questionId}"]`).forEach(r => {
+        r.disabled = true;
+        r.closest('.option-label').classList.add('locked');
+      });
+
+      // Style the selected option
+      const selectedLabel = document.getElementById('opt-' + selectedId);
+      if (selectedLabel) {
+        selectedLabel.classList.remove('selected');
+        selectedLabel.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+
+      // If wrong, highlight the correct option
+      if (!isCorrect && correctOptionId) {
+        const correctLabel = document.getElementById('opt-' + correctOptionId);
+        if (correctLabel) correctLabel.classList.add('show-correct');
+      }
+
+      // Find correct option text
+      const correctLabel = document.getElementById('opt-' + correctOptionId);
+      const correctText = correctLabel ? correctLabel.querySelector('span').textContent : '';
+
+      // Show feedback
+      const feedbackEl = document.getElementById('feedback-' + questionId);
+      feedbackEl.style.display = 'block';
+      feedbackEl.innerHTML = isCorrect
+        ? `<div class="feedback-msg feedback-correct"><span style="font-size:1.2rem;">✅</span><span>Correct! Well done!</span></div>`
+        : `<div class="feedback-msg feedback-wrong"><span style="font-size:1.2rem;">❌</span><div>Wrong answer.<br/><span style="font-weight:400;">Correct answer: <strong>${esc(correctText)}</strong></span></div></div>`;
+
+      // Save response to DB
+      db.from('quiz_responses').insert({
+        quiz_id: quizId,
+        question_id: questionId,
+        selected_option_id: selectedId,
+        is_correct: isCorrect,
+        session_id: SESSION_ID
+      });
+
+      document.getElementById('qblock-' + questionId).classList.add('answered');
+
+      // Show next question or final score
+      if (questionIndex + 1 < totalQuestions) {
+        btn.textContent = 'Next Question →';
+        btn.disabled = false;
+        btn.onclick = () => {
+          const nextQ = state.questions[questionIndex + 1];
+          document.getElementById('qblock-' + nextQ.id).style.display = 'block';
+          document.getElementById('qblock-' + questionId).style.display = 'none';
+          document.getElementById('progress-' + quizId).textContent = `Question ${questionIndex + 2} of ${totalQuestions}`;
+          document.getElementById('qblock-' + nextQ.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+      } else {
+        btn.style.display = 'none';
+        showScore(quizId, state.correct, state.total);
+        markDone(quizId);
+      }
+    }
+
+    function showScore(quizId, correct, total) {
+      const pct = Math.round((correct / total) * 100);
+      let emoji = '🥉', msg = 'Keep practising!';
+      if (pct >= 80) { emoji = '🥇'; msg = 'Outstanding! You\'re a running expert!'; }
+      else if (pct >= 50) { emoji = '🥈'; msg = 'Good job! Keep it up!'; }
+
+      document.getElementById('score-' + quizId).style.display = 'block';
+      document.getElementById('score-' + quizId).innerHTML = `
+        <div class="score-banner">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">${emoji}</div>
+          <p style="font-size:1.6rem; font-weight:800; margin:0 0 0.25rem;">${correct} / ${total}</p>
+          <p style="font-size:0.95rem; opacity:0.85; margin:0 0 0.4rem;">${pct}% correct</p>
+          <p style="font-size:0.9rem; opacity:0.75; margin:0;">${msg}</p>
+        </div>`;
+      document.getElementById('progress-' + quizId).style.display = 'none';
+    }
+
+    loadQuizzes();
+  </script>
+</body>
+</html>

@@ -5,67 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Panel - Running Ninjas</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f1f5f9; min-height: 100vh; }
-    .tab-btn { padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0; font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
-    .tab-btn.active { background: #6366f1; color: white; }
-    .tab-btn:not(.active) { background: #e0e7ff; color: #3730a3; }
-    .tab-btn:not(.active):hover { background: #c7d2fe; }
-    .pii-cell { cursor: pointer; user-select: none; }
-    .pii-cell:hover { background: #fef9c3; }
-    .pii-cell.revealed { color: #6366f1; }
-    table { border-collapse: collapse; width: 100%; }
-    th { background: #f8fafc; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; }
-    td { padding: 0.55rem 0.75rem; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-    tr:hover td { background: #f8fafc; }
-    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; }
-    .badge-admin { background: #dcfce7; color: #166534; }
-    .badge-user  { background: #f1f5f9; color: #64748b; }
-    /* Toggle switch */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; min-height: 100vh; }
+
     .toggle { position: relative; display: inline-block; width: 2.4rem; height: 1.35rem; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; }
     .toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; cursor: pointer; transition: background 0.2s; }
     .toggle-slider::before { content: ''; position: absolute; width: 0.95rem; height: 0.95rem; left: 0.2rem; top: 0.2rem; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     .toggle input:checked + .toggle-slider { background: #6366f1; }
     .toggle input:checked + .toggle-slider::before { transform: translateX(1.05rem); }
-    /* Modal */
+
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; }
+    .badge-admin  { background: #dcfce7; color: #166534; }
+    .badge-super  { background: #fce7f3; color: #9d174d; }
+    .badge-user   { background: #f1f5f9; color: #64748b; }
+
+    table { border-collapse: collapse; width: 100%; }
+    th { background: #f8fafc; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; padding: 0.55rem 0.7rem; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 1; white-space: nowrap; }
+    td { padding: 0.5rem 0.7rem; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+    tr:hover td { background: #f8fafc; }
+    .pii-cell { cursor: pointer; user-select: none; }
+    .pii-cell:hover { background: #fef9c3 !important; }
+    .pii-cell.revealed { color: #6366f1; }
+
+    /* Sidebar */
+    #adminSidebar {
+      width: 248px; min-width: 248px;
+      background: #0f172a;
+      display: flex; flex-direction: column;
+      overflow-y: auto; overflow-x: hidden;
+      transition: width 0.22s ease, min-width 0.22s ease;
+      flex-shrink: 0; height: 100%;
+    }
+    #adminSidebar.collapsed { width: 0; min-width: 0; }
+
+    .sidebar-profile { padding: 1rem; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 0.65rem; flex-shrink: 0; }
+    .sidebar-avatar { width: 2rem; height: 2rem; border-radius: 50%; background: #6366f1; color: white; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sidebar-name { font-size: 0.82rem; font-weight: 600; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-role { font-size: 0.7rem; color: #64748b; white-space: nowrap; }
+    .sidebar-role.super { color: #f9a8d4; }
+
+    .nav-section-label { padding: 1rem 1rem 0.25rem 1rem; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; }
+    .nav-section-toggle { display: flex; align-items: center; width: 100%; padding: 0.5rem 1rem; font-size: 0.82rem; font-weight: 600; color: #94a3b8; background: none; border: none; cursor: pointer; white-space: nowrap; transition: color 0.15s; }
+    .nav-section-toggle:hover { color: #cbd5e1; }
+    .nav-section-toggle .chevron { font-size: 0.6rem; transition: transform 0.2s; margin-left: auto; padding-left: 0.5rem; }
+    .nav-section-toggle.closed .chevron { transform: rotate(-90deg); }
+    .nav-sub { overflow: hidden; max-height: 400px; transition: max-height 0.25s ease; }
+    .nav-sub.closed { max-height: 0; }
+    .nav-item { display: flex; align-items: center; gap: 0.6rem; width: 100%; text-align: left; padding: 0.5rem 1rem 0.5rem 1.35rem; font-size: 0.82rem; color: #94a3b8; background: none; border: none; border-left: 3px solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background 0.12s, color 0.12s, border-color 0.12s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+    .nav-item.active { background: rgba(99,102,241,0.18); color: #a5b4fc; border-left-color: #6366f1; }
+    .sidebar-footer { margin-top: auto; padding: 0.75rem 1rem; border-top: 1px solid #1e293b; flex-shrink: 0; }
+
+    /* Dashboard */
+    #dashboard { display: none; height: calc(100vh - 52px); }
+    #dashboard.open { display: flex; }
+
+    /* Workspace */
+    #wsArea { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: #f1f5f9; }
+    #wsToolbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-shrink: 0; flex-wrap: wrap; }
+    #wsTitle { font-size: 1.05rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    #wsBreadcrumb { font-size: 0.72rem; color: #94a3b8; margin-top: 0.15rem; }
+    #wsBody { flex: 1; overflow-y: auto; padding: 1.25rem; }
+
+    .event-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1rem; }
+    .content-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; }
+    .pending-bar { display: flex; align-items: flex-start; gap: 0.65rem; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: #92400e; }
+
+    .quick-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.1rem 1.25rem; cursor: pointer; transition: box-shadow 0.15s, border-color 0.15s; display: flex; align-items: center; gap: 0.85rem; }
+    .quick-card:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.13); border-color: #a5b4fc; }
+    .quick-icon { width: 2.8rem; height: 2.8rem; border-radius: 0.65rem; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; }
     .modal-box { background: white; border-radius: 0.75rem; padding: 1.5rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    /* Event cards */
-    .event-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; }
-    @media (max-width: 640px) { .tab-btn { font-size: 0.75rem; padding: 0.4rem 0.6rem; } }
+
+    .form-label { display: block; font-size: 0.72rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .form-input { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid #e2e8f0; border-radius: 0.4rem; font-size: 0.85rem; color: #1e293b; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+    .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    .form-input:read-only { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+
+    @media (max-width: 640px) {
+      #adminSidebar { position: fixed; top: 52px; bottom: 0; left: 0; z-index: 30; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
+  <!-- TOP BAR -->
+  <div class="bg-gray-900 text-white px-4 flex items-center justify-between sticky top-0 z-40" style="height:52px;">
     <div class="flex items-center gap-3">
-      <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" class="w-8 h-8 rounded-full" />
-      <span class="font-bold text-lg">Running Ninjas Admin</span>
+      <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white hover:bg-gray-700 p-1.5 rounded transition-colors">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" class="w-7 h-7 rounded-full" alt="RN" />
+      <span class="font-bold text-sm">Running Ninjas Admin</span>
     </div>
-    <div id="adminInfo" class="hidden flex items-center gap-3">
-      <span id="adminName" class="text-sm text-gray-300"></span>
-      <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>
+    <div id="adminInfo" style="display:none;" class="flex items-center gap-3">
+      <div class="text-right hidden sm:block">
+        <p class="text-sm font-medium leading-none" id="adminName"></p>
+        <p class="text-xs text-gray-400 mt-0.5" id="adminRoleLabel">Administrator</p>
+      </div>
+      <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1.5 rounded transition-colors">Logout</button>
     </div>
   </div>
 
-  <!-- LOGIN SECTION -->
+  <!-- LOGIN -->
   <div id="loginSection" class="max-w-md mx-auto mt-16 bg-white rounded-xl shadow p-8">
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Admin Login</h2>
     <p class="text-gray-500 text-sm mb-6">Access restricted to authorised Running Ninjas admins.</p>
-
     <div id="stepId">
       <label class="block mb-2 text-sm font-medium text-gray-700">Unique ID
-        <input id="loginUniqueId" type="text" placeholder="e.g. RAHU22112" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        <input id="loginUniqueId" type="text" placeholder="e.g. RAHU22112" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400" onkeydown="if(event.key==='Enter') checkAdminId()" />
       </label>
-      <button onclick="checkAdminId()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded mt-2">Continue</button>
+      <button onclick="checkAdminId()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded mt-2 transition-colors">Continue</button>
       <p id="loginError" class="text-red-500 text-sm mt-2 hidden"></p>
     </div>
-
-    <!-- Set password (first login) -->
     <div id="stepSetPassword" class="hidden">
       <p class="text-amber-600 text-sm mb-3 bg-amber-50 p-3 rounded">First login detected. Please set your admin password.</p>
       <label class="block mb-2 text-sm font-medium text-gray-700">New Password
@@ -77,99 +133,546 @@
       <button onclick="setPassword()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded">Set Password &amp; Login</button>
       <p id="setPasswordError" class="text-red-500 text-sm mt-2 hidden"></p>
     </div>
-
-    <!-- Enter password (returning admin) -->
     <div id="stepPassword" class="hidden">
       <p class="text-sm text-gray-600 mb-3">Welcome back, <strong id="returningName"></strong></p>
       <label class="block mb-4 text-sm font-medium text-gray-700">Password
-        <input id="loginPassword" type="password" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-               onkeydown="if(event.key==='Enter') verifyAndLogin()" />
+        <input id="loginPassword" type="password" class="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400" onkeydown="if(event.key==='Enter') verifyAndLogin()" />
       </label>
       <button onclick="verifyAndLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded">Login</button>
       <p id="passwordError" class="text-red-500 text-sm mt-2 hidden"></p>
     </div>
-
     <a href="index.html" class="block text-center mt-4 text-sm text-indigo-600">&larr; Back to site</a>
   </div>
 
   <!-- DASHBOARD -->
-  <div id="dashboard" class="hidden max-w-full mx-auto px-2 sm:px-4 py-6">
-
-    <!-- Tabs -->
-    <div class="flex gap-1 overflow-x-auto pb-0 mb-0 scrollbar-hide">
-      <button class="tab-btn active" onclick="switchTab('runners',this)">Runners</button>
-      <button class="tab-btn" onclick="switchTab('tshirt',this)">T-Shirt Orders</button>
-      <button class="tab-btn" onclick="switchTab('bus_bookings',this)">Bus Bookings</button>
-      <button class="tab-btn" onclick="switchTab('bus_payments',this)">Bus Payments</button>
-      <button class="tab-btn" onclick="switchTab('bib_details',this)">Bib Details</button>
-      <button class="tab-btn" onclick="switchTab('race_feedback',this)">Race Feedback</button>
-      <button class="tab-btn" onclick="switchTab('events',this)">Events</button>
-      <button class="tab-btn" onclick="switchTab('user_mgmt',this)">User Management</button>
-    </div>
-
-    <!-- Controls bar (data tabs only) -->
-    <div id="controlsBar" class="bg-white border border-t-0 border-gray-200 rounded-b-none px-4 py-3 flex flex-wrap gap-3 items-center">
-      <div id="eventFilterWrap" class="hidden items-center gap-2">
-        <label class="text-sm font-medium text-gray-600">Filter by Event:</label>
-        <select id="eventFilter" onchange="loadCurrentTab()" class="p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-          <option value="">All Events</option>
-        </select>
+  <div id="dashboard">
+    <!-- SIDEBAR -->
+    <aside id="adminSidebar">
+      <div class="sidebar-profile">
+        <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+        <div style="min-width:0;">
+          <div class="sidebar-name" id="sidebarName">Admin</div>
+          <div class="sidebar-role" id="sidebarRole">Administrator</div>
+        </div>
       </div>
-      <div class="flex-1"></div>
-      <span id="rowCount" class="text-sm text-gray-500"></span>
-      <button id="clearTableBtn" onclick="openClearModal()" class="bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold px-4 py-2 rounded">
-        Clear All
-      </button>
-      <button id="exportBtn" onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded flex items-center gap-1">
-        &#8595; Export Excel
-      </button>
-    </div>
+      <nav style="flex:1; padding-bottom:1rem;">
+        <div class="nav-section-label">Overview</div>
+        <button class="nav-item" data-nav="home" onclick="navigateTo('home')" style="padding-left:1rem;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
 
-    <!-- Table wrapper -->
-    <div id="tableWrap" class="bg-white border border-gray-200 rounded-b-xl shadow overflow-x-auto" style="max-height: 65vh; overflow-y: auto;">
-      <div id="tableContent" class="p-4 text-gray-400 text-sm">Select a tab to load data.</div>
-    </div>
+        <div class="nav-section-label" style="margin-top:0.5rem;">User Management</div>
+        <button class="nav-section-toggle" id="secToggle-users" onclick="toggleSection('sec-users','secToggle-users')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          &nbsp;Users <span class="chevron">&#9660;</span>
+        </button>
+        <div class="nav-sub" id="sec-users">
+          <button class="nav-item" data-nav="all_runners" onclick="navigateTo('all_runners')">All Runners</button>
+          <button class="nav-item" data-nav="add_runner" onclick="navigateTo('add_runner')">Add New Runner</button>
+        </div>
 
-    <!-- Events Panel -->
-    <div id="eventsPanel" class="hidden bg-white border border-gray-200 rounded-b-xl shadow p-6">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg font-bold text-gray-800">Race Events</h3>
-        <button onclick="openEventEditor(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded">+ New Event</button>
+        <div class="nav-section-label" style="margin-top:0.5rem;">Event Management</div>
+        <button class="nav-section-toggle" id="secToggle-events" onclick="toggleSection('sec-events','secToggle-events')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          &nbsp;Events <span class="chevron">&#9660;</span>
+        </button>
+        <div class="nav-sub" id="sec-events">
+          <button class="nav-item" data-nav="race_events"   onclick="navigateTo('race_events')">Event Info &amp; Management</button>
+          <div style="padding: 0.5rem 1rem 0.15rem 1.35rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; white-space: nowrap;">Event Data</div>
+          <button class="nav-item" data-nav="bus_bookings"  onclick="navigateTo('bus_bookings')">Bus - Step1 (Booking)</button>
+          <button class="nav-item" data-nav="bus_payments"  onclick="navigateTo('bus_payments')">Bus - Step2 (Payment)</button>
+          <button class="nav-item" data-nav="bib_details"   onclick="navigateTo('bib_details')">Bib Collection</button>
+          <button class="nav-item" data-nav="race_feedback" onclick="navigateTo('race_feedback')">Race Feedback</button>
+          <button class="nav-item" data-nav="tshirt"        onclick="navigateTo('tshirt')">T-Shirt - Step1 (Booking)</button>
+          <button class="nav-item" data-nav="tshirt2"       onclick="navigateTo('tshirt2')">T-Shirt - Step2 (Payment)</button>
+        </div>
+
+        <div class="nav-section-label" style="margin-top:0.5rem;">Content Management</div>
+        <button class="nav-section-toggle" id="secToggle-content" onclick="toggleSection('sec-content','secToggle-content')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+          &nbsp;Content <span class="chevron">&#9660;</span>
+        </button>
+        <div class="nav-sub" id="sec-content">
+          <button class="nav-item" data-nav="landing_cards"  onclick="navigateTo('landing_cards')">Landing Page Cards</button>
+          <button class="nav-item" data-nav="hamburger_menu" onclick="navigateTo('hamburger_menu')">Hamburger Menu</button>
+          <button class="nav-item" data-nav="survey_mgmt"   onclick="navigateTo('survey_mgmt')">Survey Management</button>
+          <button class="nav-item" data-nav="quiz_mgmt"     onclick="navigateTo('quiz_mgmt')">Quiz Management</button>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html" class="nav-item" style="padding-left:1rem; font-size:0.75rem; color:#475569;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Back to Site
+        </a>
       </div>
-      <div id="eventsContent" class="text-gray-400 text-sm">Loading...</div>
-    </div>
+    </aside>
 
-    <!-- User Management Panel -->
-    <div id="userMgmtPanel" class="hidden bg-white border border-gray-200 rounded-b-xl shadow p-6">
-      <h3 class="text-lg font-bold text-gray-800 mb-4">User Management</h3>
-      <p class="text-sm text-gray-500 mb-4">Search a runner by Unique ID or name to grant/revoke admin access or reset their admin password.</p>
-
-      <div class="flex gap-2 mb-4">
-        <input id="userSearch" type="text" placeholder="Search by Unique ID or name..." class="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm" />
-        <button onclick="searchUser()" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-semibold">Search</button>
-      </div>
-
-      <div id="userSearchResult" class="hidden bg-gray-50 rounded-lg p-4">
-        <div class="flex flex-wrap gap-4 items-start justify-between">
-          <div>
-            <p class="font-semibold text-gray-800" id="srName"></p>
-            <p class="text-sm text-gray-500" id="srId"></p>
-            <p class="text-sm text-gray-500" id="srFlat"></p>
+    <!-- WORKSPACE -->
+    <div id="wsArea">
+      <div id="wsToolbar">
+        <div>
+          <div id="wsTitle">Dashboard</div>
+          <div id="wsBreadcrumb">Home</div>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <div id="eventFilterWrap" style="display:none;" class="flex items-center gap-2">
+            <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Filter by Event:</label>
+            <select id="eventFilter" onchange="loadCurrentTab()" class="p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              <option value="">All Events</option>
+            </select>
           </div>
-          <span id="srAdminBadge" class="badge"></span>
+          <input id="eventDataSearch" type="text" placeholder="Search..." style="display:none;"
+            class="p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 min-w-40"
+            oninput="filterEventData()" />
+          <span id="rowCount" class="text-sm text-gray-500 whitespace-nowrap" style="display:none;"></span>
+          <button id="addRowBtn" onclick="openAddEventDataModal()" style="display:none;" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded">+ Add Row</button>
+          <button id="clearTableBtn" onclick="openClearModal()" style="display:none;" class="bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold px-3 py-1.5 rounded">Clear All</button>
+          <button id="exportBtn" onclick="exportToExcel()" style="display:none;" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Excel
+          </button>
+          <button id="newEventBtn" onclick="openEventEditor(null)" style="display:none;" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded">+ New Event</button>
         </div>
-        <div class="flex flex-wrap gap-2 mt-4">
-          <button id="srToggleAdminBtn" onclick="toggleAdmin()" class="text-sm font-semibold px-4 py-2 rounded"></button>
-          <button id="srResetPwdBtn" onclick="resetAdminPassword()" class="hidden text-sm font-semibold px-4 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white">Reset Password</button>
-        </div>
-        <p id="userMgmtMsg" class="text-sm mt-2 hidden"></p>
       </div>
 
-      <div id="userSearchNotFound" class="hidden text-sm text-red-500 mt-2">User not found.</div>
+      <div id="wsBody">
+
+        <!-- WELCOME -->
+        <div id="ws-home">
+          <div class="mb-5">
+            <h2 class="text-xl font-bold text-gray-800">Welcome back, <span id="welcomeName"></span> 👋</h2>
+            <p class="text-gray-500 text-sm mt-1">Select a section from the sidebar to get started.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="quick-card" onclick="navigateTo('all_runners')"><div class="quick-icon" style="background:#ede9fe;">👥</div><div><p class="font-semibold text-gray-800 text-sm">All Runners</p><p class="text-xs text-gray-500 mt-0.5">View, edit &amp; manage runner profiles</p></div></div>
+            <div class="quick-card" onclick="navigateTo('race_events')"><div class="quick-icon" style="background:#dbeafe;">🏁</div><div><p class="font-semibold text-gray-800 text-sm">Event Info &amp; Management</p><p class="text-xs text-gray-500 mt-0.5">Add, edit and toggle event features</p></div></div>
+            <div class="quick-card" onclick="navigateTo('bus_bookings')"><div class="quick-icon" style="background:#dcfce7;">🚌</div><div><p class="font-semibold text-gray-800 text-sm">Bus - Step1 (Booking)</p><p class="text-xs text-gray-500 mt-0.5">View ninja bus seat registrations</p></div></div>
+            <div class="quick-card" onclick="navigateTo('bus_payments')"><div class="quick-icon" style="background:#fef9c3;">💳</div><div><p class="font-semibold text-gray-800 text-sm">Bus - Step2 (Payment)</p><p class="text-xs text-gray-500 mt-0.5">Track payment collections</p></div></div>
+            <div class="quick-card" onclick="navigateTo('bib_details')"><div class="quick-icon" style="background:#fce7f3;">🏷️</div><div><p class="font-semibold text-gray-800 text-sm">Bib Collection</p><p class="text-xs text-gray-500 mt-0.5">Manage runner bib information</p></div></div>
+            <div class="quick-card" onclick="navigateTo('add_runner')"><div class="quick-icon" style="background:#e0f2fe;">➕</div><div><p class="font-semibold text-gray-800 text-sm">Add New Runner</p><p class="text-xs text-gray-500 mt-0.5">Register a new community member</p></div></div>
+          </div>
+        </div>
+
+        <!-- ALL RUNNERS (dedicated panel) -->
+        <div id="ws-all_runners" style="display:none;">
+          <div class="flex gap-3 mb-4 flex-wrap">
+            <input id="runnersSearch" type="text" placeholder="Search by name, Unique ID, flat number..."
+              class="flex-1 min-w-48 p-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              oninput="filterRunners()" />
+            <button onclick="exportRunnersExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <button onclick="navigateTo('add_runner')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">+ Add Runner</button>
+          </div>
+          <div id="runnersCount" class="text-xs text-gray-400 mb-2"></div>
+          <div class="bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 230px); overflow-y:auto;">
+            <div id="runnersTableContent" class="p-4 text-gray-400 text-sm">Loading...</div>
+          </div>
+        </div>
+
+        <!-- ADD RUNNER (inline form) -->
+        <div id="ws-add_runner" style="display:none;">
+          <div class="content-card" style="max-width:680px;">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h3 class="font-bold text-gray-800 text-base">Add New Runner</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Creates a runner profile and generates their Unique ID.</p>
+              </div>
+              <button onclick="navigateTo('all_runners')" class="text-sm text-gray-400 hover:text-gray-600">← Back to All Runners</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                  <label class="form-label">First Name *</label>
+                  <input id="ar_first_name" type="text" class="form-input" placeholder="e.g. Rahul" oninput="arGenerateId()" />
+                  <p id="ar_fn_err" class="text-red-500 text-xs mt-1 hidden">Letters only</p>
+                </div>
+                <div>
+                  <label class="form-label">Last Name</label>
+                  <input id="ar_last_name" type="text" class="form-input" placeholder="e.g. Jain" />
+                </div>
+              </div>
+              <div>
+                <label class="form-label">Flat Number * <span class="text-gray-400 font-normal normal-case">(1001–23188)</span></label>
+                <input id="ar_flat" type="number" min="1001" max="23188" class="form-input" placeholder="e.g. 22112" oninput="arGenerateId()" />
+                <p id="ar_flat_err" class="text-red-500 text-xs mt-1 hidden">Must be 1001–23188</p>
+              </div>
+              <div>
+                <label class="form-label">Unique ID (auto-generated)</label>
+                <input id="ar_unique_id" type="text" class="form-input" readonly placeholder="Fill name + flat" />
+              </div>
+              <div>
+                <label class="form-label">Email *</label>
+                <input id="ar_email" type="email" class="form-input" placeholder="runner@email.com" />
+                <p id="ar_email_err" class="text-red-500 text-xs mt-1 hidden">Enter a valid email</p>
+              </div>
+              <div>
+                <label class="form-label">Phone</label>
+                <input id="ar_phone" type="tel" class="form-input" placeholder="10-digit number" />
+              </div>
+              <div>
+                <label class="form-label">Date of Birth</label>
+                <input id="ar_dob" type="date" class="form-input" oninput="arCalcAge()" />
+              </div>
+              <div>
+                <label class="form-label">Age (auto-calculated)</label>
+                <input id="ar_age" type="number" class="form-input" readonly />
+              </div>
+              <div>
+                <label class="form-label">Gender</label>
+                <select id="ar_gender" class="form-input">
+                  <option value="">Select...</option>
+                  <option>Male</option><option>Female</option><option>Do not wish to disclose</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">T-Shirt Size</label>
+                <select id="ar_tshirt" class="form-input">
+                  <option value="">Select...</option>
+                  <option value="kids-xs">Kids XS</option><option value="kids-s">Kids S</option>
+                  <option value="kids-m">Kids M</option><option value="kids-l">Kids L</option>
+                  <option value="kids-xl">Kids XL</option>
+                  <option value="xxs">XXS</option><option value="xs">XS</option><option value="s">S</option>
+                  <option value="m">M</option><option value="l">L</option><option value="xl">XL</option><option value="xxl">XXL</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Blood Group</label>
+                <select id="ar_blood" class="form-input">
+                  <option value="">Select...</option>
+                  <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                  <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Emergency Contact Name</label>
+                <input id="ar_ec_name" type="text" class="form-input" placeholder="Contact name" />
+              </div>
+              <div>
+                <label class="form-label">Emergency Contact Number</label>
+                <input id="ar_ec_num" type="tel" class="form-input" placeholder="10-digit number" />
+              </div>
+            </div>
+            <p id="ar_error" class="text-red-500 text-sm mt-4 hidden"></p>
+            <p id="ar_success" class="text-green-600 text-sm mt-4 hidden"></p>
+            <div class="flex justify-end gap-3 mt-5 border-t pt-4">
+              <button onclick="arReset()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Reset</button>
+              <button id="ar_submit_btn" onclick="submitAddRunner()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Create Runner</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SHARED DATA TABLE (for non-runner tabs) -->
+        <div id="tableWrap" style="display:none;" class="bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 190px); overflow-y:auto;">
+          <div id="tableContent" class="p-4 text-gray-400 text-sm">Select a section to load data.</div>
+        </div>
+
+        <!-- EVENTS PANEL -->
+        <div id="eventsPanel" style="display:none;">
+          <div class="flex gap-3 mb-4 flex-wrap items-center">
+            <input id="eventsSearch" type="text" placeholder="Search by name, location, date..."
+              class="flex-1 min-w-48 p-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              oninput="filterEventsPanel()" />
+            <label class="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap cursor-pointer select-none bg-white border border-gray-200 rounded-lg px-3 py-2">
+              <span class="toggle"><input type="checkbox" id="showAllYears" onchange="filterEventsPanel()" /><span class="toggle-slider"></span></span>
+              Show All Years
+            </label>
+          </div>
+          <div id="eventsCount" class="text-xs text-gray-400 mb-2"></div>
+          <div id="eventsContent" class="text-gray-400 text-sm">Loading...</div>
+        </div>
+
+        <!-- TSHIRT STEP2 PLACEHOLDER -->
+        <div id="ws-tshirt2" style="display:none;">
+          <div class="pending-bar"><span style="font-size:1rem;flex-shrink:0;">⚠️</span><div><strong>Coming Soon</strong> — T-Shirt Step2 (Payment) requirements are being finalised. This section will be wired up once requirements are confirmed.</div></div>
+        </div>
+
+        <!-- CONTENT: LANDING PAGE CARDS -->
+        <div id="ws-landing_cards" style="display:none;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-xs text-gray-500 mt-0.5">Up to 6 hero cards shown on the landing page. Each card has an image, title, subtitle, and a click-through link.</p>
+            </div>
+            <button onclick="openLandingCardModal(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition-colors">+ Add Card</button>
+          </div>
+          <div id="lcError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-3"></div>
+          <div id="landingCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="text-sm text-gray-400 p-4">Loading...</div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+            <strong>Supabase setup:</strong> Create table <code>landing_cards</code> with columns:
+            <code>id serial primary key, display_order int, title text, subtitle text, image_url text, link_url text, active boolean default true</code>.
+            Grant anon read and authenticated write (or use RLS policies matching your runner auth pattern).
+          </div>
+        </div>
+
+        <!-- CONTENT: HAMBURGER MENU -->
+        <div id="ws-hamburger_menu" style="display:none;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-xs text-gray-500 mt-0.5">Configure the links shown in the hamburger (☰) menu on the landing page. Drag-to-reorder is not supported — use the Order field instead.</p>
+            </div>
+            <button onclick="openMenuLinkModal(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition-colors">+ Add Link</button>
+          </div>
+          <div id="menuLinksTable" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="text-sm text-gray-400 p-4">Loading...</div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+            <strong>Supabase setup:</strong> Create table <code>menu_links</code> with columns:
+            <code>id serial primary key, label text, url text, display_order int, active boolean default true, open_new_tab boolean default false</code>.
+            Grant anon read access so the landing page can fetch the menu dynamically.
+          </div>
+        </div>
+
+        <!-- CONTENT: SURVEY MANAGEMENT -->
+        <div id="ws-survey_mgmt" style="display:none;">
+          <!-- Surveys List View -->
+          <div id="sv-list-view">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-xs text-gray-500">Create surveys with multiple-choice questions. Users vote anonymously and see live results.</p>
+              <button onclick="openSurveyEditor(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition-colors">+ New Survey</button>
+            </div>
+            <div id="sv-list-table" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div class="text-sm text-gray-400 p-4">Loading...</div>
+            </div>
+            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              <strong>Supabase setup:</strong> Tables needed: <code>surveys</code>, <code>survey_questions</code>, <code>survey_options</code>, <code>survey_responses</code>. See SQL at bottom of this page.
+            </div>
+          </div>
+          <!-- Survey Editor View -->
+          <div id="sv-editor-view" style="display:none;">
+            <div class="flex items-center gap-3 mb-4">
+              <button onclick="showSvListView()" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center gap-1">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Back to Surveys
+              </button>
+              <span class="text-gray-300">|</span>
+              <span id="sv-editor-heading" class="font-semibold text-gray-700 text-sm"></span>
+            </div>
+            <div class="content-card mb-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                <div><label class="form-label">Title *</label><input id="sv-field-title" type="text" class="form-input" placeholder="e.g. Race Day Preferences" /></div>
+                <div class="flex items-end pb-0.5"><label class="toggle mr-2"><input id="sv-field-active" type="checkbox"><span class="toggle-slider"></span></label><span class="text-sm text-gray-600">Active (visible to users)</span></div>
+              </div>
+              <div><label class="form-label">Description</label><textarea id="sv-field-desc" class="form-input" rows="2" placeholder="Optional description shown to users"></textarea></div>
+            </div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold text-gray-700">Questions &amp; Options</p>
+              <button onclick="addSvQuestion()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Question
+              </button>
+            </div>
+            <div id="sv-questions-container"></div>
+            <p id="sv-save-error" class="text-red-500 text-sm mt-2 hidden"></p>
+            <div class="flex gap-3 mt-4">
+              <button onclick="saveSurveyFull()" id="sv-save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded">Save Survey</button>
+              <button onclick="showSvListView()" class="border border-gray-300 text-gray-700 text-sm px-4 py-2 rounded hover:bg-gray-50">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTENT: QUIZ MANAGEMENT -->
+        <div id="ws-quiz_mgmt" style="display:none;">
+          <!-- Quizzes List View -->
+          <div id="qz-list-view">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-xs text-gray-500">Create quizzes with right/wrong answers. Users get instant per-question feedback.</p>
+              <button onclick="openQuizEditor(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition-colors">+ New Quiz</button>
+            </div>
+            <div id="qz-list-table" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div class="text-sm text-gray-400 p-4">Loading...</div>
+            </div>
+            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              <strong>Supabase setup:</strong> Tables needed: <code>quizzes</code>, <code>quiz_questions</code>, <code>quiz_options</code>, <code>quiz_responses</code>. See SQL at bottom of this page.
+            </div>
+          </div>
+          <!-- Quiz Editor View -->
+          <div id="qz-editor-view" style="display:none;">
+            <div class="flex items-center gap-3 mb-4">
+              <button onclick="showQzListView()" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center gap-1">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Back to Quizzes
+              </button>
+              <span class="text-gray-300">|</span>
+              <span id="qz-editor-heading" class="font-semibold text-gray-700 text-sm"></span>
+            </div>
+            <div class="content-card mb-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                <div><label class="form-label">Title *</label><input id="qz-field-title" type="text" class="form-input" placeholder="e.g. Running Trivia #1" /></div>
+                <div class="flex items-end pb-0.5"><label class="toggle mr-2"><input id="qz-field-active" type="checkbox"><span class="toggle-slider"></span></label><span class="text-sm text-gray-600">Active (visible to users)</span></div>
+              </div>
+              <div><label class="form-label">Description</label><textarea id="qz-field-desc" class="form-input" rows="2" placeholder="Optional description shown to users"></textarea></div>
+            </div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold text-gray-700">Questions &amp; Options</p>
+              <button onclick="addQzQuestion()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Question
+              </button>
+            </div>
+            <div id="qz-questions-container"></div>
+            <p id="qz-save-error" class="text-red-500 text-sm mt-2 hidden"></p>
+            <div class="flex gap-3 mt-4">
+              <button onclick="saveQuizFull()" id="qz-save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded">Save Quiz</button>
+              <button onclick="showQzListView()" class="border border-gray-300 text-gray-700 text-sm px-4 py-2 rounded hover:bg-gray-50">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- wsBody -->
+    </div><!-- wsArea -->
+  </div><!-- dashboard -->
+
+  <!-- MODALS -->
+
+  <!-- Runner Editor Modal -->
+  <div id="runnerEditorModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:600px; max-height:88vh; overflow-y:auto;">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-800">Edit Runner</h3>
+        <span id="re_unique_id_badge" class="text-xs bg-indigo-50 text-indigo-700 font-mono font-bold px-3 py-1 rounded-full"></span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div><label class="form-label">First Name *</label><input id="re_first_name" type="text" class="form-input" /></div>
+        <div><label class="form-label">Last Name</label><input id="re_last_name" type="text" class="form-input" /></div>
+        <div><label class="form-label">Flat Number</label><input id="re_flat" type="number" class="form-input" /></div>
+        <div><label class="form-label">Email</label><input id="re_email" type="email" class="form-input" /></div>
+        <div><label class="form-label">Phone</label><input id="re_phone" type="tel" class="form-input" /></div>
+        <div><label class="form-label">Date of Birth</label><input id="re_dob" type="date" class="form-input" /></div>
+        <div>
+          <label class="form-label">Gender</label>
+          <select id="re_gender" class="form-input">
+            <option value="">Select...</option><option>Male</option><option>Female</option><option>Do not wish to disclose</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">T-Shirt Size</label>
+          <select id="re_tshirt" class="form-input">
+            <option value="">Select...</option>
+            <option value="kids-xs">Kids XS</option><option value="kids-s">Kids S</option><option value="kids-m">Kids M</option>
+            <option value="kids-l">Kids L</option><option value="kids-xl">Kids XL</option>
+            <option value="xxs">XXS</option><option value="xs">XS</option><option value="s">S</option>
+            <option value="m">M</option><option value="l">L</option><option value="xl">XL</option><option value="xxl">XXL</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Blood Group</label>
+          <select id="re_blood" class="form-input">
+            <option value="">Select...</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+          </select>
+        </div>
+        <div><label class="form-label">Emergency Contact Name</label><input id="re_ec_name" type="text" class="form-input" /></div>
+        <div class="sm:col-span-2"><label class="form-label">Emergency Contact Number</label><input id="re_ec_num" type="tel" class="form-input" /></div>
+      </div>
+      <p id="re_error" class="text-red-500 text-sm mb-3 hidden"></p>
+      <div class="flex gap-3 justify-end border-t pt-4">
+        <button onclick="closeRunnerEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="re_save_btn" onclick="saveRunnerEdit()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Changes</button>
+      </div>
     </div>
   </div>
 
-  <!-- ===== DELETE ROW MODAL ===== -->
+  <!-- Menu Link Modal -->
+  <div id="menuLinkModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="ml_modal_title" class="text-lg font-bold text-gray-800">Add Menu Link</h3>
+        <button onclick="closeMenuLinkModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Label *</label>
+          <input id="ml_label" type="text" class="form-input" placeholder="e.g. Upcoming Marathons" />
+        </div>
+        <div>
+          <label class="form-label">URL *</label>
+          <input id="ml_url" type="text" class="form-input" placeholder="e.g. index.html or https://..." />
+          <p class="text-xs text-gray-400 mt-1">Use relative paths (e.g. <code>index.html</code>) for internal pages, or full URLs for external links.</p>
+        </div>
+        <div>
+          <label class="form-label">Display Order</label>
+          <input id="ml_order" type="number" min="1" class="form-input" placeholder="e.g. 1" />
+          <p class="text-xs text-gray-400 mt-1">Links are shown in ascending order. Leave blank to append at the end.</p>
+        </div>
+        <div class="flex flex-col gap-3 pt-1 border-t border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-800">Active</p>
+              <p class="text-xs text-gray-400">Show this link in the menu</p>
+            </div>
+            <label class="toggle"><input id="ml_active" type="checkbox" checked /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-800">Open in new tab</p>
+              <p class="text-xs text-gray-400">Useful for external links</p>
+            </div>
+            <label class="toggle"><input id="ml_new_tab" type="checkbox" /><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+      <p id="ml_save_error" class="hidden text-red-500 text-sm mt-3"></p>
+      <div class="flex gap-3 justify-end mt-5 border-t pt-4">
+        <button onclick="closeMenuLinkModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="ml_save_btn" onclick="saveMenuLink()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Landing Card Modal -->
+  <div id="landingCardModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:500px;">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="lc_modal_title" class="text-lg font-bold text-gray-800">Add Landing Card</h3>
+        <button onclick="closeLandingCardModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Display Order (1–6) *</label>
+          <input id="lc_order" type="number" min="1" max="6" class="form-input" placeholder="e.g. 1" />
+          <p class="text-xs text-gray-400 mt-1">Cards are shown in ascending order (1 first, 6 last).</p>
+        </div>
+        <div>
+          <label class="form-label">Title *</label>
+          <input id="lc_title" type="text" class="form-input" placeholder="e.g. Run Your First 10K" />
+        </div>
+        <div>
+          <label class="form-label">Subtitle / Description</label>
+          <input id="lc_subtitle" type="text" class="form-input" placeholder="e.g. A guide for beginners to complete their first race" />
+        </div>
+        <div>
+          <label class="form-label">Image URL</label>
+          <input id="lc_image_url" type="url" class="form-input" placeholder="https://..." oninput="lcPreviewImage()" />
+          <img id="lc_preview_img" src="" alt="Preview" style="display:none; margin-top:0.5rem; max-height:120px; border-radius:0.4rem; object-fit:cover; width:100%;" onerror="this.style.display='none'" />
+          <p class="text-xs text-gray-400 mt-1">Leave blank to show a gradient background instead.</p>
+        </div>
+        <div>
+          <label class="form-label">Link URL</label>
+          <input id="lc_link_url" type="text" class="form-input" placeholder="https://... or index.html or #" />
+          <p class="text-xs text-gray-400 mt-1">Where the card navigates when clicked.</p>
+        </div>
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div>
+            <p class="text-sm font-medium text-gray-800">Active</p>
+            <p class="text-xs text-gray-400">Show this card on the landing page</p>
+          </div>
+          <label class="toggle"><input id="lc_active" type="checkbox" checked /><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+      <p id="lc_save_error" class="hidden text-red-500 text-sm mt-3"></p>
+      <div class="flex gap-3 justify-end mt-5 border-t pt-4">
+        <button onclick="closeLandingCardModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="lc_save_btn" onclick="saveLandingCard()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Row Modal -->
   <div id="deleteRowModal" class="modal-overlay hidden">
     <div class="modal-box">
       <h3 class="text-lg font-bold text-gray-800 mb-2">Delete Entry</h3>
@@ -177,128 +680,102 @@
       <div id="deleteRowLabel" class="text-sm font-semibold text-gray-800 bg-gray-50 rounded-lg p-3 mb-4 border border-gray-200"></div>
       <p class="text-xs text-red-600 bg-red-50 rounded-lg p-3 mb-5 border border-red-100">This action cannot be undone.</p>
       <div class="flex gap-3 justify-end">
-        <button onclick="closeDeleteRowModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button onclick="closeDeleteRowModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
         <button id="confirmDeleteRowBtn" onclick="confirmDeleteRow()" class="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== CLEAR TABLE MODAL ===== -->
+  <!-- Clear Table Modal -->
   <div id="clearTableModal" class="modal-overlay hidden">
     <div class="modal-box">
       <h3 class="text-lg font-bold text-red-700 mb-2">Clear All Data</h3>
-      <p class="text-sm text-gray-600 mb-1">
-        You are about to permanently delete all <strong id="clearTableRowCount"></strong> rows from <strong id="clearTableName"></strong>.
-      </p>
+      <p class="text-sm text-gray-600 mb-1">Delete all <strong id="clearTableRowCount"></strong> rows from <strong id="clearTableName"></strong>.</p>
       <p class="text-xs text-red-600 bg-red-50 rounded-lg p-3 mb-4 border border-red-100 mt-3">This cannot be undone. Re-enter your admin password to confirm.</p>
       <label class="block mb-1 text-sm font-medium text-gray-700">Admin Password</label>
-      <input id="clearTablePassword" type="password" placeholder="Your admin password" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-2" />
+      <input id="clearTablePassword" type="password" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-2" />
       <p id="clearTableError" class="text-red-500 text-sm mb-3 hidden"></p>
       <div class="flex gap-3 justify-end mt-4">
-        <button onclick="closeClearModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button onclick="closeClearModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
         <button id="confirmClearBtn" onclick="confirmClearTable()" class="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete All</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== EVENT EDITOR MODAL ===== -->
-  <div id="eventEditorModal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 2rem; overflow-y: auto;">
-    <div class="modal-box" style="max-width: 640px; max-height: 88vh; overflow-y: auto;">
+  <!-- Event Editor Modal -->
+  <div id="eventEditorModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:640px; max-height:88vh; overflow-y:auto;">
       <h3 id="eventEditorTitle" class="text-lg font-bold text-gray-800 mb-4">New Event</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Event Name *</label>
-          <input id="ef_event_name" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Event Date</label>
-          <input id="ef_event_date" type="date" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Location</label>
-          <input id="ef_location" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Summary</label>
-          <textarea id="ef_summary" rows="2" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
-        </div>
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Registration Link</label>
-          <input id="ef_registration_link" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Instructions</label>
-          <textarea id="ef_instructions" rows="2" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">UPI ID</label>
-          <input id="ef_upi_id" type="text" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Ninja Price (Rs.)</label>
-          <input id="ef_ninja_price" type="number" min="0" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Seat Cost (Rs.)</label>
-          <input id="ef_seat_cost" type="number" min="0" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Total Seats</label>
-          <input id="ef_total_seats" type="number" min="0" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-        </div>
+        <div class="sm:col-span-2"><label class="form-label">Event Name *</label><input id="ef_event_name" type="text" class="form-input" /></div>
+        <div><label class="form-label">Event Date</label><input id="ef_event_date" type="date" class="form-input" /></div>
+        <div><label class="form-label">Location</label><input id="ef_location" type="text" class="form-input" /></div>
+        <div class="sm:col-span-2"><label class="form-label">Summary</label><textarea id="ef_summary" rows="2" class="form-input resize-none"></textarea></div>
+        <div class="sm:col-span-2"><label class="form-label">Registration Link</label><input id="ef_registration_link" type="text" class="form-input" /></div>
+        <div class="sm:col-span-2"><label class="form-label">Instructions</label><textarea id="ef_instructions" rows="2" class="form-input resize-none"></textarea></div>
+        <div><label class="form-label">UPI ID</label><input id="ef_upi_id" type="text" class="form-input" /></div>
+        <div><label class="form-label">Ninja Price (Rs.)</label><input id="ef_ninja_price" type="number" min="0" class="form-input" /></div>
+        <div><label class="form-label">Seat Cost (Rs.)</label><input id="ef_seat_cost" type="number" min="0" class="form-input" /></div>
+        <div><label class="form-label">Total Seats</label><input id="ef_total_seats" type="number" min="0" class="form-input" /></div>
       </div>
-
-      <!-- Feature flag toggles -->
       <div class="border-t pt-4 mb-5">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-3">Feature Flags</p>
+        <p class="form-label mb-3">Feature Flags</p>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <span class="toggle"><input type="checkbox" id="ef_display" /><span class="toggle-slider"></span></span>
-            <span class="text-sm text-gray-700 font-medium">Visible</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <span class="toggle"><input type="checkbox" id="ef_bus_available" /><span class="toggle-slider"></span></span>
-            <span class="text-sm text-gray-700 font-medium">Bus Available</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <span class="toggle"><input type="checkbox" id="ef_bib_details" /><span class="toggle-slider"></span></span>
-            <span class="text-sm text-gray-700 font-medium">Bib Details</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <span class="toggle"><input type="checkbox" id="ef_ninja_discount" /><span class="toggle-slider"></span></span>
-            <span class="text-sm text-gray-700 font-medium">Ninja Discount</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <span class="toggle"><input type="checkbox" id="ef_bus_payment" /><span class="toggle-slider"></span></span>
-            <span class="text-sm text-gray-700 font-medium">Bus Payment</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <span class="toggle"><input type="checkbox" id="ef_feedback" /><span class="toggle-slider"></span></span>
-            <span class="text-sm text-gray-700 font-medium">Feedback</span>
-          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_display" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Visible</span></label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_bus_available" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Bus Available</span></label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_bib_details" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Bib Details</span></label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_ninja_discount" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Ninja Discount</span></label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_bus_payment" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Bus Payment</span></label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_feedback" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Feedback</span></label>
         </div>
       </div>
-
       <p id="eventEditorError" class="text-red-500 text-sm mb-3 hidden"></p>
       <div class="flex gap-3 justify-end">
-        <button onclick="closeEventEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button onclick="closeEventEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
         <button id="saveEventBtn" onclick="saveEvent()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Event</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== DELETE EVENT MODAL ===== -->
+  <!-- Delete Event Modal -->
   <div id="deleteEventModal" class="modal-overlay hidden">
     <div class="modal-box">
       <h3 class="text-lg font-bold text-gray-800 mb-2">Delete Event</h3>
-      <p class="text-sm text-gray-500 mb-2">You are about to delete the event:</p>
+      <p class="text-sm text-gray-500 mb-2">You are about to delete:</p>
       <div id="deleteEventLabel" class="text-sm font-semibold text-gray-800 bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200"></div>
-      <p class="text-xs text-amber-700 bg-amber-50 rounded-lg p-3 mb-5 border border-amber-100">
-        This will not delete associated bookings, payments, or bib details. Clear those tables separately if needed.
-      </p>
+      <p class="text-xs text-amber-700 bg-amber-50 rounded-lg p-3 mb-5 border border-amber-100">This will not delete associated bookings, payments, or bib details.</p>
       <div class="flex gap-3 justify-end">
-        <button onclick="closeDeleteEventModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+        <button onclick="closeDeleteEventModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
         <button id="confirmDeleteEventBtn" onclick="confirmDeleteEvent()" class="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete Event</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Data Edit Modal -->
+  <div id="eventDataEditModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:580px; max-height:88vh; overflow-y:auto;">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-800">Edit Row</h3>
+        <span class="text-xs text-gray-400" id="ede_row_label"></span>
+      </div>
+      <div id="eventDataEditFields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4"></div>
+      <p id="eventDataEditError" class="text-red-500 text-sm mb-3 hidden"></p>
+      <div class="flex gap-3 justify-end border-t pt-4">
+        <button onclick="closeEditEventDataModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="ede_save_btn" onclick="saveEditEventData()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Data Add Row Modal -->
+  <div id="eventDataAddModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:580px; max-height:88vh; overflow-y:auto;">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">Add New Row</h3>
+      <div id="eventDataAddFields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4"></div>
+      <p id="eventDataAddError" class="text-red-500 text-sm mb-3 hidden"></p>
+      <div class="flex gap-3 justify-end border-t pt-4">
+        <button onclick="closeAddEventDataModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="eda_save_btn" onclick="saveAddEventData()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Add Row</button>
       </div>
     </div>
   </div>
@@ -309,24 +786,126 @@
     const { createClient } = window.supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Session stored in memory only (cleared on page refresh = logout)
-    let session = null; // { uniqueId, name, password }
+    const SUPER_ADMINS = ['RAHU22112', 'ABHA13048'];
+    function isSuperAdmin() { return SUPER_ADMINS.includes(session?.uniqueId); }
+
+    let session = null;
     let currentTab = 'runners';
     let tableData = [];
     let tableColumns = [];
     let eventsData = [];
+    let allRunnersData = [];
+    let editingRunnerId = null;
 
-    // ---- Auth flow ----
+    // Nav config
+    const NAV_META = {
+      home:          { title: 'Dashboard',                    breadcrumb: 'Home' },
+      all_runners:   { title: 'All Runners',                  breadcrumb: 'User Management / All Runners' },
+      add_runner:    { title: 'Add New Runner',               breadcrumb: 'User Management / Add New Runner' },
+      race_events:   { title: 'Event Info & Management',      breadcrumb: 'Event Management / Event Info & Management' },
+      tshirt:        { title: 'T-Shirt - Step1 (Booking)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step1',  tab: 'tshirt',        showExport: true, showClear: true, showFilter: false },
+      tshirt2:       { title: 'T-Shirt - Step2 (Payment)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step2' },
+      bus_bookings:  { title: 'Bus - Step1 (Booking)',        breadcrumb: 'Event Management / Event Data / Bus Step1',      tab: 'bus_bookings',  showExport: true, showClear: true, showFilter: true  },
+      bus_payments:  { title: 'Bus - Step2 (Payment)',        breadcrumb: 'Event Management / Event Data / Bus Step2',      tab: 'bus_payments',  showExport: true, showClear: true, showFilter: true  },
+      bib_details:   { title: 'Bib Collection',               breadcrumb: 'Event Management / Event Data / Bib Collection', tab: 'bib_details',   showExport: true, showClear: true, showFilter: true  },
+      race_feedback: { title: 'Race Feedback',                breadcrumb: 'Event Management / Event Data / Race Feedback',  tab: 'race_feedback', showExport: true, showClear: true, showFilter: true  },
+      landing_cards:  { title: 'Landing Page Cards',  breadcrumb: 'Content Management / Landing Page Cards' },
+      hamburger_menu: { title: 'Hamburger Menu',     breadcrumb: 'Content Management / Hamburger Menu' },
+      survey_mgmt:    { title: 'Survey Management',  breadcrumb: 'Content Management / Survey Management' },
+      quiz_mgmt:      { title: 'Quiz Management',    breadcrumb: 'Content Management / Quiz Management' },
+    };
 
+    const ALL_PANELS = [
+      'ws-home', 'ws-all_runners', 'ws-add_runner', 'tableWrap', 'eventsPanel',
+      'ws-tshirt2', 'ws-landing_cards', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt'
+    ];
+
+    function navigateTo(key) {
+      const meta = NAV_META[key];
+      if (!meta) return;
+
+      document.getElementById('wsTitle').textContent = meta.title;
+      document.getElementById('wsBreadcrumb').textContent = meta.breadcrumb;
+
+      ALL_PANELS.forEach(id => { document.getElementById(id).style.display = 'none'; });
+      document.getElementById('eventFilterWrap').style.display = 'none';
+      document.getElementById('eventDataSearch').style.display = 'none';
+      document.getElementById('rowCount').style.display = 'none';
+      document.getElementById('addRowBtn').style.display = 'none';
+      document.getElementById('clearTableBtn').style.display = 'none';
+      document.getElementById('exportBtn').style.display = 'none';
+      document.getElementById('newEventBtn').style.display = 'none';
+
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeEl = document.querySelector(`.nav-item[data-nav="${key}"]`);
+      if (activeEl) activeEl.classList.add('active');
+
+      if (key === 'home') {
+        document.getElementById('ws-home').style.display = 'block';
+
+      } else if (key === 'all_runners') {
+        document.getElementById('ws-all_runners').style.display = 'block';
+        loadRunnersData();
+
+      } else if (key === 'add_runner') {
+        document.getElementById('ws-add_runner').style.display = 'block';
+
+      } else if (key === 'race_events') {
+        document.getElementById('eventsPanel').style.display = 'block';
+        document.getElementById('newEventBtn').style.display = 'inline-block';
+        loadEventsTab();
+
+      } else if (meta.tab) {
+        currentTab = meta.tab;
+        document.getElementById('tableWrap').style.display = 'block';
+        document.getElementById('rowCount').style.display = 'inline';
+        document.getElementById('exportBtn').style.display = 'flex';
+        document.getElementById('eventDataSearch').style.display = 'inline-block';
+        document.getElementById('addRowBtn').style.display = 'inline-block';
+        if (meta.showClear) document.getElementById('clearTableBtn').style.display = 'inline-block';
+        if (meta.showFilter) document.getElementById('eventFilterWrap').style.display = 'flex';
+        document.getElementById('eventDataSearch').value = '';
+        loadCurrentTab();
+
+      } else if (key === 'hamburger_menu') {
+        document.getElementById('ws-hamburger_menu').style.display = 'block';
+        loadMenuLinks();
+
+      } else if (key === 'landing_cards') {
+        document.getElementById('ws-landing_cards').style.display = 'block';
+        loadLandingCards();
+
+      } else if (key === 'survey_mgmt') {
+        document.getElementById('ws-survey_mgmt').style.display = 'block';
+        document.getElementById('sv-list-view').style.display = 'block';
+        document.getElementById('sv-editor-view').style.display = 'none';
+        loadSurveys();
+
+      } else if (key === 'quiz_mgmt') {
+        document.getElementById('ws-quiz_mgmt').style.display = 'block';
+        document.getElementById('qz-list-view').style.display = 'block';
+        document.getElementById('qz-editor-view').style.display = 'none';
+        loadQuizzes();
+
+      } else {
+        const panel = document.getElementById('ws-' + key);
+        if (panel) panel.style.display = 'block';
+      }
+    }
+
+    function toggleSidebar() { document.getElementById('adminSidebar').classList.toggle('collapsed'); }
+    function toggleSection(subId, btnId) {
+      document.getElementById(subId).classList.toggle('closed');
+      document.getElementById(btnId).classList.toggle('closed');
+    }
+
+    // ---- Auth ----
     async function checkAdminId() {
       const uid = document.getElementById('loginUniqueId').value.trim().toUpperCase();
       if (!uid) return showLoginError('Please enter your Unique ID.');
-
       const { data, error } = await db.rpc('check_admin_status', { p_unique_id: uid });
-
       if (error || !data || !data.found) { showLoginError('Unique ID not found in the system.'); return; }
       if (!data.is_admin) { showLoginError('This Unique ID does not have admin access.'); return; }
-
       if (!data.has_password) {
         document.getElementById('stepId').classList.add('hidden');
         document.getElementById('stepSetPassword').classList.remove('hidden');
@@ -338,22 +917,14 @@
     }
 
     async function setPassword() {
-      const uid  = document.getElementById('loginUniqueId').value.trim().toUpperCase();
-      const pwd  = document.getElementById('newPassword').value;
+      const uid = document.getElementById('loginUniqueId').value.trim().toUpperCase();
+      const pwd = document.getElementById('newPassword').value;
       const cpwd = document.getElementById('confirmPassword').value;
       const errEl = document.getElementById('setPasswordError');
-
-      if (pwd.length < 6)     { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.remove('hidden'); return; }
-      if (pwd !== cpwd)        { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
-
+      if (pwd.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.remove('hidden'); return; }
+      if (pwd !== cpwd)   { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
       const { data, error } = await db.rpc('set_admin_password', { p_unique_id: uid, p_password: pwd });
-
-      if (error || !data?.success) {
-        errEl.textContent = data?.error || 'Failed to set password.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
+      if (error || !data?.success) { errEl.textContent = data?.error || 'Failed to set password.'; errEl.classList.remove('hidden'); return; }
       const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
       session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
       openDashboard();
@@ -363,724 +934,1248 @@
       const uid = document.getElementById('loginUniqueId').value.trim().toUpperCase();
       const pwd = document.getElementById('loginPassword').value;
       const errEl = document.getElementById('passwordError');
-
       const { data, error } = await db.rpc('verify_admin', { p_unique_id: uid, p_password: pwd });
-
-      if (error || !data) {
-        errEl.textContent = 'Incorrect password.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
+      if (error || !data) { errEl.textContent = 'Incorrect password.'; errEl.classList.remove('hidden'); return; }
       const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
       session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
       openDashboard();
     }
 
     function openDashboard() {
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
-      document.getElementById('adminInfo').classList.remove('hidden');
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('dashboard').classList.add('open');
+      document.getElementById('adminInfo').style.display = 'flex';
       document.getElementById('adminName').textContent = session.name;
+      document.getElementById('sidebarName').textContent = session.name;
+      document.getElementById('welcomeName').textContent = session.name.split(' ')[0];
+      document.getElementById('sidebarAvatar').textContent = session.name.charAt(0).toUpperCase();
+      const superAdmin = isSuperAdmin();
+      document.getElementById('sidebarRole').textContent = superAdmin ? 'Super Admin' : 'Administrator';
+      if (superAdmin) document.getElementById('sidebarRole').classList.add('super');
+      document.getElementById('adminRoleLabel').textContent = superAdmin ? 'Super Admin' : 'Administrator';
       loadEventFilter();
-      loadCurrentTab();
+      navigateTo('home');
     }
 
     function logout() {
-      session = null;
-      tableData = [];
-      eventsData = [];
-      document.getElementById('dashboard').classList.add('hidden');
-      document.getElementById('adminInfo').classList.add('hidden');
-      document.getElementById('loginSection').classList.remove('hidden');
+      session = null; tableData = []; eventsData = []; allRunnersData = [];
+      document.getElementById('dashboard').classList.remove('open');
+      document.getElementById('adminInfo').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'block';
       document.getElementById('stepId').classList.remove('hidden');
       document.getElementById('stepPassword').classList.add('hidden');
       document.getElementById('stepSetPassword').classList.add('hidden');
       document.getElementById('loginPassword').value = '';
+      document.getElementById('loginUniqueId').value = '';
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     }
 
-    function showLoginError(msg) {
-      const el = document.getElementById('loginError');
-      el.textContent = msg;
-      el.classList.remove('hidden');
-    }
+    function showLoginError(msg) { const el = document.getElementById('loginError'); el.textContent = msg; el.classList.remove('hidden'); }
 
-    // ---- Tab switching ----
-
-    function switchTab(tab, btn) {
-      currentTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const eventTabs = ['bus_bookings','bus_payments','bib_details','race_feedback'];
-      const wrap = document.getElementById('eventFilterWrap');
-      wrap.classList[eventTabs.includes(tab) ? 'remove' : 'add']('hidden');
-      if (eventTabs.includes(tab)) wrap.classList.add('flex');
-
-      const isUserMgmt = tab === 'user_mgmt';
-      const isEvents   = tab === 'events';
-      const isData     = !isUserMgmt && !isEvents;
-
-      document.getElementById('tableWrap').classList[isData ? 'remove' : 'add']('hidden');
-      document.getElementById('eventsPanel').classList[isEvents ? 'remove' : 'add']('hidden');
-      document.getElementById('userMgmtPanel').classList[isUserMgmt ? 'remove' : 'add']('hidden');
-      document.getElementById('controlsBar').classList[isData ? 'remove' : 'add']('hidden');
-
-      // Hide Clear All for runners tab (runners can't be bulk-cleared)
-      if (isData) {
-        document.getElementById('clearTableBtn').classList[tab === 'runners' ? 'add' : 'remove']('hidden');
-      }
-
-      if (isData) loadCurrentTab();
-      else if (isEvents) loadEventsTab();
-    }
-
-    async function loadEventFilter() {
-      const { data } = await db.from('events').select('event_name').order('event_date', { ascending: false });
-      const sel = document.getElementById('eventFilter');
-      sel.innerHTML = '<option value="">All Events</option>';
-      (data || []).forEach(e => {
-        const opt = document.createElement('option');
-        opt.value = e.event_name; opt.textContent = e.event_name;
-        sel.appendChild(opt);
-      });
-    }
-
-    async function loadCurrentTab() {
-      if (!session) return;
-      const ev = document.getElementById('eventFilter').value;
-
-      showTableLoading();
-
-      let result;
-      switch (currentTab) {
-        case 'runners':
-          result = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
-          break;
-        case 'tshirt':
-          result = await db.rpc('admin_get_tshirt_orders', { p_unique_id: session.uniqueId, p_password: session.password });
-          break;
-        case 'bus_bookings':
-          result = await db.rpc('admin_get_bus_bookings', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
-          break;
-        case 'bus_payments':
-          result = await db.rpc('admin_get_bus_payments', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
-          break;
-        case 'bib_details':
-          result = await db.rpc('admin_get_bib_details', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
-          break;
-        case 'race_feedback':
-          result = await db.rpc('admin_get_race_feedback', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null });
-          break;
-        default:
-          return;
-      }
-
+    // ---- All Runners ----
+    async function loadRunnersData() {
+      document.getElementById('runnersTableContent').innerHTML = `<div class="flex items-center gap-3 p-6 text-gray-400"><div class="animate-spin rounded-full h-6 w-6 border-t-2 border-indigo-500"></div><span>Loading runners...</span></div>`;
+      document.getElementById('runnersCount').textContent = '';
+      const result = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
       if (result.error || result.data?.error) {
-        document.getElementById('tableContent').innerHTML = '<p class="text-red-500 p-4">Error loading data: ' + (result.error?.message || result.data?.error) + '</p>';
+        document.getElementById('runnersTableContent').innerHTML = '<p class="text-red-500 p-4">Error: ' + (result.error?.message || result.data?.error) + '</p>';
         return;
       }
-
-      tableData = result.data || [];
-      renderTable(tableData);
+      allRunnersData = result.data || [];
+      document.getElementById('runnersSearch').value = '';
+      renderRunnersTable(allRunnersData);
     }
 
-    // ---- Table rendering ----
-
-    const PII_FIELDS = new Set(['phone', 'email', 'dob', 'emergency_contact_number', 'emergency_number']);
-
-    function maskPhone(v)  { if (!v) return '—'; return v.slice(0,4) + '••••' + v.slice(-2); }
-    function maskEmail(v)  { if (!v) return '—'; const [l,d] = v.split('@'); return l.slice(0,3) + '•••@' + (d||''); }
-    function maskDob(v)    { if (!v) return '—'; return v.slice(0,4) + '-••-••'; }
-    function maskDefault(v){ if (!v) return '—'; return '••••••'; }
-
-    function getMask(field, value) {
-      if (!value) return '—';
-      if (field === 'phone' || field === 'emergency_contact_number' || field === 'emergency_number') return maskPhone(value);
-      if (field === 'email') return maskEmail(value);
-      if (field === 'dob')   return maskDob(value);
-      return maskDefault(value);
+    function filterRunners() {
+      const q = document.getElementById('runnersSearch').value.toLowerCase().trim();
+      if (!q) { renderRunnersTable(allRunnersData); return; }
+      const filtered = allRunnersData.filter(r =>
+        (r.first_name || '').toLowerCase().includes(q) ||
+        (r.last_name  || '').toLowerCase().includes(q) ||
+        (r.unique_id  || '').toLowerCase().includes(q) ||
+        String(r.flat_number || '').includes(q) ||
+        (r.email      || '').toLowerCase().includes(q)
+      );
+      renderRunnersTable(filtered);
     }
 
-    function getRowLabel(row) {
-      if (currentTab === 'runners') {
-        return (row.first_name || '') + ' ' + (row.last_name || '') + ' (' + row.unique_id + ')';
-      }
-      if (currentTab === 'tshirt') {
-        return 'T-Shirt #' + row.id + (row.name ? ' — ' + row.name : '') + (row.unique_id ? ' (' + row.unique_id + ')' : '');
-      }
-      return '#' + row.id
-        + (row.event_name ? ' — ' + row.event_name : '')
-        + (row.name ? ' — ' + row.name : '');
-    }
+    function renderRunnersTable(data) {
+      const wrap = document.getElementById('runnersTableContent');
+      const superAdmin = isSuperAdmin();
+      document.getElementById('runnersCount').textContent = data.length + ' runner' + (data.length !== 1 ? 's' : '');
 
-    function renderTable(data) {
-      const wrap = document.getElementById('tableContent');
       if (!data || data.length === 0) {
-        wrap.innerHTML = '<p class="text-gray-400 p-4">No data found.</p>';
-        document.getElementById('rowCount').textContent = '0 rows';
+        wrap.innerHTML = '<p class="text-gray-400 p-4">No runners found.</p>';
         return;
       }
 
-      const cols = Object.keys(data[0]).filter(c => c !== 'admin_password_hash');
-      tableColumns = cols;
-      document.getElementById('rowCount').textContent = data.length + ' rows';
+      // Columns to display (curated, not raw dump)
+      const COLS = [
+        { key: 'unique_id',    label: 'Unique ID' },
+        { key: 'first_name',   label: 'First Name' },
+        { key: 'last_name',    label: 'Last Name' },
+        { key: 'flat_number',  label: 'Flat' },
+        { key: 'gender',       label: 'Gender' },
+        { key: 'tshirt_size',  label: 'T-Shirt' },
+        { key: 'blood_group',  label: 'Blood' },
+        { key: 'phone',        label: 'Phone',  pii: true },
+        { key: 'email',        label: 'Email',  pii: true },
+        { key: 'dob',          label: 'DOB',    pii: true },
+        { key: 'is_admin',     label: 'Role' },
+      ];
 
       let html = '<table><thead><tr>';
-      cols.forEach(c => { html += `<th>${c.replace(/_/g,' ')}</th>`; });
-      html += '<th style="width:2.5rem;min-width:2.5rem"></th></tr></thead><tbody>';
+      COLS.forEach(c => { html += `<th>${c.label}</th>`; });
+      html += '<th style="min-width:7rem;">Actions</th></tr></thead><tbody>';
 
       data.forEach((row, ri) => {
         html += '<tr>';
-        cols.forEach(col => {
-          const val = row[col];
-          if (PII_FIELDS.has(col) && val) {
-            html += `<td class="pii-cell" data-row="${ri}" data-col="${col}" data-val="${encodeURIComponent(val)}" title="Click to reveal">${getMask(col, val)}</td>`;
-          } else if (col === 'is_admin') {
-            html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
+        COLS.forEach(col => {
+          const val = row[col.key];
+          if (col.key === 'is_admin') {
+            const isSuperRow = SUPER_ADMINS.includes(row.unique_id);
+            if (isSuperRow) {
+              html += `<td><span class="badge badge-super">Super Admin</span></td>`;
+            } else {
+              html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
+            }
+          } else if (col.pii && val) {
+            html += `<td class="pii-cell" data-val="${encodeURIComponent(val)}" data-field="${col.key}" title="Click to reveal">${maskPii(col.key, val)}</td>`;
           } else {
             html += `<td>${val !== null && val !== undefined ? String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;') : '—'}</td>`;
           }
         });
-        html += `<td><button onclick="openDeleteRowModal(${ri})" title="Delete row" style="line-height:1" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none transition-colors">&#x1F5D1;</button></td>`;
+
+        // Actions column
+        const isSuperRow = SUPER_ADMINS.includes(row.unique_id);
+        const canToggleAdmin = superAdmin && !isSuperRow && row.unique_id !== session.uniqueId;
+        const adminToggleBtn = canToggleAdmin
+          ? (row.is_admin
+              ? `<button onclick="toggleAdminFromTable('${row.unique_id}',true)" class="text-xs font-semibold px-2 py-1 rounded bg-red-100 hover:bg-red-200 text-red-700 whitespace-nowrap">Revoke Admin</button>`
+              : `<button onclick="toggleAdminFromTable('${row.unique_id}',false)" class="text-xs font-semibold px-2 py-1 rounded bg-green-100 hover:bg-green-200 text-green-700 whitespace-nowrap">Grant Admin</button>`)
+          : '';
+
+        html += `<td class="flex gap-1.5 flex-wrap items-center">
+          <button onclick="openRunnerEditor('${row.unique_id}')" class="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700">Edit</button>
+          ${adminToggleBtn}
+        </td>`;
         html += '</tr>';
       });
 
       html += '</tbody></table>';
       wrap.innerHTML = html;
 
-      // PII reveal on click
+      // PII reveal
       wrap.querySelectorAll('.pii-cell').forEach(cell => {
         cell.addEventListener('click', function() {
+          const val = decodeURIComponent(this.dataset.val);
           if (this.classList.contains('revealed')) {
-            this.textContent = getMask(this.dataset.col, decodeURIComponent(this.dataset.val));
+            this.textContent = maskPii(this.dataset.field, val);
             this.classList.remove('revealed');
           } else {
-            this.textContent = decodeURIComponent(this.dataset.val);
+            this.textContent = val;
             this.classList.add('revealed');
           }
         });
       });
     }
 
-    function showTableLoading() {
-      document.getElementById('tableContent').innerHTML = `
-        <div class="flex items-center gap-3 p-6 text-gray-400">
-          <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-indigo-500"></div>
-          <span>Loading data...</span>
-        </div>`;
+    function maskPii(field, v) {
+      if (!v) return '—';
+      if (field === 'phone' || field === 'emergency_contact_number') return v.slice(0,4) + '••••' + v.slice(-2);
+      if (field === 'email') { const [l,d] = v.split('@'); return l.slice(0,3) + '•••@' + (d||''); }
+      if (field === 'dob')   return v.slice(0,4) + '-••-••';
+      return '••••••';
     }
 
-    // ---- Delete Row ----
-
-    let deleteRowTarget = null;
-
-    function openDeleteRowModal(ri) {
-      const row = tableData[ri];
-      deleteRowTarget = { ri, row };
-      document.getElementById('deleteRowLabel').textContent = getRowLabel(row);
-      const btn = document.getElementById('confirmDeleteRowBtn');
-      btn.disabled = false;
-      btn.textContent = 'Delete';
-      document.getElementById('deleteRowModal').classList.remove('hidden');
-    }
-
-    function closeDeleteRowModal() {
-      deleteRowTarget = null;
-      document.getElementById('deleteRowModal').classList.add('hidden');
-    }
-
-    async function confirmDeleteRow() {
-      if (!deleteRowTarget) return;
-      const btn = document.getElementById('confirmDeleteRowBtn');
-      btn.disabled = true;
-      btn.textContent = 'Deleting...';
-
-      const { row } = deleteRowTarget;
-      const tableMap = {
-        tshirt: 'tshirt_orders',
-        bus_bookings: 'bus_bookings',
-        bus_payments: 'bus_payments',
-        bib_details: 'bib_details',
-        race_feedback: 'race_feedback'
-      };
-
-      let result;
-      if (currentTab === 'runners') {
-        result = await db.rpc('admin_delete_runner', {
-          p_unique_id: session.uniqueId,
-          p_password:  session.password,
-          p_target_id: row.unique_id
-        });
-      } else {
-        result = await db.rpc('admin_delete_row', {
-          p_unique_id: session.uniqueId,
-          p_password:  session.password,
-          p_table:     tableMap[currentTab],
-          p_row_id:    row.id
-        });
-      }
-
-      btn.disabled = false;
-      btn.textContent = 'Delete';
-
-      if (result.error || result.data?.error || result.data?.success === false) {
-        alert('Error: ' + (result.data?.error || result.error?.message || 'Delete failed'));
-        return;
-      }
-
-      closeDeleteRowModal();
-      loadCurrentTab();
-    }
-
-    // ---- Clear Table ----
-
-    function openClearModal() {
-      if (!tableData || tableData.length === 0) { alert('No data to clear.'); return; }
-      const tableNames = {
-        tshirt: 'T-Shirt Orders',
-        bus_bookings: 'Bus Bookings',
-        bus_payments: 'Bus Payments',
-        bib_details: 'Bib Details',
-        race_feedback: 'Race Feedback'
-      };
-      document.getElementById('clearTableRowCount').textContent = tableData.length;
-      document.getElementById('clearTableName').textContent = tableNames[currentTab] || currentTab;
-      document.getElementById('clearTablePassword').value = '';
-      document.getElementById('clearTableError').classList.add('hidden');
-      const btn = document.getElementById('confirmClearBtn');
-      btn.disabled = false;
-      btn.textContent = 'Delete All';
-      document.getElementById('clearTableModal').classList.remove('hidden');
-    }
-
-    function closeClearModal() {
-      document.getElementById('clearTableModal').classList.add('hidden');
-    }
-
-    async function confirmClearTable() {
-      const pwd = document.getElementById('clearTablePassword').value;
-      const errEl = document.getElementById('clearTableError');
-      if (!pwd) { errEl.textContent = 'Please enter your password.'; errEl.classList.remove('hidden'); return; }
-
-      const tableMap = {
-        tshirt: 'tshirt_orders',
-        bus_bookings: 'bus_bookings',
-        bus_payments: 'bus_payments',
-        bib_details: 'bib_details',
-        race_feedback: 'race_feedback'
-      };
-
-      const btn = document.getElementById('confirmClearBtn');
-      btn.disabled = true;
-      btn.textContent = 'Deleting...';
-
-      const { data, error } = await db.rpc('admin_clear_table', {
-        p_unique_id: session.uniqueId,
-        p_password:  pwd,
-        p_table:     tableMap[currentTab]
+    async function toggleAdminFromTable(targetId, revoking) {
+      const runner = allRunnersData.find(r => r.unique_id === targetId);
+      const name = runner ? runner.first_name : targetId;
+      const action = revoking ? 'revoke admin access from' : 'grant admin access to';
+      if (!confirm(`Are you sure you want to ${action} ${name}?`)) return;
+      const { data, error } = await db.rpc('admin_toggle_user_admin', {
+        p_admin_id: session.uniqueId, p_password: session.password,
+        p_target_id: targetId, p_new_status: !revoking,
       });
+      if (error || !data?.success) { alert('Error: ' + (data?.error || error?.message)); return; }
+      loadRunnersData();
+    }
 
-      btn.disabled = false;
-      btn.textContent = 'Delete All';
+    function exportRunnersExcel() {
+      if (!allRunnersData.length) { alert('No data to export.'); return; }
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(allRunnersData.map(r => {
+        const { admin_password_hash, ...rest } = r; return rest;
+      }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Runners');
+      XLSX.writeFile(wb, 'RN_Runners_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
 
-      if (error || !data?.success) {
-        errEl.textContent = data?.error || error?.message || 'Failed. Check your password.';
+    // ---- Runner Editor ----
+    function openRunnerEditor(uniqueId) {
+      const r = allRunnersData.find(x => x.unique_id === uniqueId);
+      if (!r) return;
+      editingRunnerId = uniqueId;
+      document.getElementById('re_unique_id_badge').textContent = uniqueId;
+      document.getElementById('re_first_name').value = r.first_name || '';
+      document.getElementById('re_last_name').value  = r.last_name  || '';
+      document.getElementById('re_flat').value       = r.flat_number || '';
+      document.getElementById('re_email').value      = r.email      || '';
+      document.getElementById('re_phone').value      = r.phone      || '';
+      document.getElementById('re_dob').value        = r.dob        || '';
+      document.getElementById('re_gender').value     = r.gender     || '';
+      document.getElementById('re_tshirt').value     = r.tshirt_size || '';
+      document.getElementById('re_blood').value      = r.blood_group || '';
+      document.getElementById('re_ec_name').value    = r.emergency_contact_name   || '';
+      document.getElementById('re_ec_num').value     = r.emergency_contact_number || '';
+      document.getElementById('re_error').classList.add('hidden');
+      const btn = document.getElementById('re_save_btn');
+      btn.disabled = false; btn.textContent = 'Save Changes';
+      document.getElementById('runnerEditorModal').classList.remove('hidden');
+    }
+
+    function closeRunnerEditor() { editingRunnerId = null; document.getElementById('runnerEditorModal').classList.add('hidden'); }
+
+    async function saveRunnerEdit() {
+      const errEl = document.getElementById('re_error');
+      const fn = document.getElementById('re_first_name').value.trim();
+      if (!fn) { errEl.textContent = 'First name is required.'; errEl.classList.remove('hidden'); return; }
+      const btn = document.getElementById('re_save_btn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+
+      const updates = {
+        first_name:               fn,
+        last_name:                document.getElementById('re_last_name').value.trim() || null,
+        flat_number:              document.getElementById('re_flat').value || null,
+        email:                    document.getElementById('re_email').value.trim() || null,
+        phone:                    document.getElementById('re_phone').value.trim() || null,
+        dob:                      document.getElementById('re_dob').value || null,
+        gender:                   document.getElementById('re_gender').value || null,
+        tshirt_size:              document.getElementById('re_tshirt').value || null,
+        blood_group:              document.getElementById('re_blood').value || null,
+        emergency_contact_name:   document.getElementById('re_ec_name').value.trim() || null,
+        emergency_contact_number: document.getElementById('re_ec_num').value.trim() || null,
+      };
+
+      const { error } = await db.from('runners').update(updates).eq('unique_id', editingRunnerId);
+
+      btn.disabled = false; btn.textContent = 'Save Changes';
+
+      if (error) {
+        errEl.textContent = 'Save failed: ' + error.message;
         errEl.classList.remove('hidden');
         return;
       }
 
-      closeClearModal();
-      loadCurrentTab();
+      closeRunnerEditor();
+      loadRunnersData();
     }
 
-    // ---- Export ----
-
-    function exportToExcel() {
-      if (!tableData || tableData.length === 0) { alert('No data to export.'); return; }
-
-      const exportData = tableData.map(row => {
-        const clean = {};
-        tableColumns.forEach(col => { clean[col] = row[col] ?? ''; });
-        return clean;
-      });
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const ev = document.getElementById('eventFilter').value;
-      const sheetName = (currentTab + (ev ? '_' + ev : '')).slice(0, 31);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-      const filename = 'RN_' + currentTab + (ev ? '_' + ev.replace(/\s+/g,'_') : '') + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
-      XLSX.writeFile(wb, filename);
+    // ---- Add Runner ----
+    function arGenerateId() {
+      const fn   = document.getElementById('ar_first_name').value.trim();
+      const flat = document.getElementById('ar_flat').value.trim();
+      const uid  = document.getElementById('ar_unique_id');
+      if (fn && flat) {
+        const prefix = (fn + 'XXXX').substring(0, 4).toUpperCase();
+        uid.value = prefix + flat;
+      } else { uid.value = ''; }
     }
 
-    // ---- Events Tab ----
+    function arCalcAge() {
+      const dob = document.getElementById('ar_dob').value;
+      const ageEl = document.getElementById('ar_age');
+      if (dob) {
+        const d = new Date(dob), today = new Date();
+        let age = today.getFullYear() - d.getFullYear();
+        if (today.getMonth() < d.getMonth() || (today.getMonth() === d.getMonth() && today.getDate() < d.getDate())) age--;
+        ageEl.value = age >= 0 ? age : '';
+      } else { ageEl.value = ''; }
+    }
 
-    async function loadEventsTab() {
-      document.getElementById('eventsContent').innerHTML = `
-        <div class="flex items-center gap-2 text-gray-400 py-4">
-          <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-indigo-500"></div>
-          <span>Loading events...</span>
-        </div>`;
+    function arReset() {
+      ['ar_first_name','ar_last_name','ar_flat','ar_unique_id','ar_email','ar_phone',
+       'ar_dob','ar_age','ar_ec_name','ar_ec_num'].forEach(id => document.getElementById(id).value = '');
+      ['ar_gender','ar_tshirt','ar_blood'].forEach(id => document.getElementById(id).selectedIndex = 0);
+      ['ar_fn_err','ar_flat_err','ar_email_err','ar_error','ar_success'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    }
 
-      const { data, error } = await db.rpc('admin_get_events', {
-        p_unique_id: session.uniqueId,
-        p_password:  session.password
-      });
+    async function submitAddRunner() {
+      const errEl = document.getElementById('ar_error');
+      const successEl = document.getElementById('ar_success');
+      errEl.classList.add('hidden');
+      successEl.classList.add('hidden');
 
-      if (error || data?.error) {
-        document.getElementById('eventsContent').innerHTML = '<p class="text-red-500">Error: ' + (error?.message || data?.error) + '</p>';
+      const fn   = document.getElementById('ar_first_name').value.trim();
+      const flat = document.getElementById('ar_flat').value.trim();
+      const email = document.getElementById('ar_email').value.trim();
+      const uid  = document.getElementById('ar_unique_id').value;
+
+      let valid = true;
+      if (!fn || !/^[A-Za-z\s]+$/.test(fn)) { document.getElementById('ar_fn_err').classList.remove('hidden'); valid = false; } else { document.getElementById('ar_fn_err').classList.add('hidden'); }
+      const flatNum = parseInt(flat);
+      if (!flat || isNaN(flatNum) || flatNum < 1001 || flatNum > 23188) { document.getElementById('ar_flat_err').classList.remove('hidden'); valid = false; } else { document.getElementById('ar_flat_err').classList.add('hidden'); }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('ar_email_err').classList.remove('hidden'); valid = false; } else { document.getElementById('ar_email_err').classList.add('hidden'); }
+      if (!uid) { errEl.textContent = 'Could not generate Unique ID.'; errEl.classList.remove('hidden'); return; }
+      if (!valid) return;
+
+      const btn = document.getElementById('ar_submit_btn');
+      btn.disabled = true; btn.textContent = 'Creating...';
+
+      const { error } = await db.from('runners').insert([{
+        unique_id:                uid,
+        first_name:               fn,
+        last_name:                document.getElementById('ar_last_name').value.trim() || null,
+        flat_number:              flat,
+        email:                    email,
+        phone:                    document.getElementById('ar_phone').value.trim() || null,
+        dob:                      document.getElementById('ar_dob').value || null,
+        gender:                   document.getElementById('ar_gender').value || null,
+        tshirt_size:              document.getElementById('ar_tshirt').value || null,
+        blood_group:              document.getElementById('ar_blood').value || null,
+        emergency_contact_name:   document.getElementById('ar_ec_name').value.trim() || null,
+        emergency_contact_number: document.getElementById('ar_ec_num').value.trim() || null,
+      }]);
+
+      btn.disabled = false; btn.textContent = 'Create Runner';
+
+      if (error) {
+        errEl.textContent = error.code === '23505'
+          ? `A runner with ID "${uid}" already exists.`
+          : 'Error: ' + error.message;
+        errEl.classList.remove('hidden');
         return;
       }
 
-      eventsData = data || [];
-      renderEvents(eventsData);
+      successEl.textContent = `Runner created! Unique ID: ${uid}`;
+      successEl.classList.remove('hidden');
+      arReset();
+      setTimeout(() => successEl.classList.add('hidden'), 5000);
     }
 
-    function esc(str) {
-      if (str === null || str === undefined) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    // ---- Data table (shared non-runner tabs) ----
+    async function loadEventFilter() {
+      const { data } = await db.from('events').select('event_name').order('event_date', { ascending: false });
+      const sel = document.getElementById('eventFilter');
+      sel.innerHTML = '<option value="">All Events</option>';
+      (data || []).forEach(e => { const opt = document.createElement('option'); opt.value = e.event_name; opt.textContent = e.event_name; sel.appendChild(opt); });
     }
+
+    async function loadCurrentTab() {
+      if (!session) return;
+      const ev = document.getElementById('eventFilter').value;
+      showTableLoading();
+      let result;
+      switch (currentTab) {
+        case 'tshirt':        result = await db.rpc('admin_get_tshirt_orders', { p_unique_id: session.uniqueId, p_password: session.password }); break;
+        case 'bus_bookings':  result = await db.rpc('admin_get_bus_bookings',  { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null }); break;
+        case 'bus_payments':  result = await db.rpc('admin_get_bus_payments',  { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null }); break;
+        case 'bib_details':   result = await db.rpc('admin_get_bib_details',   { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null }); break;
+        case 'race_feedback': result = await db.rpc('admin_get_race_feedback', { p_unique_id: session.uniqueId, p_password: session.password, p_event: ev || null }); break;
+        default: return;
+      }
+      if (result.error || result.data?.error) {
+        document.getElementById('tableContent').innerHTML = '<p class="text-red-500 p-4">Error: ' + (result.error?.message || result.data?.error) + '</p>';
+        return;
+      }
+      tableData = result.data || [];
+      renderTable(tableData);
+    }
+
+    const PII_FIELDS = new Set(['phone', 'email', 'dob', 'emergency_contact_number', 'emergency_number']);
+
+    function renderTable(data) {
+      const wrap = document.getElementById('tableContent');
+      if (!data || data.length === 0) { wrap.innerHTML = '<p class="text-gray-400 p-4">No data found.</p>'; document.getElementById('rowCount').textContent = '0 rows'; return; }
+      const cols = Object.keys(data[0]).filter(c => c !== 'admin_password_hash');
+      tableColumns = cols;
+      document.getElementById('rowCount').textContent = data.length + ' rows';
+      let html = '<table><thead><tr>';
+      cols.forEach(c => { html += `<th>${c.replace(/_/g,' ')}</th>`; });
+      html += '<th style="width:2.5rem;"></th></tr></thead><tbody>';
+      data.forEach((row, ri) => {
+        html += '<tr>';
+        cols.forEach(col => {
+          const val = row[col];
+          if (PII_FIELDS.has(col) && val) {
+            html += `<td class="pii-cell" data-row="${ri}" data-col="${col}" data-val="${encodeURIComponent(val)}" title="Click to reveal">${maskPii(col, val)}</td>`;
+          } else if (col === 'is_admin') {
+            html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
+          } else {
+            html += `<td>${val !== null && val !== undefined ? String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;') : '—'}</td>`;
+          }
+        });
+        html += `<td class="flex gap-1 items-center"><button onclick="openEditEventDataModal(${ri})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="Edit">✏️</button><button onclick="openDeleteRowModal(${ri})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button></td>`;
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+      wrap.querySelectorAll('.pii-cell').forEach(cell => {
+        cell.addEventListener('click', function() {
+          const val = decodeURIComponent(this.dataset.val);
+          if (this.classList.contains('revealed')) { this.textContent = maskPii(this.dataset.col, val); this.classList.remove('revealed'); }
+          else { this.textContent = val; this.classList.add('revealed'); }
+        });
+      });
+    }
+
+    function showTableLoading() {
+      document.getElementById('tableContent').innerHTML = `<div class="flex items-center gap-3 p-6 text-gray-400"><div class="animate-spin rounded-full h-6 w-6 border-t-2 border-indigo-500"></div><span>Loading data...</span></div>`;
+    }
+
+    function filterEventData() {
+      const q = document.getElementById('eventDataSearch').value.toLowerCase().trim();
+      if (!q) { renderTable(tableData); return; }
+      const filtered = tableData.filter(row =>
+        Object.values(row).some(v => v !== null && v !== undefined && String(v).toLowerCase().includes(q))
+      );
+      renderTable(filtered);
+    }
+
+    function filterEventsPanel() {
+      const q = document.getElementById('eventsSearch').value.toLowerCase().trim();
+      const showAll = document.getElementById('showAllYears').checked;
+      const currentYear = new Date().getFullYear().toString();
+      let filtered = eventsData;
+      if (!showAll) {
+        filtered = filtered.filter(ev => ev.event_date && ev.event_date.startsWith(currentYear));
+      }
+      if (q) {
+        filtered = filtered.filter(ev =>
+          (ev.event_name || '').toLowerCase().includes(q) ||
+          (ev.location   || '').toLowerCase().includes(q) ||
+          (ev.event_date || '').includes(q)
+        );
+      }
+      const countEl = document.getElementById('eventsCount');
+      countEl.textContent = filtered.length + ' event' + (filtered.length !== 1 ? 's' : '') + (showAll ? '' : ' in ' + currentYear);
+      renderEvents(filtered);
+    }
+
+    // ---- Delete Row ----
+    let deleteRowTarget = null;
+    function openDeleteRowModal(ri) {
+      const row = tableData[ri]; deleteRowTarget = { ri, row };
+      const label = '#' + row.id + (row.event_name ? ' — ' + row.event_name : '') + (row.name ? ' — ' + row.name : '');
+      document.getElementById('deleteRowLabel').textContent = label;
+      const btn = document.getElementById('confirmDeleteRowBtn'); btn.disabled = false; btn.textContent = 'Delete';
+      document.getElementById('deleteRowModal').classList.remove('hidden');
+    }
+    function closeDeleteRowModal() { deleteRowTarget = null; document.getElementById('deleteRowModal').classList.add('hidden'); }
+    async function confirmDeleteRow() {
+      if (!deleteRowTarget) return;
+      const btn = document.getElementById('confirmDeleteRowBtn'); btn.disabled = true; btn.textContent = 'Deleting...';
+      const { row } = deleteRowTarget;
+      const tableMap = { tshirt:'tshirt_orders', bus_bookings:'bus_bookings', bus_payments:'bus_payments', bib_details:'bib_details', race_feedback:'race_feedback' };
+      const result = await db.rpc('admin_delete_row', { p_unique_id: session.uniqueId, p_password: session.password, p_table: tableMap[currentTab], p_row_id: row.id });
+      btn.disabled = false; btn.textContent = 'Delete';
+      if (result.error || result.data?.error || result.data?.success === false) { alert('Error: ' + (result.data?.error || result.error?.message || 'Delete failed')); return; }
+      closeDeleteRowModal(); loadCurrentTab();
+    }
+
+    // ---- Event Data Edit ----
+    const ED_SKIP = new Set(['id', 'created_at']);
+    let editEventDataTarget = null;
+
+    function openEditEventDataModal(ri) {
+      const row = tableData[ri];
+      editEventDataTarget = { ri, row };
+      document.getElementById('ede_row_label').textContent = 'ID: ' + (row.id || '');
+      const container = document.getElementById('eventDataEditFields');
+      container.innerHTML = tableColumns.filter(c => !ED_SKIP.has(c)).map(col => `
+        <div>
+          <label class="form-label">${col.replace(/_/g,' ')}</label>
+          <input id="ede_${col}" type="text" class="form-input" value="${esc(row[col] ?? '')}" />
+        </div>`).join('');
+      document.getElementById('eventDataEditError').classList.add('hidden');
+      const btn = document.getElementById('ede_save_btn'); btn.disabled = false; btn.textContent = 'Save Changes';
+      document.getElementById('eventDataEditModal').classList.remove('hidden');
+    }
+
+    function closeEditEventDataModal() {
+      editEventDataTarget = null;
+      document.getElementById('eventDataEditModal').classList.add('hidden');
+    }
+
+    async function saveEditEventData() {
+      if (!editEventDataTarget) return;
+      const errEl = document.getElementById('eventDataEditError');
+      const { row } = editEventDataTarget;
+      const tableMap = { tshirt:'tshirt_orders', bus_bookings:'bus_bookings', bus_payments:'bus_payments', bib_details:'bib_details', race_feedback:'race_feedback' };
+      const updates = {};
+      tableColumns.filter(c => !ED_SKIP.has(c)).forEach(col => {
+        const el = document.getElementById('ede_' + col);
+        if (el) updates[col] = el.value.trim() || null;
+      });
+      const btn = document.getElementById('ede_save_btn'); btn.disabled = true; btn.textContent = 'Saving...';
+      const { error } = await db.from(tableMap[currentTab]).update(updates).eq('id', row.id);
+      btn.disabled = false; btn.textContent = 'Save Changes';
+      if (error) { errEl.textContent = 'Save failed: ' + error.message; errEl.classList.remove('hidden'); return; }
+      closeEditEventDataModal(); loadCurrentTab();
+    }
+
+    // ---- Event Data Add Row ----
+    function openAddEventDataModal() {
+      if (!tableColumns.length) { alert('Load data first so columns can be determined.'); return; }
+      const container = document.getElementById('eventDataAddFields');
+      container.innerHTML = tableColumns.filter(c => !ED_SKIP.has(c)).map(col => `
+        <div>
+          <label class="form-label">${col.replace(/_/g,' ')}</label>
+          <input id="eda_${col}" type="text" class="form-input" placeholder="${col.replace(/_/g,' ')}" />
+        </div>`).join('');
+      document.getElementById('eventDataAddError').classList.add('hidden');
+      const btn = document.getElementById('eda_save_btn'); btn.disabled = false; btn.textContent = 'Add Row';
+      document.getElementById('eventDataAddModal').classList.remove('hidden');
+    }
+
+    function closeAddEventDataModal() {
+      document.getElementById('eventDataAddModal').classList.add('hidden');
+    }
+
+    async function saveAddEventData() {
+      const errEl = document.getElementById('eventDataAddError');
+      const tableMap = { tshirt:'tshirt_orders', bus_bookings:'bus_bookings', bus_payments:'bus_payments', bib_details:'bib_details', race_feedback:'race_feedback' };
+      const newRow = {};
+      tableColumns.filter(c => !ED_SKIP.has(c)).forEach(col => {
+        const el = document.getElementById('eda_' + col);
+        if (el) newRow[col] = el.value.trim() || null;
+      });
+      const btn = document.getElementById('eda_save_btn'); btn.disabled = true; btn.textContent = 'Adding...';
+      const { error } = await db.from(tableMap[currentTab]).insert([newRow]);
+      btn.disabled = false; btn.textContent = 'Add Row';
+      if (error) { errEl.textContent = 'Error: ' + error.message; errEl.classList.remove('hidden'); return; }
+      closeAddEventDataModal(); loadCurrentTab();
+    }
+
+    // ---- Clear Table ----
+    function openClearModal() {
+      if (!tableData || tableData.length === 0) { alert('No data to clear.'); return; }
+      const tableNames = { tshirt:'T-Shirt Step1 (Booking)', bus_bookings:'Bus Step1 (Booking)', bus_payments:'Bus Step2 (Payment)', bib_details:'Bib Collection', race_feedback:'Race Feedback' };
+      document.getElementById('clearTableRowCount').textContent = tableData.length;
+      document.getElementById('clearTableName').textContent = tableNames[currentTab] || currentTab;
+      document.getElementById('clearTablePassword').value = '';
+      document.getElementById('clearTableError').classList.add('hidden');
+      const btn = document.getElementById('confirmClearBtn'); btn.disabled = false; btn.textContent = 'Delete All';
+      document.getElementById('clearTableModal').classList.remove('hidden');
+    }
+    function closeClearModal() { document.getElementById('clearTableModal').classList.add('hidden'); }
+    async function confirmClearTable() {
+      const pwd = document.getElementById('clearTablePassword').value;
+      const errEl = document.getElementById('clearTableError');
+      if (!pwd) { errEl.textContent = 'Please enter your password.'; errEl.classList.remove('hidden'); return; }
+      const tableMap = { tshirt:'tshirt_orders', bus_bookings:'bus_bookings', bus_payments:'bus_payments', bib_details:'bib_details', race_feedback:'race_feedback' };
+      const btn = document.getElementById('confirmClearBtn'); btn.disabled = true; btn.textContent = 'Deleting...';
+      const { data, error } = await db.rpc('admin_clear_table', { p_unique_id: session.uniqueId, p_password: pwd, p_table: tableMap[currentTab] });
+      btn.disabled = false; btn.textContent = 'Delete All';
+      if (error || !data?.success) { errEl.textContent = data?.error || error?.message || 'Failed.'; errEl.classList.remove('hidden'); return; }
+      closeClearModal(); loadCurrentTab();
+    }
+
+    // ---- Export (shared table) ----
+    function exportToExcel() {
+      if (!tableData || tableData.length === 0) { alert('No data to export.'); return; }
+      const exportData = tableData.map(row => { const clean = {}; tableColumns.forEach(col => { clean[col] = row[col] ?? ''; }); return clean; });
+      const wb = XLSX.utils.book_new();
+      const ev = document.getElementById('eventFilter').value;
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exportData), (currentTab + (ev ? '_' + ev : '')).slice(0,31));
+      XLSX.writeFile(wb, 'RN_' + currentTab + (ev ? '_' + ev.replace(/\s+/g,'_') : '') + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
+
+    // ---- Events Tab ----
+    async function loadEventsTab() {
+      document.getElementById('eventsContent').innerHTML = `<div class="flex items-center gap-2 text-gray-400 py-4"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-indigo-500"></div><span>Loading events...</span></div>`;
+      document.getElementById('eventsSearch').value = '';
+      document.getElementById('eventsCount').textContent = '';
+      const { data, error } = await db.rpc('admin_get_events', { p_unique_id: session.uniqueId, p_password: session.password });
+      if (error || data?.error) { document.getElementById('eventsContent').innerHTML = '<p class="text-red-500">Error: ' + (error?.message || data?.error) + '</p>'; return; }
+      eventsData = data || [];
+      filterEventsPanel();
+    }
+
+    function esc(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     function renderEvents(events) {
       const wrap = document.getElementById('eventsContent');
       if (!events.length) {
-        wrap.innerHTML = '<p class="text-gray-400 py-4">No events yet. Click "+ New Event" to create one.</p>';
+        const showAll = document.getElementById('showAllYears')?.checked;
+        const yr = new Date().getFullYear();
+        wrap.innerHTML = showAll
+          ? '<p class="text-gray-400 py-4">No events yet. Click &quot;+ New Event&quot; to create one.</p>'
+          : `<p class="text-gray-400 py-4">No events found for ${yr}. Toggle <strong>Show All Years</strong> to see past events, or click &quot;+ New Event&quot; to create one.</p>`;
         return;
       }
-
       const boolFields = [
-        { key: 'display',        label: 'Visible' },
-        { key: 'bus_available',  label: 'Bus Available' },
-        { key: 'bib_details',    label: 'Bib Details' },
-        { key: 'ninja_discount', label: 'Ninja Discount' },
-        { key: 'bus_payment',    label: 'Bus Payment' },
-        { key: 'feedback',       label: 'Feedback' },
+        { key: 'display', label: 'Visible' }, { key: 'bus_available', label: 'Bus Available' },
+        { key: 'bib_details', label: 'Bib Details' }, { key: 'ninja_discount', label: 'Ninja Discount' },
+        { key: 'bus_payment', label: 'Bus Payment' }, { key: 'feedback', label: 'Feedback' },
       ];
-
       wrap.innerHTML = events.map(ev => `
-        <div class="event-card mb-4" id="ecard-${ev.id}">
+        <div class="event-card" id="ecard-${ev.id}">
           <div class="flex items-start justify-between gap-3 mb-3">
             <div class="min-w-0">
               <h4 class="font-bold text-gray-800 text-base truncate">${esc(ev.event_name)}</h4>
-              <p class="text-xs text-gray-500 mt-0.5">
-                ${ev.event_date || 'No date set'}${ev.location ? ' &middot; ' + esc(ev.location) : ''}
-              </p>
+              <p class="text-xs text-gray-500 mt-0.5">${ev.event_date || 'No date set'}${ev.location ? ' &middot; ' + esc(ev.location) : ''}</p>
             </div>
             <div class="flex gap-2 flex-shrink-0">
-              <button onclick="openEventEditor(${ev.id})" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap">Edit</button>
-              <button onclick="openDeleteEventModal(${ev.id})" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap">Delete</button>
+              <button onclick="openEventEditor(${ev.id})" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded">Edit</button>
+              <button onclick="openDeleteEventModal(${ev.id})" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-1.5 rounded">Delete</button>
             </div>
           </div>
-
           ${ev.summary ? `<p class="text-xs text-gray-600 mb-3 leading-relaxed">${esc(ev.summary)}</p>` : ''}
-
           <div class="flex flex-wrap gap-2 mb-3">
             ${boolFields.map(f => `
-              <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 rounded-full px-2.5 py-1.5 border border-gray-200 select-none transition-colors">
-                <span class="toggle" style="width:2rem;height:1.2rem;">
-                  <input type="checkbox" ${ev[f.key] ? 'checked' : ''} onchange="toggleEventField(${ev.id},'${f.key}',this.checked)" />
-                  <span class="toggle-slider"></span>
-                </span>
+              <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 rounded-full px-2.5 py-1.5 border border-gray-200 select-none">
+                <span class="toggle" style="width:2rem;height:1.2rem;"><input type="checkbox" ${ev[f.key] ? 'checked' : ''} onchange="toggleEventField(${ev.id},'${f.key}',this.checked)" /><span class="toggle-slider"></span></span>
                 <span class="text-xs font-medium text-gray-700">${f.label}</span>
-              </label>
-            `).join('')}
+              </label>`).join('')}
           </div>
-
           <div class="flex flex-wrap gap-2 text-xs">
             ${ev.seat_cost   != null ? `<span class="bg-blue-50 text-blue-700 rounded px-2 py-1 font-medium">Seat: Rs.${ev.seat_cost}</span>` : ''}
             ${ev.total_seats != null ? `<span class="bg-blue-50 text-blue-700 rounded px-2 py-1 font-medium">Seats: ${ev.total_seats}</span>` : ''}
             ${ev.ninja_price != null ? `<span class="bg-purple-50 text-purple-700 rounded px-2 py-1 font-medium">Ninja: Rs.${ev.ninja_price}</span>` : ''}
-            ${ev.upi_id      ? `<span class="bg-gray-100 text-gray-600 rounded px-2 py-1">UPI: ${esc(ev.upi_id)}</span>` : ''}
+            ${ev.upi_id ? `<span class="bg-gray-100 text-gray-600 rounded px-2 py-1">UPI: ${esc(ev.upi_id)}</span>` : ''}
             ${ev.registration_link ? `<a href="${esc(ev.registration_link)}" target="_blank" class="bg-green-50 text-green-700 rounded px-2 py-1 underline hover:bg-green-100">Reg Link</a>` : ''}
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
     async function toggleEventField(eventId, field, value) {
-      const ev = eventsData.find(e => e.id === eventId);
-      if (!ev) return;
-
-      const prev = ev[field];
-      ev[field] = value; // optimistic
-
+      const ev = eventsData.find(e => e.id === eventId); if (!ev) return;
+      const prev = ev[field]; ev[field] = value;
       const { data, error } = await db.rpc('admin_upsert_event', {
-        p_unique_id:         session.uniqueId,
-        p_password:          session.password,
-        p_id:                ev.id,
-        p_event_name:        ev.event_name,
-        p_event_date:        ev.event_date || null,
-        p_location:          ev.location || null,
-        p_summary:           ev.summary || null,
-        p_registration_link: ev.registration_link || null,
-        p_bus_available:     ev.bus_available,
-        p_bib_details:       ev.bib_details,
-        p_ninja_discount:    ev.ninja_discount,
-        p_display:           ev.display,
-        p_upi_id:            ev.upi_id || null,
-        p_ninja_price:       ev.ninja_price || null,
-        p_seat_cost:         ev.seat_cost || null,
-        p_instructions:      ev.instructions || null,
-        p_total_seats:       ev.total_seats || null,
-        p_bus_payment:       ev.bus_payment,
-        p_feedback:          ev.feedback,
+        p_unique_id: session.uniqueId, p_password: session.password, p_id: ev.id,
+        p_event_name: ev.event_name, p_event_date: ev.event_date || null, p_location: ev.location || null,
+        p_summary: ev.summary || null, p_registration_link: ev.registration_link || null,
+        p_bus_available: ev.bus_available, p_bib_details: ev.bib_details, p_ninja_discount: ev.ninja_discount,
+        p_display: ev.display, p_upi_id: ev.upi_id || null, p_ninja_price: ev.ninja_price || null,
+        p_seat_cost: ev.seat_cost || null, p_instructions: ev.instructions || null,
+        p_total_seats: ev.total_seats || null, p_bus_payment: ev.bus_payment, p_feedback: ev.feedback,
       });
-
-      if (error || !data?.success) {
-        ev[field] = prev; // revert
-        alert('Failed to update: ' + (data?.error || error?.message));
-        renderEvents(eventsData);
-      }
+      if (error || !data?.success) { ev[field] = prev; alert('Failed: ' + (data?.error || error?.message)); renderEvents(eventsData); }
     }
 
     // ---- Event Editor ----
-
     let editingEventId = null;
-
     function openEventEditor(eventId) {
       editingEventId = eventId;
       const ev = eventId ? eventsData.find(e => e.id === eventId) : null;
-
       document.getElementById('eventEditorTitle').textContent = ev ? 'Edit Event' : 'New Event';
-      document.getElementById('ef_event_name').value          = ev?.event_name || '';
-      document.getElementById('ef_event_date').value          = ev?.event_date || '';
-      document.getElementById('ef_location').value            = ev?.location || '';
-      document.getElementById('ef_summary').value             = ev?.summary || '';
-      document.getElementById('ef_registration_link').value   = ev?.registration_link || '';
-      document.getElementById('ef_instructions').value        = ev?.instructions || '';
-      document.getElementById('ef_upi_id').value              = ev?.upi_id || '';
-      document.getElementById('ef_ninja_price').value         = ev?.ninja_price ?? '';
-      document.getElementById('ef_seat_cost').value           = ev?.seat_cost ?? '';
-      document.getElementById('ef_total_seats').value         = ev?.total_seats ?? '';
-      document.getElementById('ef_display').checked           = !!ev?.display;
-      document.getElementById('ef_bus_available').checked     = !!ev?.bus_available;
-      document.getElementById('ef_bib_details').checked       = !!ev?.bib_details;
-      document.getElementById('ef_ninja_discount').checked    = !!ev?.ninja_discount;
-      document.getElementById('ef_bus_payment').checked       = !!ev?.bus_payment;
-      document.getElementById('ef_feedback').checked          = !!ev?.feedback;
-
-      const btn = document.getElementById('saveEventBtn');
-      btn.disabled = false;
-      btn.textContent = 'Save Event';
+      document.getElementById('ef_event_name').value        = ev?.event_name || '';
+      document.getElementById('ef_event_date').value        = ev?.event_date || '';
+      document.getElementById('ef_location').value          = ev?.location || '';
+      document.getElementById('ef_summary').value           = ev?.summary || '';
+      document.getElementById('ef_registration_link').value = ev?.registration_link || '';
+      document.getElementById('ef_instructions').value      = ev?.instructions || '';
+      document.getElementById('ef_upi_id').value            = ev?.upi_id || '';
+      document.getElementById('ef_ninja_price').value       = ev?.ninja_price ?? '';
+      document.getElementById('ef_seat_cost').value         = ev?.seat_cost ?? '';
+      document.getElementById('ef_total_seats').value       = ev?.total_seats ?? '';
+      document.getElementById('ef_display').checked         = !!ev?.display;
+      document.getElementById('ef_bus_available').checked   = !!ev?.bus_available;
+      document.getElementById('ef_bib_details').checked     = !!ev?.bib_details;
+      document.getElementById('ef_ninja_discount').checked  = !!ev?.ninja_discount;
+      document.getElementById('ef_bus_payment').checked     = !!ev?.bus_payment;
+      document.getElementById('ef_feedback').checked        = !!ev?.feedback;
+      const btn = document.getElementById('saveEventBtn'); btn.disabled = false; btn.textContent = 'Save Event';
       document.getElementById('eventEditorError').classList.add('hidden');
       document.getElementById('eventEditorModal').classList.remove('hidden');
     }
-
-    function closeEventEditor() {
-      editingEventId = null;
-      document.getElementById('eventEditorModal').classList.add('hidden');
-    }
+    function closeEventEditor() { editingEventId = null; document.getElementById('eventEditorModal').classList.add('hidden'); }
 
     async function saveEvent() {
       const name = document.getElementById('ef_event_name').value.trim();
       const errEl = document.getElementById('eventEditorError');
       if (!name) { errEl.textContent = 'Event name is required.'; errEl.classList.remove('hidden'); return; }
-
-      const btn = document.getElementById('saveEventBtn');
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-
-      const np = document.getElementById('ef_ninja_price').value;
-      const sc = document.getElementById('ef_seat_cost').value;
-      const ts = document.getElementById('ef_total_seats').value;
-
+      const btn = document.getElementById('saveEventBtn'); btn.disabled = true; btn.textContent = 'Saving...';
+      const np = document.getElementById('ef_ninja_price').value, sc = document.getElementById('ef_seat_cost').value, ts = document.getElementById('ef_total_seats').value;
       const { data, error } = await db.rpc('admin_upsert_event', {
-        p_unique_id:         session.uniqueId,
-        p_password:          session.password,
-        p_id:                editingEventId || null,
-        p_event_name:        name,
-        p_event_date:        document.getElementById('ef_event_date').value || null,
-        p_location:          document.getElementById('ef_location').value || null,
-        p_summary:           document.getElementById('ef_summary').value || null,
+        p_unique_id: session.uniqueId, p_password: session.password, p_id: editingEventId || null,
+        p_event_name: name, p_event_date: document.getElementById('ef_event_date').value || null,
+        p_location: document.getElementById('ef_location').value || null,
+        p_summary: document.getElementById('ef_summary').value || null,
         p_registration_link: document.getElementById('ef_registration_link').value || null,
-        p_instructions:      document.getElementById('ef_instructions').value || null,
-        p_upi_id:            document.getElementById('ef_upi_id').value || null,
-        p_ninja_price:       np ? parseInt(np) : null,
-        p_seat_cost:         sc ? parseInt(sc) : null,
-        p_total_seats:       ts ? parseInt(ts) : null,
-        p_display:           document.getElementById('ef_display').checked,
-        p_bus_available:     document.getElementById('ef_bus_available').checked,
-        p_bib_details:       document.getElementById('ef_bib_details').checked,
-        p_ninja_discount:    document.getElementById('ef_ninja_discount').checked,
-        p_bus_payment:       document.getElementById('ef_bus_payment').checked,
-        p_feedback:          document.getElementById('ef_feedback').checked,
+        p_instructions: document.getElementById('ef_instructions').value || null,
+        p_upi_id: document.getElementById('ef_upi_id').value || null,
+        p_ninja_price: np ? parseInt(np) : null, p_seat_cost: sc ? parseInt(sc) : null, p_total_seats: ts ? parseInt(ts) : null,
+        p_display: document.getElementById('ef_display').checked, p_bus_available: document.getElementById('ef_bus_available').checked,
+        p_bib_details: document.getElementById('ef_bib_details').checked, p_ninja_discount: document.getElementById('ef_ninja_discount').checked,
+        p_bus_payment: document.getElementById('ef_bus_payment').checked, p_feedback: document.getElementById('ef_feedback').checked,
       });
-
-      btn.disabled = false;
-      btn.textContent = 'Save Event';
-
-      if (error || !data?.success) {
-        errEl.textContent = data?.error || error?.message || 'Save failed.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
-      closeEventEditor();
-      loadEventsTab();
-      loadEventFilter(); // refresh dropdown in data tabs
+      btn.disabled = false; btn.textContent = 'Save Event';
+      if (error || !data?.success) { errEl.textContent = data?.error || error?.message || 'Save failed.'; errEl.classList.remove('hidden'); return; }
+      closeEventEditor(); loadEventsTab(); loadEventFilter();
     }
 
     // ---- Delete Event ----
-
     let deleteEventTarget = null;
-
     function openDeleteEventModal(eventId) {
-      const ev = eventsData.find(e => e.id === eventId);
-      if (!ev) return;
+      const ev = eventsData.find(e => e.id === eventId); if (!ev) return;
       deleteEventTarget = eventId;
       document.getElementById('deleteEventLabel').textContent = ev.event_name + (ev.event_date ? ' (' + ev.event_date + ')' : '');
-      const btn = document.getElementById('confirmDeleteEventBtn');
-      btn.disabled = false;
-      btn.textContent = 'Delete Event';
+      const btn = document.getElementById('confirmDeleteEventBtn'); btn.disabled = false; btn.textContent = 'Delete Event';
       document.getElementById('deleteEventModal').classList.remove('hidden');
     }
-
-    function closeDeleteEventModal() {
-      deleteEventTarget = null;
-      document.getElementById('deleteEventModal').classList.add('hidden');
-    }
-
+    function closeDeleteEventModal() { deleteEventTarget = null; document.getElementById('deleteEventModal').classList.add('hidden'); }
     async function confirmDeleteEvent() {
       if (!deleteEventTarget) return;
-      const btn = document.getElementById('confirmDeleteEventBtn');
-      btn.disabled = true;
-      btn.textContent = 'Deleting...';
+      const btn = document.getElementById('confirmDeleteEventBtn'); btn.disabled = true; btn.textContent = 'Deleting...';
+      const { data, error } = await db.rpc('admin_delete_event', { p_unique_id: session.uniqueId, p_password: session.password, p_event_id: deleteEventTarget });
+      btn.disabled = false; btn.textContent = 'Delete Event';
+      if (error || !data?.success) { alert('Error: ' + (data?.error || error?.message)); return; }
+      closeDeleteEventModal(); loadEventsTab(); loadEventFilter();
+    }
 
-      const { data, error } = await db.rpc('admin_delete_event', {
-        p_unique_id: session.uniqueId,
-        p_password:  session.password,
-        p_event_id:  deleteEventTarget
-      });
+    // ---- Hamburger Menu CRUD ----
+    let menuLinksData = [];
+    let mlEditingId = null;
 
-      btn.disabled = false;
-      btn.textContent = 'Delete Event';
-
-      if (error || !data?.success) {
-        alert('Error: ' + (data?.error || error?.message));
+    async function loadMenuLinks() {
+      const tbl = document.getElementById('menuLinksTable');
+      if (!tbl) return;
+      tbl.innerHTML = '<div class="text-sm text-gray-400 p-4">Loading...</div>';
+      const { data, error } = await db.from('menu_links').select('*').order('display_order', { ascending: true });
+      if (error) {
+        tbl.innerHTML = `<div class="text-red-500 text-sm p-4">Error: ${error.message}</div>`;
         return;
       }
-
-      closeDeleteEventModal();
-      loadEventsTab();
-      loadEventFilter();
+      menuLinksData = data || [];
+      renderMenuLinks();
     }
 
-    // ---- User Management ----
-
-    let srTarget = null;
-
-    async function searchUser() {
-      const query = document.getElementById('userSearch').value.trim().toUpperCase();
-      if (!query) return;
-
-      const notFound = document.getElementById('userSearchNotFound');
-      const result   = document.getElementById('userSearchResult');
-      notFound.classList.add('hidden');
-      result.classList.add('hidden');
-      document.getElementById('userMgmtMsg').classList.add('hidden');
-
-      const runnersResult = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
-      if (runnersResult.error || !runnersResult.data) { alert('Error fetching runners.'); return; }
-
-      const all = runnersResult.data;
-      const found = all.find(r =>
-        r.unique_id === query ||
-        (r.first_name + ' ' + (r.last_name || '')).toUpperCase().includes(query) ||
-        r.unique_id.toUpperCase().includes(query)
-      );
-
-      if (!found) { notFound.classList.remove('hidden'); return; }
-
-      srTarget = found;
-      document.getElementById('srName').textContent = found.first_name + ' ' + (found.last_name || '');
-      document.getElementById('srId').textContent   = 'ID: ' + found.unique_id;
-      document.getElementById('srFlat').textContent = 'Flat: ' + found.flat_number;
-
-      const badge = document.getElementById('srAdminBadge');
-      badge.textContent = found.is_admin ? 'Admin' : 'User';
-      badge.className = 'badge ' + (found.is_admin ? 'badge-admin' : 'badge-user');
-
-      const toggleBtn   = document.getElementById('srToggleAdminBtn');
-      const resetPwdBtn = document.getElementById('srResetPwdBtn');
-
-      if (found.is_admin) {
-        toggleBtn.textContent = 'Revoke Admin';
-        toggleBtn.className = 'text-sm font-semibold px-4 py-2 rounded bg-red-100 hover:bg-red-200 text-red-700';
-        resetPwdBtn.classList.remove('hidden');
-      } else {
-        toggleBtn.textContent = 'Grant Admin';
-        toggleBtn.className = 'text-sm font-semibold px-4 py-2 rounded bg-green-100 hover:bg-green-200 text-green-700';
-        resetPwdBtn.classList.add('hidden');
+    function renderMenuLinks() {
+      const tbl = document.getElementById('menuLinksTable');
+      if (!menuLinksData.length) {
+        tbl.innerHTML = '<div class="text-sm text-gray-400 p-6 text-center">No menu links yet. Click <strong>+ Add Link</strong> to get started.</div>';
+        return;
       }
-
-      result.classList.remove('hidden');
+      tbl.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f8fafc;">
+              <th style="padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0;">#</th>
+              <th style="padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0;">Label</th>
+              <th style="padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0;">URL</th>
+              <th style="padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:center;border-bottom:2px solid #e2e8f0;">New Tab</th>
+              <th style="padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:center;border-bottom:2px solid #e2e8f0;">Active</th>
+              <th style="padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:right;border-bottom:2px solid #e2e8f0;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${menuLinksData.map(link => `
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:0.5rem 0.75rem;font-size:0.8rem;color:#94a3b8;">${link.display_order ?? '—'}</td>
+                <td style="padding:0.5rem 0.75rem;font-size:0.82rem;font-weight:600;color:#1e293b;">${esc(link.label)}</td>
+                <td style="padding:0.5rem 0.75rem;font-size:0.78rem;color:#6366f1;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  <a href="${esc(link.url)}" target="_blank" title="${esc(link.url)}" style="text-decoration:underline;">${esc(link.url)}</a>
+                </td>
+                <td style="padding:0.5rem 0.75rem;text-align:center;">
+                  <span style="font-size:0.75rem;${link.open_new_tab ? 'color:#6366f1;font-weight:600;' : 'color:#94a3b8;'}">${link.open_new_tab ? 'Yes' : 'No'}</span>
+                </td>
+                <td style="padding:0.5rem 0.75rem;text-align:center;">
+                  <span style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:9999px;font-weight:600;${link.active ? 'background:#dcfce7;color:#166534;' : 'background:#f1f5f9;color:#64748b;'}">${link.active ? 'Active' : 'Hidden'}</span>
+                </td>
+                <td style="padding:0.5rem 0.75rem;text-align:right;">
+                  <button onclick="openMenuLinkModal(${link.id})" style="font-size:0.72rem;font-weight:600;color:#6366f1;background:none;border:none;cursor:pointer;margin-right:0.5rem;">Edit</button>
+                  <button onclick="deleteMenuLink(${link.id})" style="font-size:0.72rem;font-weight:600;color:#ef4444;background:none;border:none;cursor:pointer;">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
     }
 
-    async function toggleAdmin() {
-      if (!srTarget) return;
-      const newStatus = !srTarget.is_admin;
-      const action = newStatus ? 'grant admin access to' : 'revoke admin access from';
-      if (!confirm(`Are you sure you want to ${action} ${srTarget.first_name}?`)) return;
-
-      const { data, error } = await db.rpc('admin_toggle_user_admin', {
-        p_admin_id:   session.uniqueId,
-        p_password:   session.password,
-        p_target_id:  srTarget.unique_id,
-        p_new_status: newStatus,
-      });
-
-      const msgEl = document.getElementById('userMgmtMsg');
-      if (error || !data?.success) {
-        msgEl.textContent = 'Error: ' + (data?.error || error?.message);
-        msgEl.className = 'text-sm mt-2 text-red-600';
-      } else {
-        msgEl.textContent = (newStatus ? 'Admin access granted' : 'Admin access revoked') + ' for ' + srTarget.first_name + '.';
-        msgEl.className = 'text-sm mt-2 text-green-600';
-        srTarget.is_admin = newStatus;
-        document.getElementById('userSearch').value = srTarget.unique_id;
-        searchUser();
-      }
-      msgEl.classList.remove('hidden');
+    function openMenuLinkModal(id) {
+      mlEditingId = id;
+      const link = id ? menuLinksData.find(l => l.id === id) : null;
+      document.getElementById('ml_modal_title').textContent = link ? 'Edit Menu Link' : 'Add Menu Link';
+      document.getElementById('ml_label').value        = link?.label ?? '';
+      document.getElementById('ml_url').value          = link?.url ?? '';
+      document.getElementById('ml_order').value        = link?.display_order ?? '';
+      document.getElementById('ml_active').checked     = link ? !!link.active : true;
+      document.getElementById('ml_new_tab').checked    = link ? !!link.open_new_tab : false;
+      document.getElementById('ml_save_error').textContent = '';
+      document.getElementById('ml_save_error').classList.add('hidden');
+      document.getElementById('menuLinkModal').classList.remove('hidden');
     }
 
-    async function resetAdminPassword() {
-      if (!srTarget || !srTarget.is_admin) return;
-      if (!confirm(`Reset the admin password for ${srTarget.first_name}? They will be required to set a new password on next login.`)) return;
+    function closeMenuLinkModal() {
+      document.getElementById('menuLinkModal').classList.add('hidden');
+      mlEditingId = null;
+    }
 
-      const { data, error } = await db.rpc('admin_reset_password', {
-        p_admin_id:  session.uniqueId,
-        p_password:  session.password,
-        p_target_id: srTarget.unique_id,
-      });
+    async function saveMenuLink() {
+      const errEl = document.getElementById('ml_save_error');
+      const label = document.getElementById('ml_label').value.trim();
+      const url   = document.getElementById('ml_url').value.trim();
+      const order = parseInt(document.getElementById('ml_order').value) || null;
+      const active     = document.getElementById('ml_active').checked;
+      const open_new_tab = document.getElementById('ml_new_tab').checked;
 
-      const msgEl = document.getElementById('userMgmtMsg');
-      if (error || !data?.success) {
-        msgEl.textContent = 'Error: ' + (data?.error || error?.message);
-        msgEl.className = 'text-sm mt-2 text-red-600';
-      } else {
-        msgEl.textContent = 'Password reset for ' + srTarget.first_name + '. They must set a new password on next login.';
-        msgEl.className = 'text-sm mt-2 text-green-600';
+      if (!label) { errEl.textContent = 'Label is required.'; errEl.classList.remove('hidden'); return; }
+      if (!url)   { errEl.textContent = 'URL is required.';   errEl.classList.remove('hidden'); return; }
+      errEl.classList.add('hidden');
+
+      const btn = document.getElementById('ml_save_btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+
+      const payload = { label, url, display_order: order, active, open_new_tab };
+      const result = mlEditingId
+        ? await db.from('menu_links').update(payload).eq('id', mlEditingId)
+        : await db.from('menu_links').insert([payload]);
+
+      btn.disabled = false; btn.textContent = 'Save Link';
+
+      if (result.error) {
+        errEl.textContent = 'Save failed: ' + result.error.message;
+        errEl.classList.remove('hidden');
+        return;
       }
-      msgEl.classList.remove('hidden');
+      closeMenuLinkModal();
+      loadMenuLinks();
+    }
+
+    async function deleteMenuLink(id) {
+      const link = menuLinksData.find(l => l.id === id);
+      if (!link) return;
+      if (!confirm(`Delete "${link.label}"? This cannot be undone.`)) return;
+      const { error } = await db.from('menu_links').delete().eq('id', id);
+      if (error) { alert('Delete failed: ' + error.message); return; }
+      loadMenuLinks();
+    }
+
+    // ---- Landing Cards CRUD ----
+    let landingCardsData = [];
+    let lcEditingId = null;
+
+    async function loadLandingCards() {
+      const grid = document.getElementById('landingCardsGrid');
+      if (!grid) return;
+      grid.innerHTML = '<div class="text-sm text-gray-400 p-4">Loading...</div>';
+      const lcErr = document.getElementById('lcError');
+      if (lcErr) lcErr.classList.add('hidden');
+
+      const { data, error } = await db.from('landing_cards').select('*').order('display_order', { ascending: true });
+      if (error) {
+        grid.innerHTML = `<div class="text-red-500 text-sm p-4">Error loading cards: ${error.message}</div>`;
+        return;
+      }
+      landingCardsData = data || [];
+      renderLandingCards();
+    }
+
+    function renderLandingCards() {
+      const grid = document.getElementById('landingCardsGrid');
+      if (!grid) return;
+      if (landingCardsData.length === 0) {
+        grid.innerHTML = '<div class="text-sm text-gray-400 p-4 col-span-full text-center py-12">No cards yet. Click <strong>+ Add Card</strong> to create your first hero card.</div>';
+        return;
+      }
+      grid.innerHTML = landingCardsData.map(card => `
+        <div class="event-card relative overflow-hidden" style="border:1px solid #e2e8f0; border-radius:0.75rem; background:white; padding:0;">
+          <div style="height:4px;background:linear-gradient(90deg,#6366f1,#06b6d4);"></div>
+          ${card.image_url
+            ? `<div style="height:110px;background-image:url('${card.image_url}');background-size:cover;background-position:center;"></div>`
+            : `<div style="height:80px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:white;font-weight:600;letter-spacing:0.05em;">NO IMAGE</div>`
+          }
+          <div style="padding:0.85rem 1rem 1rem;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.35rem;">
+              <p style="font-weight:700;font-size:0.88rem;color:#1e293b;line-height:1.3;">${card.title || '(No title)'}</p>
+              <span style="flex-shrink:0;font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:9999px;font-weight:600;${card.active ? 'background:#dcfce7;color:#166534;' : 'background:#f1f5f9;color:#64748b;'}">${card.active ? 'Active' : 'Hidden'}</span>
+            </div>
+            <p style="font-size:0.75rem;color:#64748b;margin-bottom:0.6rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${card.subtitle || ''}</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.72rem;">
+              <span style="color:#94a3b8;">Order: ${card.display_order ?? '—'}</span>
+              <div style="display:flex;gap:0.75rem;">
+                <button onclick="openLandingCardModal(${card.id})" style="color:#6366f1;font-weight:600;background:none;border:none;cursor:pointer;font-size:0.72rem;">Edit</button>
+                <button onclick="deleteLandingCard(${card.id})" style="color:#ef4444;font-weight:600;background:none;border:none;cursor:pointer;font-size:0.72rem;">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openLandingCardModal(id) {
+      lcEditingId = id;
+      const card = id ? landingCardsData.find(c => c.id === id) : null;
+      document.getElementById('lc_modal_title').textContent = card ? 'Edit Landing Card' : 'Add Landing Card';
+      document.getElementById('lc_order').value    = card?.display_order ?? '';
+      document.getElementById('lc_title').value    = card?.title ?? '';
+      document.getElementById('lc_subtitle').value = card?.subtitle ?? '';
+      document.getElementById('lc_image_url').value = card?.image_url ?? '';
+      document.getElementById('lc_link_url').value  = card?.link_url ?? '';
+      document.getElementById('lc_active').checked  = card ? !!card.active : true;
+      document.getElementById('lc_save_error').textContent = '';
+      document.getElementById('lc_save_error').classList.add('hidden');
+      document.getElementById('lc_preview_img').style.display = card?.image_url ? 'block' : 'none';
+      if (card?.image_url) document.getElementById('lc_preview_img').src = card.image_url;
+      document.getElementById('landingCardModal').classList.remove('hidden');
+    }
+
+    function closeLandingCardModal() {
+      document.getElementById('landingCardModal').classList.add('hidden');
+      lcEditingId = null;
+    }
+
+    function lcPreviewImage() {
+      const url = document.getElementById('lc_image_url').value.trim();
+      const img = document.getElementById('lc_preview_img');
+      if (url) { img.src = url; img.style.display = 'block'; }
+      else img.style.display = 'none';
+    }
+
+    async function saveLandingCard() {
+      const errEl = document.getElementById('lc_save_error');
+      const order = parseInt(document.getElementById('lc_order').value);
+      const title = document.getElementById('lc_title').value.trim();
+      const subtitle = document.getElementById('lc_subtitle').value.trim();
+      const image_url = document.getElementById('lc_image_url').value.trim();
+      const link_url = document.getElementById('lc_link_url').value.trim();
+      const active = document.getElementById('lc_active').checked;
+
+      if (!title) { errEl.textContent = 'Title is required.'; errEl.classList.remove('hidden'); return; }
+      if (!order || order < 1 || order > 6) { errEl.textContent = 'Display order must be 1–6.'; errEl.classList.remove('hidden'); return; }
+      errEl.classList.add('hidden');
+
+      const btn = document.getElementById('lc_save_btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+
+      let result;
+      if (lcEditingId) {
+        result = await db.from('landing_cards').update({ display_order: order, title, subtitle, image_url, link_url, active }).eq('id', lcEditingId);
+      } else {
+        result = await db.from('landing_cards').insert([{ display_order: order, title, subtitle, image_url, link_url, active }]);
+      }
+
+      btn.disabled = false; btn.textContent = 'Save Card';
+
+      if (result.error) {
+        errEl.textContent = 'Save failed: ' + result.error.message;
+        errEl.classList.remove('hidden');
+        return;
+      }
+      closeLandingCardModal();
+      loadLandingCards();
+    }
+
+    async function deleteLandingCard(id) {
+      const card = landingCardsData.find(c => c.id === id);
+      if (!card) return;
+      if (!confirm(`Delete card "${card.title}"? This cannot be undone.`)) return;
+      const { error } = await db.from('landing_cards').delete().eq('id', id);
+      if (error) { alert('Delete failed: ' + error.message); return; }
+      loadLandingCards();
+    }
+
+    // ---- Shared utility ----
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escAttr(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+    function makeTid() { return '_t' + Math.random().toString(36).slice(2, 10); }
+
+    // ===================== SURVEY MANAGEMENT =====================
+    let surveysData = [];
+    let svEditState = null; // { id, _delQIds, questions: [{_tid,_dbId,question_text,_delOptIds,options:[{_tid,_dbId,option_text}]}] }
+
+    function showSvListView() {
+      document.getElementById('sv-list-view').style.display = 'block';
+      document.getElementById('sv-editor-view').style.display = 'none';
+    }
+    function showSvEditorView() {
+      document.getElementById('sv-list-view').style.display = 'none';
+      document.getElementById('sv-editor-view').style.display = 'block';
+    }
+
+    async function loadSurveys() {
+      const tbl = document.getElementById('sv-list-table');
+      tbl.innerHTML = '<div class="text-sm text-gray-400 p-4">Loading...</div>';
+      const { data, error } = await db.from('surveys').select('*').order('created_at', { ascending: false });
+      if (error) { tbl.innerHTML = `<div class="text-sm text-red-500 p-4">Error: ${esc(error.message)}</div>`; return; }
+      surveysData = data || [];
+      renderSurveysTable();
+    }
+    function renderSurveysTable() {
+      const tbl = document.getElementById('sv-list-table');
+      if (!surveysData.length) { tbl.innerHTML = '<div class="text-sm text-gray-400 p-6 text-center">No surveys yet. Click "+ New Survey" to create one.</div>'; return; }
+      tbl.innerHTML = `<table>
+        <thead><tr><th>Title</th><th>Description</th><th>Active</th><th>Actions</th></tr></thead>
+        <tbody>${surveysData.map(s => `<tr>
+          <td class="font-medium">${esc(s.title)}</td>
+          <td class="text-gray-500">${esc(s.description || '—')}</td>
+          <td><label class="toggle"><input type="checkbox" ${s.active ? 'checked' : ''} onchange="toggleSurveyActive('${s.id}', this.checked)"><span class="toggle-slider"></span></label></td>
+          <td><div class="flex items-center gap-2">
+            <button onclick="openSurveyEditor('${s.id}')" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2 py-1 rounded font-semibold">Edit</button>
+            <button onclick="deleteSurvey('${s.id}')" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded font-semibold">Delete</button>
+          </div></td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+    async function toggleSurveyActive(id, val) {
+      await db.from('surveys').update({ active: val }).eq('id', id);
+      const s = surveysData.find(s => s.id === id); if (s) s.active = val;
+    }
+    async function deleteSurvey(id) {
+      const s = surveysData.find(s => s.id === id);
+      if (!confirm(`Delete survey "${s?.title}"? All questions and responses will also be deleted.`)) return;
+      const { error } = await db.from('surveys').delete().eq('id', id);
+      if (error) { alert('Delete failed: ' + error.message); return; }
+      loadSurveys();
+    }
+
+    async function openSurveyEditor(surveyId) {
+      const s = surveyId ? surveysData.find(s => s.id === surveyId) : null;
+      svEditState = { id: surveyId || null, _delQIds: [], questions: [] };
+      document.getElementById('sv-editor-heading').textContent = s ? `Edit: ${s.title}` : 'New Survey';
+      document.getElementById('sv-field-title').value = s?.title || '';
+      document.getElementById('sv-field-desc').value = s?.description || '';
+      document.getElementById('sv-field-active').checked = s?.active ?? false;
+      document.getElementById('sv-save-error').classList.add('hidden');
+      document.getElementById('sv-save-btn').disabled = false;
+      document.getElementById('sv-save-btn').textContent = 'Save Survey';
+      showSvEditorView();
+      if (surveyId) {
+        document.getElementById('sv-questions-container').innerHTML = '<div class="text-sm text-gray-400 p-4">Loading questions...</div>';
+        const { data: questions } = await db.from('survey_questions').select('*, survey_options(*)').eq('survey_id', surveyId).order('display_order');
+        svEditState.questions = (questions || []).map(q => ({
+          _tid: makeTid(), _dbId: q.id, question_text: q.question_text, _delOptIds: [],
+          options: (q.survey_options || []).sort((a,b) => a.display_order - b.display_order).map(o => ({ _tid: makeTid(), _dbId: o.id, option_text: o.option_text }))
+        }));
+      }
+      renderSvQuestions();
+    }
+
+    function renderSvQuestions() {
+      const container = document.getElementById('sv-questions-container');
+      if (!svEditState.questions.length) {
+        container.innerHTML = '<div class="text-sm text-gray-400 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl mb-3">No questions yet — click "Add Question" above to start.</div>';
+        return;
+      }
+      container.innerHTML = svEditState.questions.map((q, idx) => `
+        <div class="content-card mb-3" id="svq-${q._tid}">
+          <div class="flex items-start gap-3 mb-3">
+            <div style="flex:1;">
+              <label class="form-label">Question ${idx + 1}</label>
+              <textarea class="form-input" rows="2" placeholder="Enter question text..." oninput="svSetQText('${q._tid}',this.value)">${esc(q.question_text)}</textarea>
+            </div>
+            <button onclick="removeSvQuestion('${q._tid}')" class="text-gray-300 hover:text-red-500 mt-5 flex-shrink-0" title="Remove question">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            </button>
+          </div>
+          <div class="ml-1 space-y-1.5" id="svopts-${q._tid}">
+            ${q.options.map((o, oi) => `
+              <div class="flex items-center gap-2">
+                <div style="width:1.3rem;height:1.3rem;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0;"></div>
+                <input type="text" class="form-input" style="flex:1;" placeholder="Option ${oi+1}…" value="${escAttr(o.option_text)}" oninput="svSetOptText('${q._tid}','${o._tid}',this.value)" />
+                <button onclick="removeSvOption('${q._tid}','${o._tid}')" class="text-gray-300 hover:text-red-400 flex-shrink-0">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>`).join('')}
+          </div>
+          <button onclick="addSvOption('${q._tid}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold mt-2.5 flex items-center gap-1">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Option
+          </button>
+        </div>`).join('');
+    }
+
+    function svSetQText(tid, val) { const q = svEditState.questions.find(x=>x._tid===tid); if(q) q.question_text=val; }
+    function svSetOptText(qTid, oTid, val) { const q=svEditState.questions.find(x=>x._tid===qTid); if(q){const o=q.options.find(x=>x._tid===oTid); if(o) o.option_text=val;} }
+    function addSvQuestion() { svEditState.questions.push({_tid:makeTid(),_dbId:null,question_text:'',_delOptIds:[],options:[]}); renderSvQuestions(); }
+    function removeSvQuestion(tid) { const idx=svEditState.questions.findIndex(q=>q._tid===tid); if(idx===-1)return; const q=svEditState.questions[idx]; if(q._dbId) svEditState._delQIds.push(q._dbId); svEditState.questions.splice(idx,1); renderSvQuestions(); }
+    function addSvOption(qTid) { const q=svEditState.questions.find(x=>x._tid===qTid); if(!q)return; q.options.push({_tid:makeTid(),_dbId:null,option_text:''}); renderSvQuestions(); }
+    function removeSvOption(qTid,oTid) { const q=svEditState.questions.find(x=>x._tid===qTid); if(!q)return; const idx=q.options.findIndex(o=>o._tid===oTid); if(idx===-1)return; const o=q.options[idx]; if(o._dbId) q._delOptIds.push(o._dbId); q.options.splice(idx,1); renderSvQuestions(); }
+
+    async function saveSurveyFull() {
+      const errEl = document.getElementById('sv-save-error');
+      const btn = document.getElementById('sv-save-btn');
+      errEl.classList.add('hidden');
+      const title = document.getElementById('sv-field-title').value.trim();
+      if (!title) { errEl.textContent = 'Title is required.'; errEl.classList.remove('hidden'); return; }
+      for (const q of svEditState.questions) {
+        if (!q.question_text.trim()) { errEl.textContent = 'All questions must have text.'; errEl.classList.remove('hidden'); return; }
+        if (q.options.length < 2) { errEl.textContent = `"${q.question_text.slice(0,30)}..." needs at least 2 options.`; errEl.classList.remove('hidden'); return; }
+        for (const o of q.options) { if (!o.option_text.trim()) { errEl.textContent = 'All options must have text.'; errEl.classList.remove('hidden'); return; } }
+      }
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const payload = { title, description: document.getElementById('sv-field-desc').value.trim(), active: document.getElementById('sv-field-active').checked };
+        let surveyId = svEditState.id;
+        if (surveyId) { await db.from('surveys').update(payload).eq('id', surveyId); }
+        else { const {data,error} = await db.from('surveys').insert(payload).select('id').single(); if(error) throw error; surveyId = data.id; }
+        if (svEditState._delQIds.length) { await db.from('survey_questions').delete().in('id', svEditState._delQIds); }
+        for (let qi = 0; qi < svEditState.questions.length; qi++) {
+          const q = svEditState.questions[qi]; q.display_order = qi + 1;
+          let qId = q._dbId;
+          if (qId) { await db.from('survey_questions').update({question_text:q.question_text.trim(),display_order:q.display_order}).eq('id',qId); }
+          else { const {data,error} = await db.from('survey_questions').insert({question_text:q.question_text.trim(),display_order:q.display_order,survey_id:surveyId}).select('id').single(); if(error) throw error; qId=data.id; q._dbId=qId; }
+          if (q._delOptIds && q._delOptIds.length) { await db.from('survey_options').delete().in('id', q._delOptIds); }
+          for (let oi = 0; oi < q.options.length; oi++) {
+            const o = q.options[oi]; o.display_order = oi + 1;
+            if (o._dbId) { await db.from('survey_options').update({option_text:o.option_text.trim(),display_order:o.display_order}).eq('id',o._dbId); }
+            else { const {data,error} = await db.from('survey_options').insert({option_text:o.option_text.trim(),display_order:o.display_order,question_id:qId}).select('id').single(); if(error) throw error; o._dbId=data.id; }
+          }
+        }
+        showSvListView(); loadSurveys();
+      } catch(e) { errEl.textContent = 'Save failed: ' + e.message; errEl.classList.remove('hidden'); btn.disabled=false; btn.textContent='Save Survey'; }
+    }
+
+    // ===================== QUIZ MANAGEMENT =====================
+    let quizzesData = [];
+    let qzEditState = null; // same as svEditState + correctOptionTid per question
+
+    function showQzListView() {
+      document.getElementById('qz-list-view').style.display = 'block';
+      document.getElementById('qz-editor-view').style.display = 'none';
+    }
+    function showQzEditorView() {
+      document.getElementById('qz-list-view').style.display = 'none';
+      document.getElementById('qz-editor-view').style.display = 'block';
+    }
+
+    async function loadQuizzes() {
+      const tbl = document.getElementById('qz-list-table');
+      tbl.innerHTML = '<div class="text-sm text-gray-400 p-4">Loading...</div>';
+      const { data, error } = await db.from('quizzes').select('*').order('created_at', { ascending: false });
+      if (error) { tbl.innerHTML = `<div class="text-sm text-red-500 p-4">Error: ${esc(error.message)}</div>`; return; }
+      quizzesData = data || [];
+      renderQuizzesTable();
+    }
+    function renderQuizzesTable() {
+      const tbl = document.getElementById('qz-list-table');
+      if (!quizzesData.length) { tbl.innerHTML = '<div class="text-sm text-gray-400 p-6 text-center">No quizzes yet. Click "+ New Quiz" to create one.</div>'; return; }
+      tbl.innerHTML = `<table>
+        <thead><tr><th>Title</th><th>Description</th><th>Active</th><th>Actions</th></tr></thead>
+        <tbody>${quizzesData.map(q => `<tr>
+          <td class="font-medium">${esc(q.title)}</td>
+          <td class="text-gray-500">${esc(q.description || '—')}</td>
+          <td><label class="toggle"><input type="checkbox" ${q.active ? 'checked' : ''} onchange="toggleQuizActive('${q.id}', this.checked)"><span class="toggle-slider"></span></label></td>
+          <td><div class="flex items-center gap-2">
+            <button onclick="openQuizEditor('${q.id}')" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2 py-1 rounded font-semibold">Edit</button>
+            <button onclick="deleteQuiz('${q.id}')" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded font-semibold">Delete</button>
+          </div></td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+    async function toggleQuizActive(id, val) {
+      await db.from('quizzes').update({ active: val }).eq('id', id);
+      const q = quizzesData.find(q => q.id === id); if (q) q.active = val;
+    }
+    async function deleteQuiz(id) {
+      const q = quizzesData.find(q => q.id === id);
+      if (!confirm(`Delete quiz "${q?.title}"? All questions and responses will also be deleted.`)) return;
+      const { error } = await db.from('quizzes').delete().eq('id', id);
+      if (error) { alert('Delete failed: ' + error.message); return; }
+      loadQuizzes();
+    }
+
+    async function openQuizEditor(quizId) {
+      const qz = quizId ? quizzesData.find(q => q.id === quizId) : null;
+      qzEditState = { id: quizId || null, _delQIds: [], questions: [] };
+      document.getElementById('qz-editor-heading').textContent = qz ? `Edit: ${qz.title}` : 'New Quiz';
+      document.getElementById('qz-field-title').value = qz?.title || '';
+      document.getElementById('qz-field-desc').value = qz?.description || '';
+      document.getElementById('qz-field-active').checked = qz?.active ?? false;
+      document.getElementById('qz-save-error').classList.add('hidden');
+      document.getElementById('qz-save-btn').disabled = false;
+      document.getElementById('qz-save-btn').textContent = 'Save Quiz';
+      showQzEditorView();
+      if (quizId) {
+        document.getElementById('qz-questions-container').innerHTML = '<div class="text-sm text-gray-400 p-4">Loading questions...</div>';
+        const { data: questions } = await db.from('quiz_questions').select('*, quiz_options(*)').eq('quiz_id', quizId).order('display_order');
+        qzEditState.questions = (questions || []).map(q => {
+          const opts = (q.quiz_options || []).sort((a,b) => a.display_order - b.display_order).map(o => ({ _tid: makeTid(), _dbId: o.id, option_text: o.option_text }));
+          const correctOpt = opts.find(o => o._dbId === q.correct_option_id);
+          return { _tid: makeTid(), _dbId: q.id, question_text: q.question_text, _correctDbId: q.correct_option_id, correctOptionTid: correctOpt?._tid || null, _delOptIds: [], options: opts };
+        });
+      }
+      renderQzQuestions();
+    }
+
+    function renderQzQuestions() {
+      const container = document.getElementById('qz-questions-container');
+      if (!qzEditState.questions.length) {
+        container.innerHTML = '<div class="text-sm text-gray-400 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl mb-3">No questions yet — click "Add Question" above to start.</div>';
+        return;
+      }
+      container.innerHTML = qzEditState.questions.map((q, idx) => `
+        <div class="content-card mb-3" id="qzq-${q._tid}">
+          <div class="flex items-start gap-3 mb-3">
+            <div style="flex:1;">
+              <label class="form-label">Question ${idx + 1}</label>
+              <textarea class="form-input" rows="2" placeholder="Enter question text..." oninput="qzSetQText('${q._tid}',this.value)">${esc(q.question_text)}</textarea>
+            </div>
+            <button onclick="removeQzQuestion('${q._tid}')" class="text-gray-300 hover:text-red-500 mt-5 flex-shrink-0" title="Remove question">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            </button>
+          </div>
+          <div class="ml-1 mb-1">
+            <p class="text-xs text-gray-400 mb-2">Options — click the circle to mark the <strong>correct answer</strong>:</p>
+            <div class="space-y-1.5" id="qzopts-${q._tid}">
+              ${q.options.map((o, oi) => `
+                <div class="flex items-center gap-2 p-2 rounded-lg ${o._tid === q.correctOptionTid ? 'bg-green-50 border border-green-200' : 'border border-transparent'}">
+                  <input type="radio" name="qzcorrect-${q._tid}" ${o._tid === q.correctOptionTid ? 'checked' : ''} onchange="qzSetCorrect('${q._tid}','${o._tid}')" class="w-4 h-4 accent-green-600 cursor-pointer flex-shrink-0" title="Mark as correct answer" />
+                  <input type="text" class="form-input" style="flex:1;" placeholder="Option ${oi+1}…" value="${escAttr(o.option_text)}" oninput="qzSetOptText('${q._tid}','${o._tid}',this.value)" />
+                  <button onclick="removeQzOption('${q._tid}','${o._tid}')" class="text-gray-300 hover:text-red-400 flex-shrink-0">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>`).join('')}
+            </div>
+          </div>
+          <button onclick="addQzOption('${q._tid}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold mt-2 flex items-center gap-1">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Option
+          </button>
+          ${!q.correctOptionTid && q.options.length > 0 ? '<p class="text-xs text-amber-600 mt-2">&#9888; No correct answer selected yet — click a radio button to mark one.</p>' : ''}
+        </div>`).join('');
+    }
+
+    function qzSetQText(tid, val) { const q=qzEditState.questions.find(x=>x._tid===tid); if(q) q.question_text=val; }
+    function qzSetOptText(qTid, oTid, val) { const q=qzEditState.questions.find(x=>x._tid===qTid); if(q){const o=q.options.find(x=>x._tid===oTid); if(o) o.option_text=val;} }
+    function qzSetCorrect(qTid, oTid) { const q=qzEditState.questions.find(x=>x._tid===qTid); if(q){q.correctOptionTid=oTid; renderQzQuestions();} }
+    function addQzQuestion() { qzEditState.questions.push({_tid:makeTid(),_dbId:null,question_text:'',correctOptionTid:null,_correctDbId:null,_delOptIds:[],options:[]}); renderQzQuestions(); }
+    function removeQzQuestion(tid) { const idx=qzEditState.questions.findIndex(q=>q._tid===tid); if(idx===-1)return; const q=qzEditState.questions[idx]; if(q._dbId) qzEditState._delQIds.push(q._dbId); qzEditState.questions.splice(idx,1); renderQzQuestions(); }
+    function addQzOption(qTid) { const q=qzEditState.questions.find(x=>x._tid===qTid); if(!q)return; q.options.push({_tid:makeTid(),_dbId:null,option_text:''}); renderQzQuestions(); }
+    function removeQzOption(qTid,oTid) { const q=qzEditState.questions.find(x=>x._tid===qTid); if(!q)return; const idx=q.options.findIndex(o=>o._tid===oTid); if(idx===-1)return; const o=q.options[idx]; if(o._dbId) q._delOptIds.push(o._dbId); if(q.correctOptionTid===oTid) q.correctOptionTid=null; q.options.splice(idx,1); renderQzQuestions(); }
+
+    async function saveQuizFull() {
+      const errEl = document.getElementById('qz-save-error');
+      const btn = document.getElementById('qz-save-btn');
+      errEl.classList.add('hidden');
+      const title = document.getElementById('qz-field-title').value.trim();
+      if (!title) { errEl.textContent = 'Title is required.'; errEl.classList.remove('hidden'); return; }
+      for (const q of qzEditState.questions) {
+        if (!q.question_text.trim()) { errEl.textContent = 'All questions must have text.'; errEl.classList.remove('hidden'); return; }
+        if (q.options.length < 2) { errEl.textContent = `"${q.question_text.slice(0,30)}..." needs at least 2 options.`; errEl.classList.remove('hidden'); return; }
+        for (const o of q.options) { if (!o.option_text.trim()) { errEl.textContent = 'All options must have text.'; errEl.classList.remove('hidden'); return; } }
+        if (!q.correctOptionTid) { errEl.textContent = `"${q.question_text.slice(0,30)}..." needs a correct answer selected (click a radio button).`; errEl.classList.remove('hidden'); return; }
+      }
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const payload = { title, description: document.getElementById('qz-field-desc').value.trim(), active: document.getElementById('qz-field-active').checked };
+        let quizId = qzEditState.id;
+        if (quizId) { await db.from('quizzes').update(payload).eq('id', quizId); }
+        else { const {data,error} = await db.from('quizzes').insert(payload).select('id').single(); if(error) throw error; quizId=data.id; }
+        if (qzEditState._delQIds.length) { await db.from('quiz_questions').delete().in('id', qzEditState._delQIds); }
+        for (let qi = 0; qi < qzEditState.questions.length; qi++) {
+          const q = qzEditState.questions[qi]; q.display_order = qi + 1;
+          let qId = q._dbId;
+          if (qId) { await db.from('quiz_questions').update({question_text:q.question_text.trim(),display_order:q.display_order}).eq('id',qId); }
+          else { const {data,error} = await db.from('quiz_questions').insert({question_text:q.question_text.trim(),display_order:q.display_order,quiz_id:quizId}).select('id').single(); if(error) throw error; qId=data.id; q._dbId=qId; }
+          if (q._delOptIds && q._delOptIds.length) { await db.from('quiz_options').delete().in('id', q._delOptIds); }
+          for (let oi = 0; oi < q.options.length; oi++) {
+            const o = q.options[oi]; o.display_order = oi + 1;
+            if (o._dbId) { await db.from('quiz_options').update({option_text:o.option_text.trim(),display_order:o.display_order}).eq('id',o._dbId); }
+            else { const {data,error} = await db.from('quiz_options').insert({option_text:o.option_text.trim(),display_order:o.display_order,question_id:qId}).select('id').single(); if(error) throw error; o._dbId=data.id; }
+          }
+          // Set correct_option_id after options are saved
+          const correctOpt = q.options.find(o => o._tid === q.correctOptionTid);
+          const correctDbId = correctOpt?._dbId || null;
+          await db.from('quiz_questions').update({ correct_option_id: correctDbId }).eq('id', qId);
+        }
+        showQzListView(); loadQuizzes();
+      } catch(e) { errEl.textContent = 'Save failed: ' + e.message; errEl.classList.remove('hidden'); btn.disabled=false; btn.textContent='Save Quiz'; }
     }
 
     // ---- Keyboard shortcuts ----
-
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        document.getElementById('deleteRowModal').classList.add('hidden');
-        document.getElementById('clearTableModal').classList.add('hidden');
-        document.getElementById('eventEditorModal').classList.add('hidden');
-        document.getElementById('deleteEventModal').classList.add('hidden');
+        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','menuLinkModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
-      if (e.key === 'Enter') {
-        if (!document.getElementById('stepId').classList.contains('hidden') &&
-            document.activeElement === document.getElementById('loginUniqueId')) {
-          checkAdminId();
-        }
-      }
+      if (e.key === 'Enter' && !document.getElementById('stepId').classList.contains('hidden') && document.activeElement === document.getElementById('loginUniqueId')) checkAdminId();
     });
   </script>
 </body>
