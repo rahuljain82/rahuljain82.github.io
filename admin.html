@@ -195,6 +195,7 @@
         </button>
         <div class="nav-sub" id="sec-content">
           <button class="nav-item" data-nav="landing_cards"  onclick="navigateTo('landing_cards')">Landing Page Cards</button>
+          <button class="nav-item" data-nav="partners"       onclick="navigateTo('partners')">Partners &amp; Sponsors</button>
           <button class="nav-item" data-nav="hamburger_menu" onclick="navigateTo('hamburger_menu')">Hamburger Menu</button>
           <button class="nav-item" data-nav="survey_mgmt"   onclick="navigateTo('survey_mgmt')">Survey Management</button>
           <button class="nav-item" data-nav="quiz_mgmt"     onclick="navigateTo('quiz_mgmt')">Quiz Management</button>
@@ -408,6 +409,25 @@
           </div>
         </div>
 
+        <!-- CONTENT: PARTNERS & SPONSORS -->
+        <div id="ws-partners" style="display:none;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-xs text-gray-500 mt-0.5">Partner and sponsor logos shown in the scrolling marquee on the landing page. Each entry has a logo image, a name, and an optional click-through link.</p>
+            </div>
+            <button onclick="openPartnerModal(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition-colors">+ Add Partner</button>
+          </div>
+          <div id="partnerError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-3"></div>
+          <div id="partnersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="text-sm text-gray-400 p-4">Loading...</div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+            <strong>Supabase setup:</strong> Create table <code>partners</code> with columns:
+            <code>id serial primary key, display_order int, name text, image_url text, link_url text, active boolean default true</code>.
+            Grant anon read access so the landing page can fetch partners dynamically.
+          </div>
+        </div>
+
         <!-- CONTENT: HAMBURGER MENU -->
         <div id="ws-hamburger_menu" style="display:none;">
           <div class="flex items-center justify-between mb-4">
@@ -573,6 +593,49 @@
       <div class="flex gap-3 justify-end border-t pt-4">
         <button onclick="closeRunnerEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
         <button id="re_save_btn" onclick="saveRunnerEdit()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Partner Modal -->
+  <div id="partnerModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:500px;">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="pt_modal_title" class="text-lg font-bold text-gray-800">Add Partner</h3>
+        <button onclick="closePartnerModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Display Order *</label>
+          <input id="pt_order" type="number" min="1" class="form-input" placeholder="e.g. 1" />
+          <p class="text-xs text-gray-400 mt-1">Partners are shown in ascending order.</p>
+        </div>
+        <div>
+          <label class="form-label">Partner Name *</label>
+          <input id="pt_name" type="text" class="form-input" placeholder="e.g. Acme Corp" />
+        </div>
+        <div>
+          <label class="form-label">Logo Image URL</label>
+          <input id="pt_image_url" type="url" class="form-input" placeholder="https://..." oninput="ptPreviewImage()" />
+          <img id="pt_preview_img" src="" alt="Preview" style="display:none; margin-top:0.5rem; max-height:80px; border-radius:0.4rem; object-fit:contain; background:#f8fafc; padding:0.5rem;" onerror="this.style.display='none'" />
+        </div>
+        <div>
+          <label class="form-label">Link URL</label>
+          <input id="pt_link_url" type="text" class="form-input" placeholder="https://partner-website.com" />
+          <p class="text-xs text-gray-400 mt-1">Where clicking the logo navigates. Leave blank for no link.</p>
+        </div>
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div>
+            <p class="text-sm font-medium text-gray-800">Active</p>
+            <p class="text-xs text-gray-400">Show this partner on the landing page</p>
+          </div>
+          <label class="toggle"><input id="pt_active" type="checkbox" checked /><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+      <p id="pt_save_error" class="hidden text-red-500 text-sm mt-3"></p>
+      <div class="flex gap-3 justify-end mt-5 border-t pt-4">
+        <button onclick="closePartnerModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="pt_save_btn" onclick="savePartner()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Partner</button>
       </div>
     </div>
   </div>
@@ -809,15 +872,16 @@
       bus_payments:  { title: 'Bus - Step2 (Payment)',        breadcrumb: 'Event Management / Event Data / Bus Step2',      tab: 'bus_payments',  showExport: true, showClear: true, showFilter: true  },
       bib_details:   { title: 'Bib Collection',               breadcrumb: 'Event Management / Event Data / Bib Collection', tab: 'bib_details',   showExport: true, showClear: true, showFilter: true  },
       race_feedback: { title: 'Race Feedback',                breadcrumb: 'Event Management / Event Data / Race Feedback',  tab: 'race_feedback', showExport: true, showClear: true, showFilter: true  },
-      landing_cards:  { title: 'Landing Page Cards',  breadcrumb: 'Content Management / Landing Page Cards' },
-      hamburger_menu: { title: 'Hamburger Menu',     breadcrumb: 'Content Management / Hamburger Menu' },
+      landing_cards:  { title: 'Landing Page Cards',    breadcrumb: 'Content Management / Landing Page Cards' },
+      partners:       { title: 'Partners & Sponsors',   breadcrumb: 'Content Management / Partners & Sponsors' },
+      hamburger_menu: { title: 'Hamburger Menu',        breadcrumb: 'Content Management / Hamburger Menu' },
       survey_mgmt:    { title: 'Survey Management',  breadcrumb: 'Content Management / Survey Management' },
       quiz_mgmt:      { title: 'Quiz Management',    breadcrumb: 'Content Management / Quiz Management' },
     };
 
     const ALL_PANELS = [
       'ws-home', 'ws-all_runners', 'ws-add_runner', 'tableWrap', 'eventsPanel',
-      'ws-tshirt2', 'ws-landing_cards', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt'
+      'ws-tshirt2', 'ws-landing_cards', 'ws-partners', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt'
     ];
 
     function navigateTo(key) {
@@ -874,6 +938,10 @@
       } else if (key === 'landing_cards') {
         document.getElementById('ws-landing_cards').style.display = 'block';
         loadLandingCards();
+
+      } else if (key === 'partners') {
+        document.getElementById('ws-partners').style.display = 'block';
+        loadPartners();
 
       } else if (key === 'survey_mgmt') {
         document.getElementById('ws-survey_mgmt').style.display = 'block';
@@ -1625,6 +1693,109 @@
       closeDeleteEventModal(); loadEventsTab(); loadEventFilter();
     }
 
+    // ---- Partners CRUD ----
+    let partnersData = [];
+    let ptEditingId = null;
+
+    async function loadPartners() {
+      const grid = document.getElementById('partnersGrid');
+      if (!grid) return;
+      grid.innerHTML = '<div class="text-sm text-gray-400 p-4">Loading...</div>';
+      document.getElementById('partnerError').classList.add('hidden');
+      const { data, error } = await db.from('partners').select('*').order('display_order', { ascending: true });
+      if (error) { grid.innerHTML = `<div class="text-red-500 text-sm p-4">Error: ${error.message}</div>`; return; }
+      partnersData = data || [];
+      renderPartners();
+    }
+
+    function renderPartners() {
+      const grid = document.getElementById('partnersGrid');
+      if (!partnersData.length) {
+        grid.innerHTML = '<div class="text-sm text-gray-400 p-4 col-span-full text-center py-12">No partners yet. Click <strong>+ Add Partner</strong> to add your first sponsor.</div>';
+        return;
+      }
+      grid.innerHTML = partnersData.map(p => `
+        <div style="border:1px solid #e2e8f0; border-radius:0.75rem; background:white; padding:0; overflow:hidden;">
+          <div style="height:4px;background:linear-gradient(90deg,#6366f1,#06b6d4);"></div>
+          <div style="padding:1rem;">
+            ${p.image_url
+              ? `<div style="height:70px;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;"><img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="max-height:60px;max-width:100%;object-fit:contain;" onerror="this.style.display='none'" /></div>`
+              : `<div style="height:70px;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;background:#f8fafc;border-radius:0.4rem;color:#94a3b8;font-size:0.75rem;">No image</div>`}
+            <p style="font-weight:600;font-size:0.85rem;color:#1e293b;margin-bottom:0.25rem;">${esc(p.name)}</p>
+            ${p.link_url ? `<p style="font-size:0.72rem;color:#6366f1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.link_url)}</p>` : ''}
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.72rem;margin-top:0.5rem;">
+              <span style="padding:0.15rem 0.5rem;border-radius:9999px;font-weight:600;${p.active ? 'background:#dcfce7;color:#166534;' : 'background:#f1f5f9;color:#64748b;'}">${p.active ? 'Active' : 'Hidden'}</span>
+              <div style="display:flex;gap:0.75rem;">
+                <button onclick="openPartnerModal(${p.id})" style="color:#6366f1;font-weight:600;background:none;border:none;cursor:pointer;font-size:0.72rem;">Edit</button>
+                <button onclick="deletePartner(${p.id})" style="color:#ef4444;font-weight:600;background:none;border:none;cursor:pointer;font-size:0.72rem;">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function openPartnerModal(id) {
+      ptEditingId = id;
+      const p = id ? partnersData.find(x => x.id === id) : null;
+      document.getElementById('pt_modal_title').textContent = p ? 'Edit Partner' : 'Add Partner';
+      document.getElementById('pt_order').value     = p?.display_order ?? '';
+      document.getElementById('pt_name').value      = p?.name ?? '';
+      document.getElementById('pt_image_url').value = p?.image_url ?? '';
+      document.getElementById('pt_link_url').value  = p?.link_url ?? '';
+      document.getElementById('pt_active').checked  = p ? !!p.active : true;
+      document.getElementById('pt_save_error').textContent = '';
+      document.getElementById('pt_save_error').classList.add('hidden');
+      const img = document.getElementById('pt_preview_img');
+      img.style.display = p?.image_url ? 'block' : 'none';
+      if (p?.image_url) img.src = p.image_url;
+      document.getElementById('partnerModal').classList.remove('hidden');
+    }
+
+    function closePartnerModal() {
+      document.getElementById('partnerModal').classList.add('hidden');
+      ptEditingId = null;
+    }
+
+    function ptPreviewImage() {
+      const url = document.getElementById('pt_image_url').value.trim();
+      const img = document.getElementById('pt_preview_img');
+      if (url) { img.src = url; img.style.display = 'block'; }
+      else img.style.display = 'none';
+    }
+
+    async function savePartner() {
+      const errEl = document.getElementById('pt_save_error');
+      const name = document.getElementById('pt_name').value.trim();
+      const order = parseInt(document.getElementById('pt_order').value);
+      const image_url = document.getElementById('pt_image_url').value.trim();
+      const link_url = document.getElementById('pt_link_url').value.trim();
+      const active = document.getElementById('pt_active').checked;
+
+      if (!name) { errEl.textContent = 'Partner name is required.'; errEl.classList.remove('hidden'); return; }
+      if (!order || order < 1) { errEl.textContent = 'Display order must be a positive number.'; errEl.classList.remove('hidden'); return; }
+      errEl.classList.add('hidden');
+
+      const btn = document.getElementById('pt_save_btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const payload = { display_order: order, name, image_url: image_url || null, link_url: link_url || null, active };
+      const result = ptEditingId
+        ? await db.from('partners').update(payload).eq('id', ptEditingId)
+        : await db.from('partners').insert([payload]);
+      btn.disabled = false; btn.textContent = 'Save Partner';
+      if (result.error) { errEl.textContent = 'Save failed: ' + result.error.message; errEl.classList.remove('hidden'); return; }
+      closePartnerModal();
+      loadPartners();
+    }
+
+    async function deletePartner(id) {
+      const p = partnersData.find(x => x.id === id);
+      if (!p) return;
+      if (!confirm(`Delete partner "${p.name}"? This cannot be undone.`)) return;
+      const { error } = await db.from('partners').delete().eq('id', id);
+      if (error) { alert('Delete failed: ' + error.message); return; }
+      loadPartners();
+    }
+
     // ---- Hamburger Menu CRUD ----
     let menuLinksData = [];
     let mlEditingId = null;
@@ -2173,7 +2344,7 @@
     // ---- Keyboard shortcuts ----
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','menuLinkModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
       if (e.key === 'Enter' && !document.getElementById('stepId').classList.contains('hidden') && document.activeElement === document.getElementById('loginUniqueId')) checkAdminId();
     });

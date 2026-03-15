@@ -392,16 +392,11 @@
       100% { transform: translateX(-50%); }
     }
     .partner-logo {
-      height: 52px;
+      height: 50px;
       width: auto;
-      max-width: 140px;
       object-fit: contain;
-      filter: grayscale(100%);
-      opacity: 0.5;
-      transition: filter 0.2s, opacity 0.2s;
       flex-shrink: 0;
     }
-    .partner-logo:hover { filter: none; opacity: 1; }
     .partner-placeholder {
       height: 50px;
       width: 130px;
@@ -629,18 +624,7 @@
     <div class="partners-label">Our Partners &amp; Sponsors</div>
     <div class="partners-marquee-wrap">
       <div class="partners-marquee" id="partnersMarquee">
-        <!-- Items + duplicates injected by JS for seamless loop -->
-        <div class="partner-placeholder">Partner 1</div>
-        <div class="partner-placeholder">Partner 2</div>
-        <div class="partner-placeholder">Partner 3</div>
-        <div class="partner-placeholder">Partner 4</div>
-        <div class="partner-placeholder">Partner 5</div>
-        <!-- Duplicates for seamless loop -->
-        <div class="partner-placeholder">Partner 1</div>
-        <div class="partner-placeholder">Partner 2</div>
-        <div class="partner-placeholder">Partner 3</div>
-        <div class="partner-placeholder">Partner 4</div>
-        <div class="partner-placeholder">Partner 5</div>
+        <!-- Injected dynamically from partners table -->
       </div>
     </div>
   </section>
@@ -998,11 +982,40 @@
       } catch(e) {}
     }
 
+    // ---- PARTNERS MARQUEE ----
+    async function loadPartners() {
+      const marquee = document.getElementById('partnersMarquee');
+      if (!marquee) return;
+      if (!db) return;
+      try {
+        const { data, error } = await db
+          .from('partners')
+          .select('name, image_url, link_url')
+          .eq('active', true)
+          .order('display_order', { ascending: true });
+        const partners = (!error && data && data.length) ? data : [];
+        if (!partners.length) { marquee.closest('.partners-section').style.display = 'none'; return; }
+        // Build items, repeat to ensure enough width, then duplicate for seamless loop
+        const items = partners.map(p => {
+          const inner = p.image_url
+            ? `<img src="${p.image_url}" alt="${p.name}" class="partner-logo" />`
+            : `<div class="partner-placeholder">${p.name}</div>`;
+          return p.link_url
+            ? `<a href="${p.link_url}" target="_blank" rel="noopener">${inner}</a>`
+            : inner;
+        });
+        const repeats = Math.ceil(6 / partners.length);
+        const half = Array(repeats).fill(items).flat();
+        marquee.innerHTML = [...half, ...half].join('');
+      } catch(e) { /* silently hide section on error */ marquee.closest('.partners-section').style.display = 'none'; }
+    }
+
     // ---- INIT ----
     window.addEventListener('DOMContentLoaded', () => {
       loadMenuLinks();
       loadLandingCards();
       loadUpcomingEvents();
+      loadPartners();
     });
   </script>
 
