@@ -186,6 +186,8 @@
           <button class="nav-item" data-nav="race_feedback" onclick="navigateTo('race_feedback')">Race Feedback</button>
           <button class="nav-item" data-nav="tshirt"        onclick="navigateTo('tshirt')">T-Shirt - Step1 (Booking)</button>
           <button class="nav-item" data-nav="tshirt2"       onclick="navigateTo('tshirt2')">T-Shirt - Step2 (Payment)</button>
+          <div style="padding: 0.5rem 1rem 0.15rem 1.35rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; white-space: nowrap;">Volunteering</div>
+          <button class="nav-item" data-nav="race_volunteering" onclick="navigateTo('race_volunteering')">Race Volunteering</button>
         </div>
 
         <div class="nav-section-label" style="margin-top:0.5rem;">Content Management</div>
@@ -383,6 +385,43 @@
           </div>
           <div id="eventsCount" class="text-xs text-gray-400 mb-2"></div>
           <div id="eventsContent" class="text-gray-400 text-sm">Loading...</div>
+        </div>
+
+        <!-- RACE VOLUNTEERING -->
+        <div id="ws-race_volunteering" style="display:none;">
+          <div class="mb-4">
+            <p class="text-xs text-gray-500">Enter a race name to manage volunteering data for all runners. Each runner gets a participation count (people who ran through them) and a volunteer score for that race.</p>
+          </div>
+          <div class="content-card mb-4">
+            <div class="flex gap-3 flex-wrap items-end">
+              <div style="flex:1; min-width:220px;">
+                <label class="form-label">Race Name</label>
+                <input id="rv_race_input" type="text" class="form-input" placeholder="e.g. Airtel Delhi Half Marathon 2025" list="rv_race_suggestions" />
+                <datalist id="rv_race_suggestions"></datalist>
+              </div>
+              <button onclick="loadRaceVolunteering()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded whitespace-nowrap transition-colors">Load / Create Race</button>
+            </div>
+          </div>
+          <div id="rv_error" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-3"></div>
+          <div id="rv_table_wrap" style="display:none;">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <p class="font-semibold text-gray-700 text-sm" id="rv_race_label"></p>
+              <div class="flex gap-2 flex-wrap">
+                <input id="rv_search" type="text" placeholder="Search runners..." oninput="filterRvTable()"
+                  class="p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 min-w-40" />
+                <button onclick="exportRvExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export
+                </button>
+              </div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 330px); overflow-y:auto;">
+              <div id="rv_table_content" class="p-4 text-gray-400 text-sm">Loading...</div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+            <strong>Supabase setup:</strong> Run <code>race_volunteering_setup.sql</code> in your Supabase SQL editor to create the required table and scorecard view.
+          </div>
         </div>
 
         <!-- TSHIRT STEP2 PLACEHOLDER -->
@@ -868,6 +907,7 @@
       race_events:   { title: 'Event Info & Management',      breadcrumb: 'Event Management / Event Info & Management' },
       tshirt:        { title: 'T-Shirt - Step1 (Booking)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step1',  tab: 'tshirt',        showExport: true, showClear: true, showFilter: false },
       tshirt2:       { title: 'T-Shirt - Step2 (Payment)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step2' },
+      race_volunteering: { title: 'Race Volunteering',      breadcrumb: 'Event Management / Race Volunteering' },
       bus_bookings:  { title: 'Bus - Step1 (Booking)',        breadcrumb: 'Event Management / Event Data / Bus Step1',      tab: 'bus_bookings',  showExport: true, showClear: true, showFilter: true  },
       bus_payments:  { title: 'Bus - Step2 (Payment)',        breadcrumb: 'Event Management / Event Data / Bus Step2',      tab: 'bus_payments',  showExport: true, showClear: true, showFilter: true  },
       bib_details:   { title: 'Bib Collection',               breadcrumb: 'Event Management / Event Data / Bib Collection', tab: 'bib_details',   showExport: true, showClear: true, showFilter: true  },
@@ -881,7 +921,7 @@
 
     const ALL_PANELS = [
       'ws-home', 'ws-all_runners', 'ws-add_runner', 'tableWrap', 'eventsPanel',
-      'ws-tshirt2', 'ws-landing_cards', 'ws-partners', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt'
+      'ws-tshirt2', 'ws-race_volunteering', 'ws-landing_cards', 'ws-partners', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt'
     ];
 
     function navigateTo(key) {
@@ -954,6 +994,10 @@
         document.getElementById('qz-list-view').style.display = 'block';
         document.getElementById('qz-editor-view').style.display = 'none';
         loadQuizzes();
+
+      } else if (key === 'race_volunteering') {
+        document.getElementById('ws-race_volunteering').style.display = 'block';
+        initRvRaceList();
 
       } else {
         const panel = document.getElementById('ws-' + key);
@@ -2339,6 +2383,126 @@
         }
         showQzListView(); loadQuizzes();
       } catch(e) { errEl.textContent = 'Save failed: ' + e.message; errEl.classList.remove('hidden'); btn.disabled=false; btn.textContent='Save Quiz'; }
+    }
+
+    // ---- Race Volunteering ----
+    let rvAllRunners = [];
+    let rvRaceData = [];
+    let rvCurrentRace = '';
+    let rvFilteredRunners = [];
+
+    async function initRvRaceList() {
+      const { data } = await db.from('race_volunteering').select('race_name');
+      if (!data) return;
+      const races = [...new Set(data.map(r => r.race_name))].sort();
+      const dl = document.getElementById('rv_race_suggestions');
+      if (dl) dl.innerHTML = races.map(r => `<option value="${esc(r)}">`).join('');
+    }
+
+    async function loadRaceVolunteering() {
+      const raceName = document.getElementById('rv_race_input').value.trim();
+      const errEl = document.getElementById('rv_error');
+      errEl.classList.add('hidden');
+      if (!raceName) { errEl.textContent = 'Please enter a race name.'; errEl.classList.remove('hidden'); return; }
+      rvCurrentRace = raceName;
+      document.getElementById('rv_table_wrap').style.display = 'block';
+      document.getElementById('rv_table_content').innerHTML = '<div class="p-4 text-gray-400 text-sm">Loading runners...</div>';
+
+      if (allRunnersData.length) {
+        rvAllRunners = allRunnersData;
+      } else {
+        const { data, error } = await db.from('runners').select('unique_id, first_name, last_name, flat_number').order('first_name');
+        if (error) { errEl.textContent = 'Error loading runners: ' + error.message; errEl.classList.remove('hidden'); document.getElementById('rv_table_wrap').style.display = 'none'; return; }
+        rvAllRunners = data || [];
+      }
+
+      const { data: rvData, error: rvErr } = await db.from('race_volunteering').select('*').eq('race_name', raceName);
+      if (rvErr) { errEl.textContent = 'Error loading race data: ' + rvErr.message; errEl.classList.remove('hidden'); document.getElementById('rv_table_wrap').style.display = 'none'; return; }
+      rvRaceData = rvData || [];
+
+      document.getElementById('rv_race_label').textContent = `Race: ${raceName} — ${rvAllRunners.length} runners`;
+      document.getElementById('rv_search').value = '';
+      rvFilteredRunners = [...rvAllRunners];
+      renderRvTable();
+      initRvRaceList();
+    }
+
+    function filterRvTable() {
+      const q = document.getElementById('rv_search').value.toLowerCase();
+      rvFilteredRunners = rvAllRunners.filter(r =>
+        (r.first_name + ' ' + (r.last_name || '')).toLowerCase().includes(q) ||
+        r.unique_id.toLowerCase().includes(q) ||
+        String(r.flat_number || '').includes(q)
+      );
+      renderRvTable();
+    }
+
+    function renderRvTable() {
+      const wrap = document.getElementById('rv_table_content');
+      if (!rvFilteredRunners.length) { wrap.innerHTML = '<div class="p-4 text-gray-400 text-sm text-center">No runners found.</div>'; return; }
+      const rvMap = {};
+      rvRaceData.forEach(r => { rvMap[r.runner_unique_id] = r; });
+      const thS = 'padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:1;';
+      const tdS = 'padding:0.5rem 0.75rem;font-size:0.82rem;color:#334155;border-bottom:1px solid #f1f5f9;vertical-align:middle;';
+      let html = `<table style="width:100%;border-collapse:collapse;"><thead><tr>
+        <th style="${thS}">Runner</th><th style="${thS}">Unique ID</th><th style="${thS}">Flat</th>
+        <th style="${thS}">Participation Count</th><th style="${thS}">Volunteer Score</th><th style="${thS}">Action</th>
+      </tr></thead><tbody>`;
+      rvFilteredRunners.forEach(r => {
+        const ex = rvMap[r.unique_id];
+        const pc = ex != null ? ex.participation_count : '';
+        const vs = ex != null ? ex.volunteer_score : '';
+        const dot = ex != null ? ' <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;" title="Saved"></span>' : '';
+        html += `<tr id="rv_row_${r.unique_id}" style="border-bottom:1px solid #f1f5f9;">
+          <td style="${tdS} font-weight:600;">${esc(r.first_name)} ${esc(r.last_name || '')}${dot}</td>
+          <td style="${tdS} font-family:monospace;font-size:0.78rem;color:#6366f1;">${esc(r.unique_id)}</td>
+          <td style="${tdS}">${r.flat_number ?? '—'}</td>
+          <td style="${tdS}"><input id="rv_pc_${r.unique_id}" type="number" min="0" value="${pc}" placeholder="0"
+            style="width:90px;padding:0.3rem 0.5rem;border:1px solid #e2e8f0;border-radius:0.35rem;font-size:0.82rem;outline:none;" /></td>
+          <td style="${tdS}"><input id="rv_vs_${r.unique_id}" type="number" min="0" step="0.01" value="${vs}" placeholder="0.00"
+            style="width:90px;padding:0.3rem 0.5rem;border:1px solid #e2e8f0;border-radius:0.35rem;font-size:0.82rem;outline:none;" /></td>
+          <td style="${tdS}"><button id="rv_btn_${r.unique_id}" onclick="saveRvRow('${r.unique_id}')"
+            style="background:#6366f1;color:white;font-size:0.75rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:0.35rem;border:none;cursor:pointer;">Save</button></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+    }
+
+    async function saveRvRow(uniqueId) {
+      const pc = parseInt(document.getElementById('rv_pc_' + uniqueId).value) || 0;
+      const vs = parseFloat(document.getElementById('rv_vs_' + uniqueId).value) || 0;
+      const btn = document.getElementById('rv_btn_' + uniqueId);
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const { error } = await db.from('race_volunteering').upsert(
+        { race_name: rvCurrentRace, runner_unique_id: uniqueId, participation_count: pc, volunteer_score: vs },
+        { onConflict: 'race_name,runner_unique_id' }
+      );
+      btn.disabled = false; btn.textContent = 'Save';
+      if (error) { alert('Save failed: ' + error.message); return; }
+      const idx = rvRaceData.findIndex(r => r.runner_unique_id === uniqueId);
+      if (idx >= 0) { rvRaceData[idx].participation_count = pc; rvRaceData[idx].volunteer_score = vs; }
+      else { rvRaceData.push({ race_name: rvCurrentRace, runner_unique_id: uniqueId, participation_count: pc, volunteer_score: vs }); }
+      const row = document.getElementById('rv_row_' + uniqueId);
+      if (row) { row.style.background = '#f0fdf4'; setTimeout(() => { if (row) row.style.background = ''; }, 1500); }
+    }
+
+    function exportRvExcel() {
+      if (!rvAllRunners.length || !rvCurrentRace) { alert('No data to export.'); return; }
+      const rvMap = {};
+      rvRaceData.forEach(r => { rvMap[r.runner_unique_id] = r; });
+      const rows = rvAllRunners.map(r => ({
+        'Race': rvCurrentRace,
+        'Unique ID': r.unique_id,
+        'Name': r.first_name + ' ' + (r.last_name || ''),
+        'Flat': r.flat_number,
+        'Participation Count': rvMap[r.unique_id]?.participation_count ?? 0,
+        'Volunteer Score': rvMap[r.unique_id]?.volunteer_score ?? 0,
+      }));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, 'Volunteering');
+      XLSX.writeFile(wb, 'RN_Volunteering_' + rvCurrentRace.replace(/[^a-z0-9]/gi, '_') + '.xlsx');
     }
 
     // ---- Keyboard shortcuts ----

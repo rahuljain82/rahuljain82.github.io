@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volunteer Scorecard - Running Ninjas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; min-height: 100vh; }
+    table { border-collapse: collapse; width: 100%; }
+    th { background: #f8fafc; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; padding: 0.6rem 0.85rem; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 1; white-space: nowrap; }
+    td { padding: 0.5rem 0.85rem; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+    tr:hover td { filter: brightness(0.97); }
+    .form-input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.45rem; font-size: 0.9rem; color: #1e293b; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+    .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+    .tier-red    { background: #fef2f2; }
+    .tier-orange { background: #fff7ed; }
+    .tier-yellow { background: #fefce8; }
+    .tier-green  { background: #f0fdf4; }
+    .tier-red    td { color: #7f1d1d; }
+    .tier-orange td { color: #7c2d12; }
+    .tier-yellow td { color: #713f12; }
+    .tier-green  td { color: #14532d; }
+
+    .score-badge-red    { background:#fee2e2; color:#dc2626; }
+    .score-badge-orange { background:#fed7aa; color:#ea580c; }
+    .score-badge-yellow { background:#fef08a; color:#ca8a04; }
+    .score-badge-green  { background:#bbf7d0; color:#16a34a; }
+    .score-badge { display:inline-block; padding:0.2rem 0.55rem; border-radius:9999px; font-weight:700; font-size:0.82rem; }
+
+    .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%; font-weight:700; font-size:0.78rem; }
+    .rank-1 { background:#fbbf24; color:#78350f; }
+    .rank-2 { background:#94a3b8; color:#1e293b; }
+    .rank-3 { background:#cd7f32; color:#fff; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="bg-gray-900 text-white px-4 flex items-center justify-between sticky top-0 z-40" style="height:52px;">
+    <div class="flex items-center gap-3">
+      <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" class="w-7 h-7 rounded-full" alt="RN" />
+      <span class="font-bold text-sm">Running Ninjas</span>
+      <span class="text-gray-500 text-sm hidden sm:inline">/ Volunteer Scorecard</span>
+    </div>
+    <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">&larr; Back to Site</a>
+  </div>
+
+  <!-- VERIFY SECTION -->
+  <div id="verifySection" class="max-w-md mx-auto mt-14 bg-white rounded-xl shadow p-8">
+    <div class="text-center mb-6">
+      <div style="font-size:2.5rem; margin-bottom:0.5rem;">🏃</div>
+      <h2 class="text-2xl font-bold text-gray-800">Volunteer Scorecard</h2>
+      <p class="text-gray-500 text-sm mt-2">Enter your Runner ID to view the community volunteering scorecard.</p>
+    </div>
+    <label class="block mb-1 text-sm font-semibold text-gray-700">Runner ID</label>
+    <input id="sc_runner_id" type="text" placeholder="e.g. RAHU22112" class="form-input mb-1"
+      onkeydown="if(event.key==='Enter') verifyRunner()" />
+    <p id="sc_verify_error" class="text-red-500 text-sm mt-1 mb-3 hidden"></p>
+    <button onclick="verifyRunner()" id="sc_verify_btn"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg mt-2 transition-colors text-sm">
+      View Scorecard
+    </button>
+  </div>
+
+  <!-- SCORECARD SECTION -->
+  <div id="scorecardSection" style="display:none;" class="max-w-5xl mx-auto mt-8 px-4 pb-12">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
+      <div>
+        <h1 class="text-xl font-bold text-gray-800">Volunteer Scorecard</h1>
+        <p class="text-sm text-gray-500 mt-0.5" id="sc_subtitle">Community-wide volunteering standings</p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <input id="sc_search" type="text" placeholder="Search by name or ID..."
+          oninput="filterScorecard()"
+          class="p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 min-w-44" />
+        <button onclick="verifySection()" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg px-3 py-2 transition-colors">Logout</button>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="flex items-center gap-3 flex-wrap mb-4 text-xs font-semibold">
+      <span class="text-gray-500">Score tier:</span>
+      <span class="score-badge score-badge-red">Bottom 25%</span>
+      <span class="score-badge score-badge-orange">25–50%</span>
+      <span class="score-badge score-badge-yellow">50–75%</span>
+      <span class="score-badge score-badge-green">Top 25%</span>
+    </div>
+
+    <!-- Loading / Error -->
+    <div id="sc_loading" class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">Loading scorecard...</div>
+    <div id="sc_error" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4"></div>
+
+    <!-- Table -->
+    <div id="sc_table_wrap" class="hidden bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 260px); overflow-y:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:3rem;">Rank</th>
+            <th>Runner</th>
+            <th>Unique ID</th>
+            <th style="text-align:right;">Total Participation</th>
+            <th style="text-align:right;">Total Volunteer Score</th>
+            <th style="text-align:right;">Score</th>
+          </tr>
+        </thead>
+        <tbody id="sc_tbody"></tbody>
+      </table>
+    </div>
+    <p id="sc_row_count" class="text-xs text-gray-400 mt-2"></p>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let scorecardData = [];
+    let filteredData = [];
+
+    function verifySection() {
+      document.getElementById('scorecardSection').style.display = 'none';
+      document.getElementById('verifySection').style.display = 'block';
+      document.getElementById('sc_runner_id').value = '';
+      document.getElementById('sc_verify_error').classList.add('hidden');
+    }
+
+    async function verifyRunner() {
+      const uid = document.getElementById('sc_runner_id').value.trim().toUpperCase();
+      const errEl = document.getElementById('sc_verify_error');
+      const btn = document.getElementById('sc_verify_btn');
+      errEl.classList.add('hidden');
+      if (!uid) { errEl.textContent = 'Please enter your Runner ID.'; errEl.classList.remove('hidden'); return; }
+
+      btn.disabled = true; btn.textContent = 'Verifying...';
+      const { data, error } = await db.from('runners').select('unique_id').eq('unique_id', uid).maybeSingle();
+      btn.disabled = false; btn.textContent = 'View Scorecard';
+
+      if (error || !data) {
+        errEl.textContent = 'Runner ID not found. Please check and try again.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('verifySection').style.display = 'none';
+      document.getElementById('scorecardSection').style.display = 'block';
+      loadScorecard();
+    }
+
+    async function loadScorecard() {
+      document.getElementById('sc_loading').style.display = 'block';
+      document.getElementById('sc_table_wrap').classList.add('hidden');
+      document.getElementById('sc_error').classList.add('hidden');
+
+      // Try the aggregated view first
+      const { data: viewData, error: viewErr } = await db
+        .from('volunteer_scorecard_view')
+        .select('unique_id, full_name, total_participation, total_volunteer_score, score');
+
+      if (viewErr) {
+        document.getElementById('sc_loading').style.display = 'none';
+        document.getElementById('sc_error').textContent = 'Could not load scorecard: ' + viewErr.message + '. Make sure race_volunteering_setup.sql has been run in Supabase.';
+        document.getElementById('sc_error').classList.remove('hidden');
+        return;
+      }
+
+      // Sort by score desc, then by total_volunteer_score desc as tiebreaker
+      scorecardData = (viewData || []).sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return b.total_volunteer_score - a.total_volunteer_score;
+      });
+
+      document.getElementById('sc_subtitle').textContent =
+        `Community-wide volunteering standings — ${scorecardData.length} runners`;
+
+      filteredData = [...scorecardData];
+      renderScorecard();
+      document.getElementById('sc_loading').style.display = 'none';
+      document.getElementById('sc_table_wrap').classList.remove('hidden');
+    }
+
+    function getTier(percentile) {
+      if (percentile < 25) return 'red';
+      if (percentile < 50) return 'orange';
+      if (percentile < 75) return 'yellow';
+      return 'green';
+    }
+
+    function renderScorecard() {
+      const tbody = document.getElementById('sc_tbody');
+      if (!filteredData.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94a3b8;">No data to display.</td></tr>';
+        document.getElementById('sc_row_count').textContent = '';
+        return;
+      }
+
+      // Calculate percentile tiers based on score, using the full scorecardData set
+      const allScores = scorecardData.map(r => parseFloat(r.score) || 0).sort((a, b) => a - b);
+      const n = allScores.length;
+
+      function getPercentile(score) {
+        const scoreF = parseFloat(score) || 0;
+        // count how many scores are strictly below this score
+        const below = allScores.filter(s => s < scoreF).length;
+        return n <= 1 ? 100 : (below / (n - 1)) * 100;
+      }
+
+      // Assign rank using full sorted list (rank by position in scorecardData which is already sorted desc)
+      const rankMap = {};
+      let currentRank = 1;
+      scorecardData.forEach((r, i) => {
+        if (i > 0 && parseFloat(r.score) < parseFloat(scorecardData[i - 1].score)) currentRank = i + 1;
+        rankMap[r.unique_id] = currentRank;
+      });
+
+      let html = '';
+      filteredData.forEach(r => {
+        const score = parseFloat(r.score) || 0;
+        const pct = getPercentile(score);
+        const tier = getTier(pct);
+        const rank = rankMap[r.unique_id] || '—';
+
+        let rankCell;
+        if (rank === 1) rankCell = `<span class="rank-badge rank-1">1</span>`;
+        else if (rank === 2) rankCell = `<span class="rank-badge rank-2">2</span>`;
+        else if (rank === 3) rankCell = `<span class="rank-badge rank-3">3</span>`;
+        else rankCell = `<span style="font-size:0.82rem;color:#94a3b8;font-weight:600;">${rank}</span>`;
+
+        html += `<tr class="tier-${tier}">
+          <td style="text-align:center;">${rankCell}</td>
+          <td style="font-weight:600;">${esc(r.full_name || '—')}</td>
+          <td style="font-family:monospace;font-size:0.78rem;color:#6366f1;">${esc(r.unique_id)}</td>
+          <td style="text-align:right;">${r.total_participation ?? 0}</td>
+          <td style="text-align:right;">${parseFloat(r.total_volunteer_score || 0).toFixed(2)}</td>
+          <td style="text-align:right;">
+            <span class="score-badge score-badge-${tier}">${score.toFixed(4)}</span>
+          </td>
+        </tr>`;
+      });
+
+      tbody.innerHTML = html;
+      document.getElementById('sc_row_count').textContent =
+        filteredData.length < scorecardData.length
+          ? `Showing ${filteredData.length} of ${scorecardData.length} runners`
+          : `${scorecardData.length} runners`;
+    }
+
+    function filterScorecard() {
+      const q = document.getElementById('sc_search').value.toLowerCase();
+      filteredData = scorecardData.filter(r =>
+        (r.full_name || '').toLowerCase().includes(q) ||
+        (r.unique_id || '').toLowerCase().includes(q)
+      );
+      renderScorecard();
+    }
+
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
