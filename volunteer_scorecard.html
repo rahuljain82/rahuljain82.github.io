@@ -35,6 +35,38 @@
     .detail-inner { padding: 0.5rem 1rem 0.85rem 3.2rem; }
     .detail-sub-th { padding:0.3rem 0.55rem; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
     .detail-sub-td { padding:0.3rem 0.55rem; font-size:0.78rem; border-bottom:1px solid #f1f5f9; color:#334155; }
+
+    /* Desktop: fixed table layout for controlled column widths */
+    @media (min-width: 769px) {
+      #sc_table_wrap table { table-layout: fixed; }
+    }
+
+    /* Ensure rows have a background so sticky cells inherit correctly */
+    #sc_table_wrap tbody tr { background: #ffffff; }
+
+    /* Mobile: pin Rank and Runner Name columns */
+    @media (max-width: 768px) {
+      #sc_table_wrap tr:not(.detail-row) th:nth-child(1),
+      #sc_table_wrap tr:not(.detail-row) td:nth-child(1) {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background: inherit;
+      }
+      #sc_table_wrap tr:not(.detail-row) th:nth-child(2),
+      #sc_table_wrap tr:not(.detail-row) td:nth-child(2) {
+        position: sticky;
+        left: 3.2rem;
+        z-index: 2;
+        background: inherit;
+        box-shadow: 2px 0 5px -2px rgba(0,0,0,0.12);
+      }
+      #sc_table_wrap thead th:nth-child(1),
+      #sc_table_wrap thead th:nth-child(2) {
+        background: #f8fafc;
+        z-index: 3;
+      }
+    }
   </style>
 </head>
 <body>
@@ -105,16 +137,16 @@
         <thead id="sc_thead">
           <tr>
             <th style="width:3.2rem; text-align:center;">Rank</th>
-            <th class="sortable" onclick="handleSort('full_name',event)" id="th_full_name">Runner<span id="si_full_name"></span></th>
-            <th class="sortable" onclick="handleSort('unique_id',event)" id="th_unique_id">Unique ID<span id="si_unique_id"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_participation',event)" id="th_total_participation">Participation<span id="si_total_participation"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_bib_collection',event)" id="th_total_bib_collection">Bib Collection<span id="si_total_bib_collection"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_bib_distribution',event)" id="th_total_bib_distribution">Bib Distribution<span id="si_total_bib_distribution"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_bus_coordination',event)" id="th_total_bus_coordination">Bus Coordination<span id="si_total_bus_coordination"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_car_pooling',event)" id="th_total_car_pooling">Car Pooling<span id="si_total_car_pooling"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_miscellaneous',event)" id="th_total_miscellaneous">Miscellaneous<span id="si_total_miscellaneous"></span></th>
-            <th class="sortable" style="text-align:right;" onclick="handleSort('total_volunteer_score',event)" id="th_total_volunteer_score">Total Vol. Score<span id="si_total_volunteer_score"></span></th>
-            <th class="sortable sort-active" style="text-align:right;" onclick="handleSort('score_pct',event)" id="th_score_pct">Score %<span id="si_score_pct"></span></th>
+            <th class="sortable" onclick="handleSort('full_name',event)" id="th_full_name" style="min-width:8rem;">Runner<span id="si_full_name"></span></th>
+            <th class="sortable" onclick="handleSort('unique_id',event)" id="th_unique_id" style="width:6rem;">Unique ID<span id="si_unique_id"></span></th>
+            <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_participation',event)" id="th_total_participation">Participation<span id="si_total_participation"></span></th>
+            <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_bib_collection',event)" id="th_total_bib_collection">Bib Collection<span id="si_total_bib_collection"></span></th>
+            <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_bib_distribution',event)" id="th_total_bib_distribution">Bib Distribution<span id="si_total_bib_distribution"></span></th>
+            <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_bus_coordination',event)" id="th_total_bus_coordination">Bus Coordination<span id="si_total_bus_coordination"></span></th>
+            <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_car_pooling',event)" id="th_total_car_pooling">Car Pooling<span id="si_total_car_pooling"></span></th>
+            <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_miscellaneous',event)" id="th_total_miscellaneous">Miscellaneous<span id="si_total_miscellaneous"></span></th>
+            <th class="sortable" style="text-align:right; width:5.5rem; white-space:normal;" onclick="handleSort('total_volunteer_score',event)" id="th_total_volunteer_score">Total Vol. Score<span id="si_total_volunteer_score"></span></th>
+            <th class="sortable sort-active" style="text-align:right; width:4.5rem;" onclick="handleSort('score_pct',event)" id="th_score_pct">Score %<span id="si_score_pct"></span></th>
           </tr>
         </thead>
         <tbody id="sc_tbody"></tbody>
