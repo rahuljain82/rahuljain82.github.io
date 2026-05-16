@@ -14,27 +14,27 @@
     th.sortable:hover { background: #f1f5f9; color: #1e293b; }
     th.sort-active { color: #6366f1; background: #eef2ff; }
     td { padding: 0.45rem 0.75rem; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
-    tr:hover td { filter: brightness(0.97); }
+    .data-row { cursor: pointer; }
+    .data-row:hover td { filter: brightness(0.97); }
     .form-input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.45rem; font-size: 0.9rem; color: #1e293b; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
     .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-
-    /* Row tier backgrounds */
     .tier-red    { background: #fef2f2; }
     .tier-orange { background: #fff7ed; }
     .tier-yellow { background: #fefce8; }
     .tier-green  { background: #f0fdf4; }
-
-    /* Score % badge */
     .sbadge { display:inline-block; padding:0.2rem 0.55rem; border-radius:9999px; font-weight:700; font-size:0.8rem; }
     .sbadge-red    { background:#fee2e2; color:#dc2626; }
     .sbadge-orange { background:#fed7aa; color:#ea580c; }
     .sbadge-yellow { background:#fef08a; color:#ca8a04; }
     .sbadge-green  { background:#bbf7d0; color:#16a34a; }
-
-    .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%; font-weight:700; font-size:0.75rem; }
+    .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border-radius:50%; font-weight:700; font-size:0.75rem; }
     .rank-1 { background:#fbbf24; color:#78350f; }
     .rank-2 { background:#94a3b8; color:#1e293b; }
     .rank-3 { background:#cd7f32; color:#fff; }
+    .detail-row td { background: #f8faff; border-bottom: 2px solid #e2e8f0; padding: 0; }
+    .detail-inner { padding: 0.5rem 1rem 0.85rem 3.2rem; }
+    .detail-sub-th { padding:0.3rem 0.55rem; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+    .detail-sub-td { padding:0.3rem 0.55rem; font-size:0.78rem; border-bottom:1px solid #f1f5f9; color:#334155; }
   </style>
 </head>
 <body>
@@ -69,7 +69,6 @@
   <!-- SCORECARD SECTION -->
   <div id="scorecardSection" style="display:none;" class="max-w-7xl mx-auto mt-8 px-4 pb-12">
 
-    <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
       <div>
         <h1 class="text-xl font-bold text-gray-800">Volunteer Scorecard</h1>
@@ -83,37 +82,39 @@
       </div>
     </div>
 
-    <!-- Legend -->
-    <div class="flex items-center gap-3 flex-wrap mb-4 text-xs font-semibold">
-      <span class="text-gray-500">Score % tier:</span>
-      <span class="sbadge sbadge-red">Bottom 25%</span>
-      <span class="sbadge sbadge-orange">25–50%</span>
-      <span class="sbadge sbadge-yellow">50–75%</span>
-      <span class="sbadge sbadge-green">Top 25%</span>
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+      <div class="flex items-center gap-3 flex-wrap text-xs font-semibold">
+        <span class="text-gray-500">Score % tier:</span>
+        <span class="sbadge sbadge-red">Bottom 25%</span>
+        <span class="sbadge sbadge-orange">25–50%</span>
+        <span class="sbadge sbadge-yellow">50–75%</span>
+        <span class="sbadge sbadge-green">Top 25%</span>
+      </div>
+      <p class="text-xs text-gray-400">
+        Click column to sort (↓ desc → ↑ asc → off) &nbsp;·&nbsp;
+        <kbd style="background:#f1f5f9;border:1px solid #e2e8f0;padding:0.1rem 0.3rem;border-radius:3px;">Shift</kbd>+click to add secondary sort &nbsp;·&nbsp;
+        Click a row to expand
+      </p>
     </div>
 
-    <!-- Loading / Error -->
     <div id="sc_loading" class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">Loading scorecard...</div>
     <div id="sc_error" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4"></div>
 
-    <!-- Table -->
-    <div id="sc_table_wrap" class="hidden bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height: calc(100vh - 260px); overflow-y: auto;">
+    <div id="sc_table_wrap" class="hidden bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 270px); overflow-y:auto;">
       <table>
-        <thead>
+        <thead id="sc_thead">
           <tr>
-            <th style="width:3rem; text-align:center;">Rank</th>
-            <th>Runner</th>
-            <th>Unique ID</th>
-            <th style="text-align:right;">Participation</th>
-            <th style="text-align:right;">Bib Collection</th>
-            <th style="text-align:right;">Bib Distribution</th>
-            <th style="text-align:right;">Bus Coordination</th>
-            <th style="text-align:right;">Car Pooling</th>
-            <th style="text-align:right;">Miscellaneous</th>
-            <th style="text-align:right;">Total Vol. Score</th>
-            <th class="sortable sort-active" style="text-align:right;" onclick="toggleSort()" id="sc_sort_th">
-              Score % <span id="sc_sort_arrow">&#9660;</span>
-            </th>
+            <th style="width:3.2rem; text-align:center;">Rank</th>
+            <th class="sortable" onclick="handleSort('full_name',event)" id="th_full_name">Runner<span id="si_full_name"></span></th>
+            <th class="sortable" onclick="handleSort('unique_id',event)" id="th_unique_id">Unique ID<span id="si_unique_id"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_participation',event)" id="th_total_participation">Participation<span id="si_total_participation"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_bib_collection',event)" id="th_total_bib_collection">Bib Collection<span id="si_total_bib_collection"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_bib_distribution',event)" id="th_total_bib_distribution">Bib Distribution<span id="si_total_bib_distribution"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_bus_coordination',event)" id="th_total_bus_coordination">Bus Coordination<span id="si_total_bus_coordination"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_car_pooling',event)" id="th_total_car_pooling">Car Pooling<span id="si_total_car_pooling"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_miscellaneous',event)" id="th_total_miscellaneous">Miscellaneous<span id="si_total_miscellaneous"></span></th>
+            <th class="sortable" style="text-align:right;" onclick="handleSort('total_volunteer_score',event)" id="th_total_volunteer_score">Total Vol. Score<span id="si_total_volunteer_score"></span></th>
+            <th class="sortable sort-active" style="text-align:right;" onclick="handleSort('score_pct',event)" id="th_score_pct">Score %<span id="si_score_pct"></span></th>
           </tr>
         </thead>
         <tbody id="sc_tbody"></tbody>
@@ -129,10 +130,24 @@
     const { createClient } = window.supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let scorecardData = [];   // full sorted dataset
-    let filteredData  = [];   // after search
-    let scSortDir = 'desc';   // 'asc' | 'desc'
+    let originalData    = [];   // load order, never mutated
+    let scorecardData   = [];   // working sorted copy
+    let filteredData    = [];
+    let scSortKeys      = [{ col: 'score_pct', dir: 'desc' }];
+    let expandedRunners = new Set();
+    let runnerRaceCache = {};
 
+    const STRING_COLS = new Set(['full_name', 'unique_id']);
+    const ALL_SORT_COLS = [
+      'full_name','unique_id','total_participation',
+      'total_bib_collection','total_bib_distribution','total_bus_coordination',
+      'total_car_pooling','total_miscellaneous','total_volunteer_score','score_pct'
+    ];
+
+    const f1   = v => parseFloat(v || 0).toFixed(1);
+    const fPct = v => (+parseFloat(v || 0).toFixed(2)) + '%';
+
+    // ---- Auth ----
     function showVerifySection() {
       document.getElementById('scorecardSection').style.display = 'none';
       document.getElementById('verifySection').style.display = 'block';
@@ -146,79 +161,119 @@
       const btn = document.getElementById('sc_verify_btn');
       errEl.classList.add('hidden');
       if (!uid) { errEl.textContent = 'Please enter your Runner ID.'; errEl.classList.remove('hidden'); return; }
-
       btn.disabled = true; btn.textContent = 'Verifying...';
       const { data, error } = await db.from('runners').select('unique_id').eq('unique_id', uid).maybeSingle();
       btn.disabled = false; btn.textContent = 'View Scorecard';
-
-      if (error || !data) {
-        errEl.textContent = 'Runner ID not found. Please check and try again.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
+      if (error || !data) { errEl.textContent = 'Runner ID not found. Please check and try again.'; errEl.classList.remove('hidden'); return; }
       document.getElementById('verifySection').style.display = 'none';
       document.getElementById('scorecardSection').style.display = 'block';
       loadScorecard();
     }
 
+    // ---- Load ----
     async function loadScorecard() {
       document.getElementById('sc_loading').style.display = 'block';
       document.getElementById('sc_table_wrap').classList.add('hidden');
       document.getElementById('sc_error').classList.add('hidden');
-
-      const { data, error } = await db
-        .from('volunteer_scorecard_view')
-        .select('unique_id, full_name, total_participation, total_bib_collection, total_bib_distribution, total_bus_coordination, total_car_pooling, total_miscellaneous, total_volunteer_score, score_pct');
-
+      const { data, error } = await db.from('volunteer_scorecard_view').select('*');
       if (error) {
         document.getElementById('sc_loading').style.display = 'none';
-        document.getElementById('sc_error').textContent = 'Could not load scorecard: ' + error.message + '. Make sure race_volunteering_setup.sql has been run in Supabase.';
+        document.getElementById('sc_error').textContent = 'Could not load scorecard: ' + error.message;
         document.getElementById('sc_error').classList.remove('hidden');
         return;
       }
-
-      // Sort desc by score_pct, tiebreak by total_volunteer_score
-      scorecardData = (data || []).sort((a, b) => {
-        const diff = parseFloat(b.score_pct) - parseFloat(a.score_pct);
-        return diff !== 0 ? diff : parseFloat(b.total_volunteer_score) - parseFloat(a.total_volunteer_score);
-      });
-
+      originalData  = data || [];
+      scorecardData = [...originalData];
       document.getElementById('sc_subtitle').textContent =
         `Community-wide volunteering standings — ${scorecardData.length} runners`;
-
-      filteredData = [...scorecardData];
-      renderScorecard();
+      applySortAndRender();
       document.getElementById('sc_loading').style.display = 'none';
       document.getElementById('sc_table_wrap').classList.remove('hidden');
     }
 
-    function toggleSort() {
-      scSortDir = scSortDir === 'desc' ? 'asc' : 'desc';
-      document.getElementById('sc_sort_arrow').innerHTML = scSortDir === 'desc' ? '&#9660;' : '&#9650;';
+    // ---- Sort ----
+    function handleSort(col, event) {
+      if (event.shiftKey) {
+        // Secondary sort: add → desc, cycle desc→asc, asc→remove
+        const idx = scSortKeys.findIndex(k => k.col === col);
+        if (idx === -1) {
+          scSortKeys.push({ col, dir: 'desc' });
+        } else if (scSortKeys[idx].dir === 'desc') {
+          scSortKeys[idx].dir = 'asc';
+        } else {
+          scSortKeys.splice(idx, 1);
+        }
+      } else {
+        // Primary sort: not sorted→desc, desc→asc, asc→off
+        const existing = scSortKeys.length === 1 && scSortKeys[0].col === col ? scSortKeys[0] : null;
+        if (!existing) {
+          scSortKeys = [{ col, dir: 'desc' }];
+        } else if (existing.dir === 'desc') {
+          scSortKeys = [{ col, dir: 'asc' }];
+        } else {
+          scSortKeys = [];   // off — restore original order
+        }
+      }
+      applySortAndRender();
+    }
 
-      const mul = scSortDir === 'desc' ? -1 : 1;
-      scorecardData.sort((a, b) => {
-        const diff = (parseFloat(a.score_pct) - parseFloat(b.score_pct)) * mul;
-        return diff !== 0 ? diff : (parseFloat(a.total_volunteer_score) - parseFloat(b.total_volunteer_score)) * mul;
-      });
-      // Re-apply search filter
-      const q = document.getElementById('sc_search').value.toLowerCase();
+    function applySortAndRender() {
+      if (scSortKeys.length === 0) {
+        scorecardData = [...originalData];
+      } else {
+        scorecardData.sort((a, b) => {
+          for (const k of scSortKeys) {
+            if (STRING_COLS.has(k.col)) {
+              const va = (a[k.col] || '').toLowerCase();
+              const vb = (b[k.col] || '').toLowerCase();
+              const cmp = va.localeCompare(vb);
+              if (cmp !== 0) return k.dir === 'desc' ? -cmp : cmp;
+            } else {
+              const va = parseFloat(a[k.col]) || 0;
+              const vb = parseFloat(b[k.col]) || 0;
+              if (va !== vb) return k.dir === 'desc' ? vb - va : va - vb;
+            }
+          }
+          return 0;
+        });
+      }
+      const q = document.getElementById('sc_search')?.value.toLowerCase() || '';
       filteredData = q
         ? scorecardData.filter(r => (r.full_name||'').toLowerCase().includes(q) || (r.unique_id||'').toLowerCase().includes(q))
         : [...scorecardData];
+      updateSortHeaders();
       renderScorecard();
     }
 
-    function getTier(percentileRank) {
-      // percentileRank: 0 = lowest, 100 = highest in the current sorted set
-      if (percentileRank < 25)  return 'red';
-      if (percentileRank < 50)  return 'orange';
-      if (percentileRank < 75)  return 'yellow';
+    function updateSortHeaders() {
+      ALL_SORT_COLS.forEach(col => {
+        const th = document.getElementById('th_' + col);
+        const si = document.getElementById('si_' + col);
+        if (!th || !si) return;
+        const idx = scSortKeys.findIndex(k => k.col === col);
+        if (idx === -1) {
+          th.classList.remove('sort-active');
+          si.innerHTML = ' <span style="color:#cbd5e1;font-size:0.85em;">↕</span>';
+        } else {
+          th.classList.add('sort-active');
+          const arrow = scSortKeys[idx].dir === 'desc' ? '↓' : '↑';
+          const num   = scSortKeys.length > 1 ? `<sup style="font-size:0.65em;font-weight:700;">${idx + 1}</sup>` : '';
+          si.innerHTML = ` <span style="color:#6366f1;">${arrow}${num}</span>`;
+        }
+      });
+    }
+
+    // ---- Tier ----
+    function getTier(pctRank) {
+      if (pctRank < 25) return 'red';
+      if (pctRank < 50) return 'orange';
+      if (pctRank < 75) return 'yellow';
       return 'green';
     }
 
+    // ---- Render ----
     function renderScorecard() {
+      expandedRunners.clear();
       const tbody = document.getElementById('sc_tbody');
       if (!filteredData.length) {
         tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:2rem;color:#94a3b8;">No data to display.</td></tr>';
@@ -226,56 +281,50 @@
         return;
       }
 
-      // Compute percentile tiers using the FULL sorted set (scorecardData), not filtered
-      const allScores = scorecardData.map(r => parseFloat(r.score_pct) || 0);
-      const n = allScores.length;
-
-      // Assign dense ranks in current sort order (scorecardData)
+      // Ranks always by score_pct desc
+      const byScore = [...scorecardData].sort((a, b) => parseFloat(b.score_pct) - parseFloat(a.score_pct));
       const rankMap = {};
-      let currentRank = 1;
-      const descData = [...scorecardData].sort((a, b) => parseFloat(b.score_pct) - parseFloat(a.score_pct));
-      descData.forEach((r, i) => {
-        if (i > 0 && parseFloat(r.score_pct) < parseFloat(descData[i - 1].score_pct)) currentRank = i + 1;
-        if (rankMap[r.unique_id] === undefined) rankMap[r.unique_id] = currentRank;
+      let curRank = 1;
+      byScore.forEach((r, i) => {
+        if (i > 0 && parseFloat(r.score_pct) < parseFloat(byScore[i - 1].score_pct)) curRank = i + 1;
+        if (rankMap[r.unique_id] === undefined) rankMap[r.unique_id] = curRank;
       });
 
-      // For percentile, use position in the ascending score array
-      const sortedScoresAsc = [...allScores].sort((a, b) => a - b);
-      function getPercentileRank(scorePct) {
-        const s = parseFloat(scorePct) || 0;
-        const below = sortedScoresAsc.filter(x => x < s).length;
+      // Percentile based on score_pct
+      const allScores = scorecardData.map(r => parseFloat(r.score_pct) || 0).sort((a, b) => a - b);
+      const n = allScores.length;
+      function getPctRank(s) {
+        const sv = parseFloat(s) || 0;
+        const below = allScores.filter(x => x < sv).length;
         return n <= 1 ? 100 : (below / (n - 1)) * 100;
       }
 
-      const f2 = v => parseFloat(v || 0).toFixed(2);
-
       let html = '';
       filteredData.forEach(r => {
-        const pct = getPercentileRank(r.score_pct);
-        const tier = getTier(pct);
-        const rank = rankMap[r.unique_id] || '—';
-        const scorePct = parseFloat(r.score_pct || 0).toFixed(2);
+        const uid  = r.unique_id;
+        const tier = getTier(getPctRank(r.score_pct));
+        const rank = rankMap[uid] || '—';
+        const rankCell = rank === 1 ? `<span class="rank-badge rank-1">1</span>`
+          : rank === 2 ? `<span class="rank-badge rank-2">2</span>`
+          : rank === 3 ? `<span class="rank-badge rank-3">3</span>`
+          : `<span style="font-size:0.8rem;color:#94a3b8;font-weight:600;">${rank}</span>`;
 
-        let rankCell;
-        if (rank === 1) rankCell = `<span class="rank-badge rank-1">1</span>`;
-        else if (rank === 2) rankCell = `<span class="rank-badge rank-2">2</span>`;
-        else if (rank === 3) rankCell = `<span class="rank-badge rank-3">3</span>`;
-        else rankCell = `<span style="font-size:0.8rem;color:#94a3b8;font-weight:600;">${rank}</span>`;
-
-        html += `<tr class="tier-${tier}">
-          <td style="text-align:center;">${rankCell}</td>
-          <td style="font-weight:600;">${esc(r.full_name || '—')}</td>
-          <td style="font-family:monospace;font-size:0.75rem;color:#6366f1;">${esc(r.unique_id)}</td>
-          <td style="text-align:right;">${r.total_participation ?? 0}</td>
-          <td style="text-align:right;">${f2(r.total_bib_collection)}</td>
-          <td style="text-align:right;">${f2(r.total_bib_distribution)}</td>
-          <td style="text-align:right;">${f2(r.total_bus_coordination)}</td>
-          <td style="text-align:right;">${f2(r.total_car_pooling)}</td>
-          <td style="text-align:right;">${f2(r.total_miscellaneous)}</td>
-          <td style="text-align:right;font-weight:600;">${f2(r.total_volunteer_score)}</td>
-          <td style="text-align:right;">
-            <span class="sbadge sbadge-${tier}">${scorePct}%</span>
+        html += `<tr id="sc_row_${uid}" class="data-row tier-${tier}" onclick="toggleRunnerExpand('${uid}')">
+          <td style="text-align:center;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:3px;">
+              <span id="sc_chev_${uid}" style="font-size:0.6rem;color:#94a3b8;">▶</span>${rankCell}
+            </div>
           </td>
+          <td style="font-weight:600;">${esc(r.full_name||'—')}</td>
+          <td style="font-family:monospace;font-size:0.75rem;color:#6366f1;">${esc(uid)}</td>
+          <td style="text-align:right;">${r.total_participation ?? 0}</td>
+          <td style="text-align:right;">${f1(r.total_bib_collection)}</td>
+          <td style="text-align:right;">${f1(r.total_bib_distribution)}</td>
+          <td style="text-align:right;">${f1(r.total_bus_coordination)}</td>
+          <td style="text-align:right;">${f1(r.total_car_pooling)}</td>
+          <td style="text-align:right;">${f1(r.total_miscellaneous)}</td>
+          <td style="text-align:right;font-weight:600;">${f1(r.total_volunteer_score)}</td>
+          <td style="text-align:right;"><span class="sbadge sbadge-${tier}">${fPct(r.score_pct)}</span></td>
         </tr>`;
       });
 
@@ -286,11 +335,82 @@
           : `${scorecardData.length} runners`;
     }
 
+    // ---- Expand ----
+    async function toggleRunnerExpand(uid) {
+      if (expandedRunners.has(uid)) {
+        expandedRunners.delete(uid);
+        document.getElementById('sc_detail_' + uid)?.remove();
+        const chev = document.getElementById('sc_chev_' + uid);
+        if (chev) chev.textContent = '▶';
+        return;
+      }
+      expandedRunners.add(uid);
+      const chev = document.getElementById('sc_chev_' + uid);
+      if (chev) chev.textContent = '▼';
+
+      if (!runnerRaceCache[uid]) {
+        const { data } = await db.from('race_volunteering').select('*').eq('runner_unique_id', uid).order('race_name');
+        runnerRaceCache[uid] = data || [];
+      }
+      const races = runnerRaceCache[uid];
+      const runnerRow = document.getElementById('sc_row_' + uid);
+      if (!runnerRow) return;
+
+      const thS = 'text-align:right;', thL = 'text-align:left;';
+      let inner = `<div class="detail-inner">
+        <div style="font-size:0.68rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Race-by-Race Breakdown</div>`;
+
+      if (!races.length) {
+        inner += `<div style="color:#94a3b8;font-size:0.82rem;">No race entries found.</div>`;
+      } else {
+        inner += `<div style="overflow-x:auto;"><table style="border-collapse:collapse;min-width:580px;">
+          <thead><tr>
+            <th class="detail-sub-th" style="${thL}">Race</th>
+            <th class="detail-sub-th" style="${thS}">Participation</th>
+            <th class="detail-sub-th" style="${thS}">Bib Collection</th>
+            <th class="detail-sub-th" style="${thS}">Bib Distribution</th>
+            <th class="detail-sub-th" style="${thS}">Bus Coord.</th>
+            <th class="detail-sub-th" style="${thS}">Car Pooling</th>
+            <th class="detail-sub-th" style="${thS}">Miscellaneous</th>
+            <th class="detail-sub-th" style="${thS}">Vol. Score</th>
+          </tr></thead><tbody>`;
+        races.forEach(race => {
+          const vol = ['bib_collection','bib_distribution','bus_coordination','car_pooling','miscellaneous']
+            .reduce((s, k) => s + (parseFloat(race[k]) || 0), 0);
+          inner += `<tr>
+            <td class="detail-sub-td" style="${thL}font-weight:600;">${esc(race.race_name)}</td>
+            <td class="detail-sub-td" style="${thS}">${race.participation_count || 0}</td>
+            <td class="detail-sub-td" style="${thS}">${f1(race.bib_collection)}</td>
+            <td class="detail-sub-td" style="${thS}">${f1(race.bib_distribution)}</td>
+            <td class="detail-sub-td" style="${thS}">${f1(race.bus_coordination)}</td>
+            <td class="detail-sub-td" style="${thS}">${f1(race.car_pooling)}</td>
+            <td class="detail-sub-td" style="${thS}">${f1(race.miscellaneous)}</td>
+            <td class="detail-sub-td" style="${thS}font-weight:600;">${f1(vol)}</td>
+          </tr>`;
+        });
+        inner += `</tbody></table></div>`;
+        const runner = scorecardData.find(r => r.unique_id === uid);
+        if (runner) {
+          const pc = runner.total_participation || 0;
+          const formula = pc > 0
+            ? `${f1(runner.total_volunteer_score)} ÷ ${pc} × 100 = <strong>${fPct(runner.score_pct)}</strong>`
+            : `Participation is 0 → Score % = <strong>0%</strong>`;
+          inner += `<div style="margin-top:0.6rem;font-size:0.75rem;color:#475569;background:#f1f5f9;border-radius:0.4rem;padding:0.4rem 0.65rem;display:inline-block;">
+            Score % = Total Vol. Score ÷ Total Participation × 100 &nbsp;→&nbsp; ${formula}
+          </div>`;
+        }
+      }
+      inner += `</div>`;
+      runnerRow.insertAdjacentHTML('afterend',
+        `<tr id="sc_detail_${uid}" class="detail-row"><td colspan="11">${inner}</td></tr>`);
+    }
+
+    // ---- Search ----
     function filterScorecard() {
       const q = document.getElementById('sc_search').value.toLowerCase();
       filteredData = scorecardData.filter(r =>
-        (r.full_name || '').toLowerCase().includes(q) ||
-        (r.unique_id || '').toLowerCase().includes(q)
+        (r.full_name||'').toLowerCase().includes(q) ||
+        (r.unique_id||'').toLowerCase().includes(q)
       );
       renderScorecard();
     }

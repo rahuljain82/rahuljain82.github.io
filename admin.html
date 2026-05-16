@@ -2611,12 +2611,12 @@
           <td style="${tdS}font-weight:600;">${esc(r.first_name)} ${esc(r.last_name || '')}${dot}</td>
           <td style="${tdS}font-family:monospace;font-size:0.75rem;color:#6366f1;">${esc(r.unique_id)}</td>
           <td style="${tdS}">${r.flat_number ?? '—'}</td>
-          <td style="${tdS}"><input id="rv_pc_${r.unique_id}"  type="number" min="0"           value="${v('participation_count')}"  placeholder="0"    style="${inS}" /></td>
-          <td style="${tdS}"><input id="rv_bc_${r.unique_id}"  type="number" min="0" step="0.01" value="${v('bib_collection')}"       placeholder="0.00" style="${inS}" /></td>
-          <td style="${tdS}"><input id="rv_bd_${r.unique_id}"  type="number" min="0" step="0.01" value="${v('bib_distribution')}"     placeholder="0.00" style="${inS}" /></td>
-          <td style="${tdS}"><input id="rv_bsc_${r.unique_id}" type="number" min="0" step="0.01" value="${v('bus_coordination')}"     placeholder="0.00" style="${inS}" /></td>
-          <td style="${tdS}"><input id="rv_cp_${r.unique_id}"  type="number" min="0" step="0.01" value="${v('car_pooling')}"          placeholder="0.00" style="${inS}" /></td>
-          <td style="${tdS}"><input id="rv_misc_${r.unique_id}"type="number" min="0" step="0.01" value="${v('miscellaneous')}"        placeholder="0.00" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_pc_${r.unique_id}"  type="number" min="0" step="1" value="${v('participation_count')}"  placeholder="0" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_bc_${r.unique_id}"  type="number" min="0" step="1" value="${v('bib_collection')}"       placeholder="0" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_bd_${r.unique_id}"  type="number" min="0" step="1" value="${v('bib_distribution')}"     placeholder="0" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_bsc_${r.unique_id}" type="number" min="0" step="1" value="${v('bus_coordination')}"     placeholder="0" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_cp_${r.unique_id}"  type="number" min="0" step="1" value="${v('car_pooling')}"          placeholder="0" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_misc_${r.unique_id}"type="number" min="0" step="1" value="${v('miscellaneous')}"        placeholder="0" style="${inS}" /></td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -2640,11 +2640,11 @@
         if (pcEl) {
           // Visible row — read from DOM
           const pc   = parseInt(pcEl.value) || 0;
-          const bc   = parseFloat(document.getElementById('rv_bc_'  + uid)?.value) || 0;
-          const bd   = parseFloat(document.getElementById('rv_bd_'  + uid)?.value) || 0;
-          const bsc  = parseFloat(document.getElementById('rv_bsc_' + uid)?.value) || 0;
-          const cp   = parseFloat(document.getElementById('rv_cp_'  + uid)?.value) || 0;
-          const misc = parseFloat(document.getElementById('rv_misc_'+ uid)?.value) || 0;
+          const bc   = parseInt(document.getElementById('rv_bc_'  + uid)?.value) || 0;
+          const bd   = parseInt(document.getElementById('rv_bd_'  + uid)?.value) || 0;
+          const bsc  = parseInt(document.getElementById('rv_bsc_' + uid)?.value) || 0;
+          const cp   = parseInt(document.getElementById('rv_cp_'  + uid)?.value) || 0;
+          const misc = parseInt(document.getElementById('rv_misc_'+ uid)?.value) || 0;
           if (existing || pc || bc || bd || bsc || cp || misc) {
             toUpsert.push({ race_name: rvCurrentRace, runner_unique_id: uid, participation_count: pc, bib_collection: bc, bib_distribution: bd, bus_coordination: bsc, car_pooling: cp, miscellaneous: misc });
           }
