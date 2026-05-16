@@ -9,28 +9,29 @@
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; min-height: 100vh; }
     table { border-collapse: collapse; width: 100%; }
-    th { background: #f8fafc; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; padding: 0.6rem 0.85rem; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 1; white-space: nowrap; }
-    td { padding: 0.5rem 0.85rem; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+    th { background: #f8fafc; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; padding: 0.55rem 0.75rem; text-align: left; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: #f1f5f9; color: #1e293b; }
+    th.sort-active { color: #6366f1; background: #eef2ff; }
+    td { padding: 0.45rem 0.75rem; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
     tr:hover td { filter: brightness(0.97); }
     .form-input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.45rem; font-size: 0.9rem; color: #1e293b; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
     .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
 
+    /* Row tier backgrounds */
     .tier-red    { background: #fef2f2; }
     .tier-orange { background: #fff7ed; }
     .tier-yellow { background: #fefce8; }
     .tier-green  { background: #f0fdf4; }
-    .tier-red    td { color: #7f1d1d; }
-    .tier-orange td { color: #7c2d12; }
-    .tier-yellow td { color: #713f12; }
-    .tier-green  td { color: #14532d; }
 
-    .score-badge-red    { background:#fee2e2; color:#dc2626; }
-    .score-badge-orange { background:#fed7aa; color:#ea580c; }
-    .score-badge-yellow { background:#fef08a; color:#ca8a04; }
-    .score-badge-green  { background:#bbf7d0; color:#16a34a; }
-    .score-badge { display:inline-block; padding:0.2rem 0.55rem; border-radius:9999px; font-weight:700; font-size:0.82rem; }
+    /* Score % badge */
+    .sbadge { display:inline-block; padding:0.2rem 0.55rem; border-radius:9999px; font-weight:700; font-size:0.8rem; }
+    .sbadge-red    { background:#fee2e2; color:#dc2626; }
+    .sbadge-orange { background:#fed7aa; color:#ea580c; }
+    .sbadge-yellow { background:#fef08a; color:#ca8a04; }
+    .sbadge-green  { background:#bbf7d0; color:#16a34a; }
 
-    .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%; font-weight:700; font-size:0.78rem; }
+    .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border-radius:50%; font-weight:700; font-size:0.75rem; }
     .rank-1 { background:#fbbf24; color:#78350f; }
     .rank-2 { background:#94a3b8; color:#1e293b; }
     .rank-3 { background:#cd7f32; color:#fff; }
@@ -66,10 +67,10 @@
   </div>
 
   <!-- SCORECARD SECTION -->
-  <div id="scorecardSection" style="display:none;" class="max-w-5xl mx-auto mt-8 px-4 pb-12">
+  <div id="scorecardSection" style="display:none;" class="max-w-7xl mx-auto mt-8 px-4 pb-12">
 
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
       <div>
         <h1 class="text-xl font-bold text-gray-800">Volunteer Scorecard</h1>
         <p class="text-sm text-gray-500 mt-0.5" id="sc_subtitle">Community-wide volunteering standings</p>
@@ -78,17 +79,17 @@
         <input id="sc_search" type="text" placeholder="Search by name or ID..."
           oninput="filterScorecard()"
           class="p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 min-w-44" />
-        <button onclick="verifySection()" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg px-3 py-2 transition-colors">Logout</button>
+        <button onclick="showVerifySection()" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg px-3 py-2 transition-colors">Logout</button>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="flex items-center gap-3 flex-wrap mb-4 text-xs font-semibold">
-      <span class="text-gray-500">Score tier:</span>
-      <span class="score-badge score-badge-red">Bottom 25%</span>
-      <span class="score-badge score-badge-orange">25–50%</span>
-      <span class="score-badge score-badge-yellow">50–75%</span>
-      <span class="score-badge score-badge-green">Top 25%</span>
+      <span class="text-gray-500">Score % tier:</span>
+      <span class="sbadge sbadge-red">Bottom 25%</span>
+      <span class="sbadge sbadge-orange">25–50%</span>
+      <span class="sbadge sbadge-yellow">50–75%</span>
+      <span class="sbadge sbadge-green">Top 25%</span>
     </div>
 
     <!-- Loading / Error -->
@@ -96,16 +97,23 @@
     <div id="sc_error" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4"></div>
 
     <!-- Table -->
-    <div id="sc_table_wrap" class="hidden bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 260px); overflow-y:auto;">
+    <div id="sc_table_wrap" class="hidden bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height: calc(100vh - 260px); overflow-y: auto;">
       <table>
         <thead>
           <tr>
-            <th style="width:3rem;">Rank</th>
+            <th style="width:3rem; text-align:center;">Rank</th>
             <th>Runner</th>
             <th>Unique ID</th>
-            <th style="text-align:right;">Total Participation</th>
-            <th style="text-align:right;">Total Volunteer Score</th>
-            <th style="text-align:right;">Score</th>
+            <th style="text-align:right;">Participation</th>
+            <th style="text-align:right;">Bib Collection</th>
+            <th style="text-align:right;">Bib Distribution</th>
+            <th style="text-align:right;">Bus Coordination</th>
+            <th style="text-align:right;">Car Pooling</th>
+            <th style="text-align:right;">Miscellaneous</th>
+            <th style="text-align:right;">Total Vol. Score</th>
+            <th class="sortable sort-active" style="text-align:right;" onclick="toggleSort()" id="sc_sort_th">
+              Score % <span id="sc_sort_arrow">&#9660;</span>
+            </th>
           </tr>
         </thead>
         <tbody id="sc_tbody"></tbody>
@@ -121,10 +129,11 @@
     const { createClient } = window.supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let scorecardData = [];
-    let filteredData = [];
+    let scorecardData = [];   // full sorted dataset
+    let filteredData  = [];   // after search
+    let scSortDir = 'desc';   // 'asc' | 'desc'
 
-    function verifySection() {
+    function showVerifySection() {
       document.getElementById('scorecardSection').style.display = 'none';
       document.getElementById('verifySection').style.display = 'block';
       document.getElementById('sc_runner_id').value = '';
@@ -158,22 +167,21 @@
       document.getElementById('sc_table_wrap').classList.add('hidden');
       document.getElementById('sc_error').classList.add('hidden');
 
-      // Try the aggregated view first
-      const { data: viewData, error: viewErr } = await db
+      const { data, error } = await db
         .from('volunteer_scorecard_view')
-        .select('unique_id, full_name, total_participation, total_volunteer_score, score');
+        .select('unique_id, full_name, total_participation, total_bib_collection, total_bib_distribution, total_bus_coordination, total_car_pooling, total_miscellaneous, total_volunteer_score, score_pct');
 
-      if (viewErr) {
+      if (error) {
         document.getElementById('sc_loading').style.display = 'none';
-        document.getElementById('sc_error').textContent = 'Could not load scorecard: ' + viewErr.message + '. Make sure race_volunteering_setup.sql has been run in Supabase.';
+        document.getElementById('sc_error').textContent = 'Could not load scorecard: ' + error.message + '. Make sure race_volunteering_setup.sql has been run in Supabase.';
         document.getElementById('sc_error').classList.remove('hidden');
         return;
       }
 
-      // Sort by score desc, then by total_volunteer_score desc as tiebreaker
-      scorecardData = (viewData || []).sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return b.total_volunteer_score - a.total_volunteer_score;
+      // Sort desc by score_pct, tiebreak by total_volunteer_score
+      scorecardData = (data || []).sort((a, b) => {
+        const diff = parseFloat(b.score_pct) - parseFloat(a.score_pct);
+        return diff !== 0 ? diff : parseFloat(b.total_volunteer_score) - parseFloat(a.total_volunteer_score);
       });
 
       document.getElementById('sc_subtitle').textContent =
@@ -185,61 +193,88 @@
       document.getElementById('sc_table_wrap').classList.remove('hidden');
     }
 
-    function getTier(percentile) {
-      if (percentile < 25) return 'red';
-      if (percentile < 50) return 'orange';
-      if (percentile < 75) return 'yellow';
+    function toggleSort() {
+      scSortDir = scSortDir === 'desc' ? 'asc' : 'desc';
+      document.getElementById('sc_sort_arrow').innerHTML = scSortDir === 'desc' ? '&#9660;' : '&#9650;';
+
+      const mul = scSortDir === 'desc' ? -1 : 1;
+      scorecardData.sort((a, b) => {
+        const diff = (parseFloat(a.score_pct) - parseFloat(b.score_pct)) * mul;
+        return diff !== 0 ? diff : (parseFloat(a.total_volunteer_score) - parseFloat(b.total_volunteer_score)) * mul;
+      });
+      // Re-apply search filter
+      const q = document.getElementById('sc_search').value.toLowerCase();
+      filteredData = q
+        ? scorecardData.filter(r => (r.full_name||'').toLowerCase().includes(q) || (r.unique_id||'').toLowerCase().includes(q))
+        : [...scorecardData];
+      renderScorecard();
+    }
+
+    function getTier(percentileRank) {
+      // percentileRank: 0 = lowest, 100 = highest in the current sorted set
+      if (percentileRank < 25)  return 'red';
+      if (percentileRank < 50)  return 'orange';
+      if (percentileRank < 75)  return 'yellow';
       return 'green';
     }
 
     function renderScorecard() {
       const tbody = document.getElementById('sc_tbody');
       if (!filteredData.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94a3b8;">No data to display.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:2rem;color:#94a3b8;">No data to display.</td></tr>';
         document.getElementById('sc_row_count').textContent = '';
         return;
       }
 
-      // Calculate percentile tiers based on score, using the full scorecardData set
-      const allScores = scorecardData.map(r => parseFloat(r.score) || 0).sort((a, b) => a - b);
+      // Compute percentile tiers using the FULL sorted set (scorecardData), not filtered
+      const allScores = scorecardData.map(r => parseFloat(r.score_pct) || 0);
       const n = allScores.length;
 
-      function getPercentile(score) {
-        const scoreF = parseFloat(score) || 0;
-        // count how many scores are strictly below this score
-        const below = allScores.filter(s => s < scoreF).length;
+      // Assign dense ranks in current sort order (scorecardData)
+      const rankMap = {};
+      let currentRank = 1;
+      const descData = [...scorecardData].sort((a, b) => parseFloat(b.score_pct) - parseFloat(a.score_pct));
+      descData.forEach((r, i) => {
+        if (i > 0 && parseFloat(r.score_pct) < parseFloat(descData[i - 1].score_pct)) currentRank = i + 1;
+        if (rankMap[r.unique_id] === undefined) rankMap[r.unique_id] = currentRank;
+      });
+
+      // For percentile, use position in the ascending score array
+      const sortedScoresAsc = [...allScores].sort((a, b) => a - b);
+      function getPercentileRank(scorePct) {
+        const s = parseFloat(scorePct) || 0;
+        const below = sortedScoresAsc.filter(x => x < s).length;
         return n <= 1 ? 100 : (below / (n - 1)) * 100;
       }
 
-      // Assign rank using full sorted list (rank by position in scorecardData which is already sorted desc)
-      const rankMap = {};
-      let currentRank = 1;
-      scorecardData.forEach((r, i) => {
-        if (i > 0 && parseFloat(r.score) < parseFloat(scorecardData[i - 1].score)) currentRank = i + 1;
-        rankMap[r.unique_id] = currentRank;
-      });
+      const f2 = v => parseFloat(v || 0).toFixed(2);
 
       let html = '';
       filteredData.forEach(r => {
-        const score = parseFloat(r.score) || 0;
-        const pct = getPercentile(score);
+        const pct = getPercentileRank(r.score_pct);
         const tier = getTier(pct);
         const rank = rankMap[r.unique_id] || '—';
+        const scorePct = parseFloat(r.score_pct || 0).toFixed(2);
 
         let rankCell;
         if (rank === 1) rankCell = `<span class="rank-badge rank-1">1</span>`;
         else if (rank === 2) rankCell = `<span class="rank-badge rank-2">2</span>`;
         else if (rank === 3) rankCell = `<span class="rank-badge rank-3">3</span>`;
-        else rankCell = `<span style="font-size:0.82rem;color:#94a3b8;font-weight:600;">${rank}</span>`;
+        else rankCell = `<span style="font-size:0.8rem;color:#94a3b8;font-weight:600;">${rank}</span>`;
 
         html += `<tr class="tier-${tier}">
           <td style="text-align:center;">${rankCell}</td>
           <td style="font-weight:600;">${esc(r.full_name || '—')}</td>
-          <td style="font-family:monospace;font-size:0.78rem;color:#6366f1;">${esc(r.unique_id)}</td>
+          <td style="font-family:monospace;font-size:0.75rem;color:#6366f1;">${esc(r.unique_id)}</td>
           <td style="text-align:right;">${r.total_participation ?? 0}</td>
-          <td style="text-align:right;">${parseFloat(r.total_volunteer_score || 0).toFixed(2)}</td>
+          <td style="text-align:right;">${f2(r.total_bib_collection)}</td>
+          <td style="text-align:right;">${f2(r.total_bib_distribution)}</td>
+          <td style="text-align:right;">${f2(r.total_bus_coordination)}</td>
+          <td style="text-align:right;">${f2(r.total_car_pooling)}</td>
+          <td style="text-align:right;">${f2(r.total_miscellaneous)}</td>
+          <td style="text-align:right;font-weight:600;">${f2(r.total_volunteer_score)}</td>
           <td style="text-align:right;">
-            <span class="score-badge score-badge-${tier}">${score.toFixed(4)}</span>
+            <span class="sbadge sbadge-${tier}">${scorePct}%</span>
           </td>
         </tr>`;
       });
@@ -262,7 +297,7 @@
 
     function esc(str) {
       if (str === null || str === undefined) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
   </script>
 </body>

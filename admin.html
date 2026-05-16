@@ -389,38 +389,106 @@
 
         <!-- RACE VOLUNTEERING -->
         <div id="ws-race_volunteering" style="display:none;">
-          <div class="mb-4">
-            <p class="text-xs text-gray-500">Enter a race name to manage volunteering data for all runners. Each runner gets a participation count (people who ran through them) and a volunteer score for that race.</p>
-          </div>
+
+          <!-- Race chips bar -->
           <div class="content-card mb-4">
-            <div class="flex gap-3 flex-wrap items-end">
-              <div style="flex:1; min-width:220px;">
-                <label class="form-label">Race Name</label>
-                <input id="rv_race_input" type="text" class="form-input" placeholder="e.g. Airtel Delhi Half Marathon 2025" list="rv_race_suggestions" />
-                <datalist id="rv_race_suggestions"></datalist>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span style="font-size:0.72rem;font-weight:700;color:#64748b;white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Saved Races:</span>
+              <div id="rv_race_chips" class="flex flex-wrap gap-2 flex-1">
+                <span style="font-size:0.78rem;color:#94a3b8;">Loading...</span>
               </div>
-              <button onclick="loadRaceVolunteering()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded whitespace-nowrap transition-colors">Load / Create Race</button>
+              <button onclick="openNewRaceInput()" id="rv_new_race_btn"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors whitespace-nowrap">
+                + New Race
+              </button>
+            </div>
+            <div id="rv_new_race_form" style="display:none;" class="flex gap-3 flex-wrap items-end pt-3 mt-2 border-t border-gray-100">
+              <div style="flex:1;min-width:200px;">
+                <label class="form-label">New Race Name</label>
+                <input id="rv_new_race_input" type="text" class="form-input" placeholder="e.g. ADHM 2025"
+                  onkeydown="if(event.key==='Enter') createNewRace()" />
+              </div>
+              <button onclick="createNewRace()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors">Create &amp; Load</button>
+              <button onclick="closeNewRaceInput()" class="border border-gray-300 text-gray-600 text-sm px-3 py-2 rounded hover:bg-gray-50">Cancel</button>
             </div>
           </div>
+
           <div id="rv_error" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-3"></div>
-          <div id="rv_table_wrap" style="display:none;">
+
+          <!-- Summary card -->
+          <div id="rv_summary" class="content-card mb-4" style="display:none;">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <p class="font-semibold text-gray-700 text-sm" id="rv_race_label"></p>
-              <div class="flex gap-2 flex-wrap">
-                <input id="rv_search" type="text" placeholder="Search runners..." oninput="filterRvTable()"
-                  class="p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 min-w-40" />
-                <button onclick="exportRvExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
-                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Export
-                </button>
+              <div>
+                <p class="font-bold text-gray-800 text-sm" id="rv_summary_title"></p>
+                <p style="font-size:0.72rem;color:#64748b;margin-top:0.15rem;" id="rv_summary_sub"></p>
+              </div>
+              <button onclick="collapseRvDetails()" class="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 border border-gray-200 hover:border-gray-400 rounded px-2 py-1 transition-colors">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                Minimise
+              </button>
+            </div>
+            <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(118px,1fr));">
+              <div style="background:#ede9fe;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#6d28d9;" id="rv_sum_participation">0</p>
+                <p style="font-size:0.65rem;color:#7c3aed;font-weight:700;margin-top:0.15rem;">Total Participation</p>
+              </div>
+              <div style="background:#dbeafe;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#1d4ed8;" id="rv_sum_bib_col">0</p>
+                <p style="font-size:0.65rem;color:#2563eb;font-weight:700;margin-top:0.15rem;">Bib Collection</p>
+              </div>
+              <div style="background:#e0f2fe;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#0369a1;" id="rv_sum_bib_dist">0</p>
+                <p style="font-size:0.65rem;color:#0284c7;font-weight:700;margin-top:0.15rem;">Bib Distribution</p>
+              </div>
+              <div style="background:#dcfce7;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#15803d;" id="rv_sum_bus">0</p>
+                <p style="font-size:0.65rem;color:#16a34a;font-weight:700;margin-top:0.15rem;">Bus Coordination</p>
+              </div>
+              <div style="background:#fef9c3;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#a16207;" id="rv_sum_carpool">0</p>
+                <p style="font-size:0.65rem;color:#ca8a04;font-weight:700;margin-top:0.15rem;">Car Pooling</p>
+              </div>
+              <div style="background:#fce7f3;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#9d174d;" id="rv_sum_misc">0</p>
+                <p style="font-size:0.65rem;color:#be185d;font-weight:700;margin-top:0.15rem;">Miscellaneous</p>
+              </div>
+              <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:0.6rem;padding:0.75rem;text-align:center;">
+                <p class="text-lg font-bold" style="color:#1e293b;" id="rv_sum_total">0</p>
+                <p style="font-size:0.65rem;color:#475569;font-weight:700;margin-top:0.15rem;">Grand Total</p>
               </div>
             </div>
-            <div class="bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 330px); overflow-y:auto;">
+          </div>
+
+          <!-- Table section -->
+          <div id="rv_table_wrap" style="display:none;">
+            <!-- Sticky save/search bar -->
+            <div style="position:sticky;top:0;z-index:10;background:#f1f5f9;padding:0.4rem 0 0.6rem;">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-semibold text-gray-700 text-sm" id="rv_race_label"></span>
+                  <input id="rv_search" type="text" placeholder="Search runners..." oninput="filterRvTable()"
+                    class="p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 min-w-36" />
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="exportRvExcel()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export
+                  </button>
+                  <button onclick="saveAllRv()" id="rv_save_all_btn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition-colors">
+                    Save All Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Scrollable table -->
+            <div class="bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 430px); overflow-y:auto;">
               <div id="rv_table_content" class="p-4 text-gray-400 text-sm">Loading...</div>
             </div>
           </div>
+
           <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-            <strong>Supabase setup:</strong> Run <code>race_volunteering_setup.sql</code> in your Supabase SQL editor to create the required table and scorecard view.
+            <strong>Supabase setup:</strong> Run <code>race_volunteering_setup.sql</code> in your Supabase SQL editor.
           </div>
         </div>
 
@@ -2392,39 +2460,118 @@
     let rvFilteredRunners = [];
 
     async function initRvRaceList() {
-      const { data } = await db.from('race_volunteering').select('race_name');
-      if (!data) return;
-      const races = [...new Set(data.map(r => r.race_name))].sort();
-      const dl = document.getElementById('rv_race_suggestions');
-      if (dl) dl.innerHTML = races.map(r => `<option value="${esc(r)}">`).join('');
+      const chipsEl = document.getElementById('rv_race_chips');
+      if (!chipsEl) return;
+      const [rvRes, rcRes] = await Promise.all([
+        db.from('race_volunteering').select('race_name'),
+        db.from('race_config').select('race_name, include_in_scorecard')
+      ]);
+      if (!rvRes.data || !rvRes.data.length) {
+        chipsEl.innerHTML = '<span style="font-size:0.78rem;color:#94a3b8;">No races yet — click + New Race to create one.</span>';
+        return;
+      }
+      const races = [...new Set(rvRes.data.map(r => r.race_name))].sort();
+      const cfgMap = {};
+      (rcRes.data || []).forEach(r => { cfgMap[r.race_name] = r.include_in_scorecard; });
+      chipsEl.innerHTML = races.map(race => {
+        const active    = rvCurrentRace === race;
+        const included  = cfgMap[race] !== false;
+        const chipStyle = active
+          ? 'background:#6366f1;color:white;border:1px solid #6366f1;'
+          : 'background:white;color:#475569;border:1px solid #e2e8f0;';
+        return `<span style="display:inline-flex;align-items:center;gap:0.35rem;${chipStyle}font-size:0.78rem;font-weight:600;padding:0.2rem 0.65rem 0.2rem 0.45rem;border-radius:9999px;transition:all 0.15s;">
+          <input type="checkbox" ${included ? 'checked' : ''} title="${included ? 'Included in scorecard — uncheck to exclude' : 'Excluded from scorecard — check to include'}"
+            onchange="toggleRaceInclusion('${escAttr(race)}', this.checked)" onclick="event.stopPropagation()"
+            style="width:13px;height:13px;cursor:pointer;accent-color:${active ? 'white' : '#6366f1'};flex-shrink:0;" />
+          <span onclick="loadRaceVolunteering('${escAttr(race)}')" style="cursor:pointer;">${esc(race)}</span>
+        </span>`;
+      }).join('');
     }
 
-    async function loadRaceVolunteering() {
-      const raceName = document.getElementById('rv_race_input').value.trim();
+    function collapseRvDetails() {
+      document.getElementById('rv_summary').style.display = 'none';
+      document.getElementById('rv_table_wrap').style.display = 'none';
+      rvCurrentRace = '';
+      initRvRaceList();
+    }
+
+    async function toggleRaceInclusion(raceName, included) {
+      await db.from('race_config').upsert(
+        { race_name: raceName, include_in_scorecard: included },
+        { onConflict: 'race_name' }
+      );
+      initRvRaceList();
+    }
+
+    function openNewRaceInput() {
+      document.getElementById('rv_new_race_form').style.display = 'flex';
+      document.getElementById('rv_new_race_btn').style.display = 'none';
+      setTimeout(() => document.getElementById('rv_new_race_input').focus(), 50);
+    }
+
+    function closeNewRaceInput() {
+      document.getElementById('rv_new_race_form').style.display = 'none';
+      document.getElementById('rv_new_race_btn').style.display = 'inline-flex';
+      document.getElementById('rv_new_race_input').value = '';
+    }
+
+    function createNewRace() {
+      const name = document.getElementById('rv_new_race_input').value.trim();
+      if (!name) { document.getElementById('rv_new_race_input').focus(); return; }
+      closeNewRaceInput();
+      loadRaceVolunteering(name);
+    }
+
+    async function loadRaceVolunteering(raceName) {
+      if (!raceName) return;
       const errEl = document.getElementById('rv_error');
       errEl.classList.add('hidden');
-      if (!raceName) { errEl.textContent = 'Please enter a race name.'; errEl.classList.remove('hidden'); return; }
       rvCurrentRace = raceName;
       document.getElementById('rv_table_wrap').style.display = 'block';
-      document.getElementById('rv_table_content').innerHTML = '<div class="p-4 text-gray-400 text-sm">Loading runners...</div>';
+      document.getElementById('rv_summary').style.display = 'block';
+      document.getElementById('rv_table_content').innerHTML = '<div style="padding:1rem;color:#94a3b8;font-size:0.85rem;">Loading runners...</div>';
+      initRvRaceList();
 
       if (allRunnersData.length) {
         rvAllRunners = allRunnersData;
       } else {
         const { data, error } = await db.from('runners').select('unique_id, first_name, last_name, flat_number').order('first_name');
-        if (error) { errEl.textContent = 'Error loading runners: ' + error.message; errEl.classList.remove('hidden'); document.getElementById('rv_table_wrap').style.display = 'none'; return; }
+        if (error) { errEl.textContent = 'Error loading runners: ' + error.message; errEl.classList.remove('hidden'); document.getElementById('rv_table_wrap').style.display = 'none'; document.getElementById('rv_summary').style.display = 'none'; return; }
         rvAllRunners = data || [];
       }
 
       const { data: rvData, error: rvErr } = await db.from('race_volunteering').select('*').eq('race_name', raceName);
-      if (rvErr) { errEl.textContent = 'Error loading race data: ' + rvErr.message; errEl.classList.remove('hidden'); document.getElementById('rv_table_wrap').style.display = 'none'; return; }
+      if (rvErr) { errEl.textContent = 'Error loading race data: ' + rvErr.message; errEl.classList.remove('hidden'); document.getElementById('rv_table_wrap').style.display = 'none'; document.getElementById('rv_summary').style.display = 'none'; return; }
       rvRaceData = rvData || [];
 
-      document.getElementById('rv_race_label').textContent = `Race: ${raceName} — ${rvAllRunners.length} runners`;
+      document.getElementById('rv_race_label').textContent = raceName;
       document.getElementById('rv_search').value = '';
       rvFilteredRunners = [...rvAllRunners];
+      updateRvSummary();
       renderRvTable();
-      initRvRaceList();
+    }
+
+    function updateRvSummary() {
+      let totPc = 0, totBc = 0, totBd = 0, totBs = 0, totCp = 0, totMisc = 0;
+      rvRaceData.forEach(r => {
+        totPc   += r.participation_count || 0;
+        totBc   += parseFloat(r.bib_collection  || 0);
+        totBd   += parseFloat(r.bib_distribution || 0);
+        totBs   += parseFloat(r.bus_coordination || 0);
+        totCp   += parseFloat(r.car_pooling || 0);
+        totMisc += parseFloat(r.miscellaneous || 0);
+      });
+      const grand = totBc + totBd + totBs + totCp + totMisc;
+      const fmt = v => v.toFixed(2).replace(/\.00$/, '');
+      document.getElementById('rv_summary_title').textContent = rvCurrentRace;
+      document.getElementById('rv_summary_sub').textContent = `${rvRaceData.length} runners with data out of ${rvAllRunners.length} total`;
+      document.getElementById('rv_sum_participation').textContent = totPc;
+      document.getElementById('rv_sum_bib_col').textContent  = fmt(totBc);
+      document.getElementById('rv_sum_bib_dist').textContent = fmt(totBd);
+      document.getElementById('rv_sum_bus').textContent      = fmt(totBs);
+      document.getElementById('rv_sum_carpool').textContent  = fmt(totCp);
+      document.getElementById('rv_sum_misc').textContent     = fmt(totMisc);
+      document.getElementById('rv_sum_total').textContent    = fmt(grand);
     }
 
     function filterRvTable() {
@@ -2439,66 +2586,116 @@
 
     function renderRvTable() {
       const wrap = document.getElementById('rv_table_content');
-      if (!rvFilteredRunners.length) { wrap.innerHTML = '<div class="p-4 text-gray-400 text-sm text-center">No runners found.</div>'; return; }
+      if (!rvFilteredRunners.length) { wrap.innerHTML = '<div style="padding:1rem;color:#94a3b8;font-size:0.85rem;text-align:center;">No runners found.</div>'; return; }
       const rvMap = {};
       rvRaceData.forEach(r => { rvMap[r.runner_unique_id] = r; });
-      const thS = 'padding:0.55rem 0.75rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:1;';
-      const tdS = 'padding:0.5rem 0.75rem;font-size:0.82rem;color:#334155;border-bottom:1px solid #f1f5f9;vertical-align:middle;';
+      const thS = 'padding:0.5rem 0.6rem;font-size:0.67rem;text-transform:uppercase;letter-spacing:0.05em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap;background:#f8fafc;';
+      const tdS = 'padding:0.45rem 0.6rem;font-size:0.8rem;color:#334155;border-bottom:1px solid #f1f5f9;vertical-align:middle;';
+      const inS = 'width:76px;padding:0.25rem 0.4rem;border:1px solid #e2e8f0;border-radius:0.3rem;font-size:0.8rem;outline:none;';
       let html = `<table style="width:100%;border-collapse:collapse;"><thead><tr>
-        <th style="${thS}">Runner</th><th style="${thS}">Unique ID</th><th style="${thS}">Flat</th>
-        <th style="${thS}">Participation Count</th><th style="${thS}">Volunteer Score</th><th style="${thS}">Action</th>
+        <th style="${thS}">Runner</th>
+        <th style="${thS}">Unique ID</th>
+        <th style="${thS}">Flat</th>
+        <th style="${thS}">Participation</th>
+        <th style="${thS}">Bib Collection</th>
+        <th style="${thS}">Bib Distribution</th>
+        <th style="${thS}">Bus Coordination</th>
+        <th style="${thS}">Car Pooling</th>
+        <th style="${thS}">Miscellaneous</th>
       </tr></thead><tbody>`;
       rvFilteredRunners.forEach(r => {
         const ex = rvMap[r.unique_id];
-        const pc = ex != null ? ex.participation_count : '';
-        const vs = ex != null ? ex.volunteer_score : '';
-        const dot = ex != null ? ' <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;" title="Saved"></span>' : '';
+        const dot = ex ? ' <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;" title="Data saved"></span>' : '';
+        const v = k => ex != null ? (ex[k] ?? '') : '';
         html += `<tr id="rv_row_${r.unique_id}" style="border-bottom:1px solid #f1f5f9;">
-          <td style="${tdS} font-weight:600;">${esc(r.first_name)} ${esc(r.last_name || '')}${dot}</td>
-          <td style="${tdS} font-family:monospace;font-size:0.78rem;color:#6366f1;">${esc(r.unique_id)}</td>
+          <td style="${tdS}font-weight:600;">${esc(r.first_name)} ${esc(r.last_name || '')}${dot}</td>
+          <td style="${tdS}font-family:monospace;font-size:0.75rem;color:#6366f1;">${esc(r.unique_id)}</td>
           <td style="${tdS}">${r.flat_number ?? '—'}</td>
-          <td style="${tdS}"><input id="rv_pc_${r.unique_id}" type="number" min="0" value="${pc}" placeholder="0"
-            style="width:90px;padding:0.3rem 0.5rem;border:1px solid #e2e8f0;border-radius:0.35rem;font-size:0.82rem;outline:none;" /></td>
-          <td style="${tdS}"><input id="rv_vs_${r.unique_id}" type="number" min="0" step="0.01" value="${vs}" placeholder="0.00"
-            style="width:90px;padding:0.3rem 0.5rem;border:1px solid #e2e8f0;border-radius:0.35rem;font-size:0.82rem;outline:none;" /></td>
-          <td style="${tdS}"><button id="rv_btn_${r.unique_id}" onclick="saveRvRow('${r.unique_id}')"
-            style="background:#6366f1;color:white;font-size:0.75rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:0.35rem;border:none;cursor:pointer;">Save</button></td>
+          <td style="${tdS}"><input id="rv_pc_${r.unique_id}"  type="number" min="0"           value="${v('participation_count')}"  placeholder="0"    style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_bc_${r.unique_id}"  type="number" min="0" step="0.01" value="${v('bib_collection')}"       placeholder="0.00" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_bd_${r.unique_id}"  type="number" min="0" step="0.01" value="${v('bib_distribution')}"     placeholder="0.00" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_bsc_${r.unique_id}" type="number" min="0" step="0.01" value="${v('bus_coordination')}"     placeholder="0.00" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_cp_${r.unique_id}"  type="number" min="0" step="0.01" value="${v('car_pooling')}"          placeholder="0.00" style="${inS}" /></td>
+          <td style="${tdS}"><input id="rv_misc_${r.unique_id}"type="number" min="0" step="0.01" value="${v('miscellaneous')}"        placeholder="0.00" style="${inS}" /></td>
         </tr>`;
       });
       html += '</tbody></table>';
       wrap.innerHTML = html;
     }
 
-    async function saveRvRow(uniqueId) {
-      const pc = parseInt(document.getElementById('rv_pc_' + uniqueId).value) || 0;
-      const vs = parseFloat(document.getElementById('rv_vs_' + uniqueId).value) || 0;
-      const btn = document.getElementById('rv_btn_' + uniqueId);
+    async function saveAllRv() {
+      const btn = document.getElementById('rv_save_all_btn');
+      const errEl = document.getElementById('rv_error');
+      errEl.classList.add('hidden');
       btn.disabled = true; btn.textContent = 'Saving…';
-      const { error } = await db.from('race_volunteering').upsert(
-        { race_name: rvCurrentRace, runner_unique_id: uniqueId, participation_count: pc, volunteer_score: vs },
-        { onConflict: 'race_name,runner_unique_id' }
-      );
-      btn.disabled = false; btn.textContent = 'Save';
-      if (error) { alert('Save failed: ' + error.message); return; }
-      const idx = rvRaceData.findIndex(r => r.runner_unique_id === uniqueId);
-      if (idx >= 0) { rvRaceData[idx].participation_count = pc; rvRaceData[idx].volunteer_score = vs; }
-      else { rvRaceData.push({ race_name: rvCurrentRace, runner_unique_id: uniqueId, participation_count: pc, volunteer_score: vs }); }
-      const row = document.getElementById('rv_row_' + uniqueId);
-      if (row) { row.style.background = '#f0fdf4'; setTimeout(() => { if (row) row.style.background = ''; }, 1500); }
+
+      const rvMap = {};
+      rvRaceData.forEach(r => { rvMap[r.runner_unique_id] = r; });
+
+      const toUpsert = [];
+      rvAllRunners.forEach(r => {
+        const uid = r.unique_id;
+        const pcEl = document.getElementById('rv_pc_' + uid);
+        const existing = rvMap[uid];
+        if (pcEl) {
+          // Visible row — read from DOM
+          const pc   = parseInt(pcEl.value) || 0;
+          const bc   = parseFloat(document.getElementById('rv_bc_'  + uid)?.value) || 0;
+          const bd   = parseFloat(document.getElementById('rv_bd_'  + uid)?.value) || 0;
+          const bsc  = parseFloat(document.getElementById('rv_bsc_' + uid)?.value) || 0;
+          const cp   = parseFloat(document.getElementById('rv_cp_'  + uid)?.value) || 0;
+          const misc = parseFloat(document.getElementById('rv_misc_'+ uid)?.value) || 0;
+          if (existing || pc || bc || bd || bsc || cp || misc) {
+            toUpsert.push({ race_name: rvCurrentRace, runner_unique_id: uid, participation_count: pc, bib_collection: bc, bib_distribution: bd, bus_coordination: bsc, car_pooling: cp, miscellaneous: misc });
+          }
+        } else if (existing) {
+          // Hidden by search filter — preserve existing values unchanged
+          toUpsert.push({ race_name: rvCurrentRace, runner_unique_id: uid, participation_count: existing.participation_count, bib_collection: existing.bib_collection, bib_distribution: existing.bib_distribution, bus_coordination: existing.bus_coordination, car_pooling: existing.car_pooling, miscellaneous: existing.miscellaneous });
+        }
+      });
+
+      if (!toUpsert.length) {
+        btn.disabled = false; btn.textContent = 'Save All Changes';
+        errEl.textContent = 'No data to save — fill in at least one runner first.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      for (let i = 0; i < toUpsert.length; i += 100) {
+        const { error } = await db.from('race_volunteering').upsert(toUpsert.slice(i, i + 100), { onConflict: 'race_name,runner_unique_id' });
+        if (error) { btn.disabled = false; btn.textContent = 'Save All Changes'; alert('Save failed: ' + error.message); return; }
+      }
+
+      const { data } = await db.from('race_volunteering').select('*').eq('race_name', rvCurrentRace);
+      rvRaceData = data || [];
+      updateRvSummary();
+      initRvRaceList();
+      renderRvTable();
+
+      btn.disabled = false;
+      btn.textContent = 'Saved!'; btn.style.background = '#16a34a';
+      setTimeout(() => { btn.textContent = 'Save All Changes'; btn.style.background = ''; }, 2000);
     }
 
     function exportRvExcel() {
       if (!rvAllRunners.length || !rvCurrentRace) { alert('No data to export.'); return; }
       const rvMap = {};
       rvRaceData.forEach(r => { rvMap[r.runner_unique_id] = r; });
-      const rows = rvAllRunners.map(r => ({
-        'Race': rvCurrentRace,
-        'Unique ID': r.unique_id,
-        'Name': r.first_name + ' ' + (r.last_name || ''),
-        'Flat': r.flat_number,
-        'Participation Count': rvMap[r.unique_id]?.participation_count ?? 0,
-        'Volunteer Score': rvMap[r.unique_id]?.volunteer_score ?? 0,
-      }));
+      const rows = rvAllRunners.map(r => {
+        const ex = rvMap[r.unique_id];
+        return {
+          'Race': rvCurrentRace,
+          'Unique ID': r.unique_id,
+          'Name': r.first_name + ' ' + (r.last_name || ''),
+          'Flat': r.flat_number,
+          'Participation Count': ex?.participation_count ?? 0,
+          'Bib Collection':      ex?.bib_collection   ?? 0,
+          'Bib Distribution':    ex?.bib_distribution ?? 0,
+          'Bus Coordination':    ex?.bus_coordination ?? 0,
+          'Car Pooling':         ex?.car_pooling      ?? 0,
+          'Miscellaneous':       ex?.miscellaneous    ?? 0,
+        };
+      });
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, 'Volunteering');
