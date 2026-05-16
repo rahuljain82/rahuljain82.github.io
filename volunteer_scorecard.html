@@ -144,7 +144,7 @@
       'total_car_pooling','total_miscellaneous','total_volunteer_score','score_pct'
     ];
 
-    const f1   = v => parseFloat(v || 0).toFixed(1);
+    const f1   = v => String(Math.round(parseFloat(v || 0)));
     const fPct = v => (+parseFloat(v || 0).toFixed(2)) + '%';
 
     // ---- Auth ----
