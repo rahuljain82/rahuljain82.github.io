@@ -37,8 +37,10 @@
     .detail-sub-td { padding:0.3rem 0.55rem; font-size:0.78rem; border-bottom:1px solid #f1f5f9; color:#334155; }
 
     /* Fixed table layout on all sizes — column widths are honoured; the
-       scrollable wrapper handles overflow in both axes */
-    #sc_table_wrap table { table-layout: fixed; }
+       scrollable wrapper handles overflow in both axes.
+       min-width = sum of all declared column widths (3.2+8+6+5×7+5.5+4.5 = 57.2rem)
+       so the table never squeezes columns below their declared sizes on narrow screens. */
+    #sc_table_wrap table { table-layout: fixed; min-width: 57.5rem; }
 
     /* Column resize handles */
     #sc_table_wrap thead th { position: relative; }
@@ -164,7 +166,7 @@
         <thead id="sc_thead">
           <tr>
             <th class="sortable" onclick="handleSort('rank',event)" id="th_rank" style="width:3.2rem; text-align:center;">Rank<span id="si_rank"></span></th>
-            <th class="sortable" onclick="handleSort('full_name',event)" id="th_full_name" style="min-width:8rem;">Runner<span id="si_full_name"></span></th>
+            <th class="sortable" onclick="handleSort('full_name',event)" id="th_full_name" style="width:8rem;">Runner<span id="si_full_name"></span></th>
             <th class="sortable" onclick="handleSort('unique_id',event)" id="th_unique_id" style="width:6rem;">Unique ID<span id="si_unique_id"></span></th>
             <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_participation',event)" id="th_total_participation">Participation<span id="si_total_participation"></span></th>
             <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_bib_collection',event)" id="th_total_bib_collection">Bib Collection<span id="si_total_bib_collection"></span></th>
