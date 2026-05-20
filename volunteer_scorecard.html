@@ -36,10 +36,9 @@
     .detail-sub-th { padding:0.3rem 0.55rem; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
     .detail-sub-td { padding:0.3rem 0.55rem; font-size:0.78rem; border-bottom:1px solid #f1f5f9; color:#334155; }
 
-    /* Desktop: fixed table layout for controlled column widths */
-    @media (min-width: 769px) {
-      #sc_table_wrap table { table-layout: fixed; }
-    }
+    /* Fixed table layout on all sizes — column widths are honoured; the
+       scrollable wrapper handles overflow in both axes */
+    #sc_table_wrap table { table-layout: fixed; }
 
     /* Column resize handles */
     #sc_table_wrap thead th { position: relative; }
@@ -53,31 +52,46 @@
     .col-resize-handle:hover { background: rgba(99,102,241,0.25); }
     body.col-resizing { cursor: col-resize !important; user-select: none !important; }
 
-    /* Ensure rows have a background so sticky cells inherit correctly */
-    #sc_table_wrap tbody tr { background: #ffffff; }
+    /* ---- Sticky columns: Rank + Runner Name ---- */
+    /* position: sticky overrides the `position: relative` set by the resize-handle rule */
+    #sc_table_wrap tr:not(.detail-row) th:nth-child(1),
+    #sc_table_wrap tr:not(.detail-row) td:nth-child(1),
+    #sc_table_wrap tr:not(.detail-row) th:nth-child(2),
+    #sc_table_wrap tr:not(.detail-row) td:nth-child(2) { position: sticky; }
 
-    /* Mobile: pin Rank and Runner Name columns */
+    #sc_table_wrap tr:not(.detail-row) th:nth-child(1),
+    #sc_table_wrap tr:not(.detail-row) td:nth-child(1) { left: 0; z-index: 2; }
+
+    /* left must equal the exact rendered width of column 1 (set to 3.2rem in the th) */
+    #sc_table_wrap tr:not(.detail-row) th:nth-child(2),
+    #sc_table_wrap tr:not(.detail-row) td:nth-child(2) {
+      left: 3.2rem;
+      z-index: 2;
+      box-shadow: 2px 0 6px -2px rgba(0,0,0,0.18);
+    }
+
+    /* Explicit opaque backgrounds — `background: inherit` is unreliable in tables
+       and lets scrolled content bleed through sticky cells */
+    #sc_table_wrap thead th:nth-child(1),
+    #sc_table_wrap thead th:nth-child(2) { background: #f8fafc; z-index: 3; }
+    #sc_table_wrap thead th.sort-active:nth-child(1),
+    #sc_table_wrap thead th.sort-active:nth-child(2) { background: #eef2ff; z-index: 3; }
+
+    #sc_table_wrap tbody td:nth-child(1),
+    #sc_table_wrap tbody td:nth-child(2) { background: #ffffff; }
+    #sc_table_wrap tbody tr.tier-red    td:nth-child(1),
+    #sc_table_wrap tbody tr.tier-red    td:nth-child(2) { background: #fef2f2; }
+    #sc_table_wrap tbody tr.tier-orange td:nth-child(1),
+    #sc_table_wrap tbody tr.tier-orange td:nth-child(2) { background: #fff7ed; }
+    #sc_table_wrap tbody tr.tier-yellow td:nth-child(1),
+    #sc_table_wrap tbody tr.tier-yellow td:nth-child(2) { background: #fefce8; }
+    #sc_table_wrap tbody tr.tier-green  td:nth-child(1),
+    #sc_table_wrap tbody tr.tier-green  td:nth-child(2) { background: #f0fdf4; }
+
+    /* Tighten cell padding on narrow screens to maximise visible columns */
     @media (max-width: 768px) {
-      #sc_table_wrap tr:not(.detail-row) th:nth-child(1),
-      #sc_table_wrap tr:not(.detail-row) td:nth-child(1) {
-        position: sticky;
-        left: 0;
-        z-index: 2;
-        background: inherit;
-      }
-      #sc_table_wrap tr:not(.detail-row) th:nth-child(2),
-      #sc_table_wrap tr:not(.detail-row) td:nth-child(2) {
-        position: sticky;
-        left: 3.2rem;
-        z-index: 2;
-        background: inherit;
-        box-shadow: 2px 0 5px -2px rgba(0,0,0,0.12);
-      }
-      #sc_table_wrap thead th:nth-child(1),
-      #sc_table_wrap thead th:nth-child(2) {
-        background: #f8fafc;
-        z-index: 3;
-      }
+      td { padding: 0.4rem 0.45rem; }
+      th { padding: 0.5rem 0.45rem; }
     }
   </style>
 </head>
@@ -134,11 +148,12 @@
         <span class="sbadge sbadge-yellow">50–75%</span>
         <span class="sbadge sbadge-green">Top 25%</span>
       </div>
-      <p class="text-xs text-gray-400">
+      <p class="text-xs text-gray-400 hidden sm:block">
         Click column to sort (↓ desc → ↑ asc → off) &nbsp;·&nbsp;
         <kbd style="background:#f1f5f9;border:1px solid #e2e8f0;padding:0.1rem 0.3rem;border-radius:3px;">Shift</kbd>+click to add secondary sort &nbsp;·&nbsp;
         Click a row to expand
       </p>
+      <p class="text-xs text-gray-400 sm:hidden">Tap a column header to sort · Tap a row to expand</p>
     </div>
 
     <div id="sc_loading" class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">Loading scorecard...</div>
@@ -148,7 +163,7 @@
       <table>
         <thead id="sc_thead">
           <tr>
-            <th style="width:3.2rem; text-align:center;">Rank</th>
+            <th class="sortable" onclick="handleSort('rank',event)" id="th_rank" style="width:3.2rem; text-align:center;">Rank<span id="si_rank"></span></th>
             <th class="sortable" onclick="handleSort('full_name',event)" id="th_full_name" style="min-width:8rem;">Runner<span id="si_full_name"></span></th>
             <th class="sortable" onclick="handleSort('unique_id',event)" id="th_unique_id" style="width:6rem;">Unique ID<span id="si_unique_id"></span></th>
             <th class="sortable" style="text-align:right; width:5rem; white-space:normal;" onclick="handleSort('total_participation',event)" id="th_total_participation">Participation<span id="si_total_participation"></span></th>
@@ -183,7 +198,7 @@
 
     const STRING_COLS = new Set(['full_name', 'unique_id']);
     const ALL_SORT_COLS = [
-      'full_name','unique_id','total_participation',
+      'rank','full_name','unique_id','total_participation',
       'total_bib_collection','total_bib_distribution','total_bus_coordination',
       'total_car_pooling','total_miscellaneous','total_volunteer_score','score_pct'
     ];
@@ -227,6 +242,13 @@
         return;
       }
       originalData  = data || [];
+      // Pre-compute rank (by score_pct desc) on each row so it's sortable
+      const byScore = [...originalData].sort((a, b) => parseFloat(b.score_pct) - parseFloat(a.score_pct));
+      let curRank = 1;
+      byScore.forEach((r, i) => {
+        if (i > 0 && parseFloat(r.score_pct) < parseFloat(byScore[i - 1].score_pct)) curRank = i + 1;
+        r.rank = curRank;
+      });
       scorecardData = [...originalData];
       document.getElementById('sc_subtitle').textContent =
         `Community-wide volunteering standings — ${scorecardData.length} runners`;
@@ -325,15 +347,6 @@
         return;
       }
 
-      // Ranks always by score_pct desc
-      const byScore = [...scorecardData].sort((a, b) => parseFloat(b.score_pct) - parseFloat(a.score_pct));
-      const rankMap = {};
-      let curRank = 1;
-      byScore.forEach((r, i) => {
-        if (i > 0 && parseFloat(r.score_pct) < parseFloat(byScore[i - 1].score_pct)) curRank = i + 1;
-        if (rankMap[r.unique_id] === undefined) rankMap[r.unique_id] = curRank;
-      });
-
       // Percentile based on score_pct
       const allScores = scorecardData.map(r => parseFloat(r.score_pct) || 0).sort((a, b) => a - b);
       const n = allScores.length;
@@ -347,7 +360,7 @@
       filteredData.forEach(r => {
         const uid  = r.unique_id;
         const tier = getTier(getPctRank(r.score_pct));
-        const rank = rankMap[uid] || '—';
+        const rank = r.rank || '—';
         const rankCell = rank === 1 ? `<span class="rank-badge rank-1">1</span>`
           : rank === 2 ? `<span class="rank-badge rank-2">2</span>`
           : rank === 3 ? `<span class="rank-badge rank-3">3</span>`
