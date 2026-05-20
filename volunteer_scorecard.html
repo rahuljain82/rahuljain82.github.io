@@ -41,6 +41,18 @@
       #sc_table_wrap table { table-layout: fixed; }
     }
 
+    /* Column resize handles */
+    #sc_table_wrap thead th { position: relative; }
+    .col-resize-handle {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 5px;
+      cursor: col-resize;
+      z-index: 4;
+    }
+    .col-resize-handle:hover { background: rgba(99,102,241,0.25); }
+    body.col-resizing { cursor: col-resize !important; user-select: none !important; }
+
     /* Ensure rows have a background so sticky cells inherit correctly */
     #sc_table_wrap tbody tr { background: #ffffff; }
 
@@ -451,6 +463,38 @@
       if (str === null || str === undefined) return '';
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    // ---- Column resize ----
+    function initColResize() {
+      const ths = document.querySelectorAll('#sc_table_wrap thead th');
+      ths.forEach(th => {
+        if (th.querySelector('.col-resize-handle')) return;
+        const handle = document.createElement('div');
+        handle.className = 'col-resize-handle';
+        th.appendChild(handle);
+
+        handle.addEventListener('mousedown', e => {
+          const startX = e.pageX;
+          const startW = th.offsetWidth;
+          document.body.classList.add('col-resizing');
+
+          function onMove(e) {
+            th.style.width = Math.max(32, startW + e.pageX - startX) + 'px';
+          }
+          function onUp() {
+            document.body.classList.remove('col-resizing');
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initColResize);
   </script>
 </body>
 </html>
