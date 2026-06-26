@@ -53,6 +53,10 @@
       </div>
     </form>
 
+    <div id="seatsFull" style="display:none;" class="bg-orange-50 border border-orange-300 rounded-lg p-4 mt-2 text-center">
+      <p class="text-orange-800 font-bold text-base mb-1">Bus Seats Are Full</p>
+      <p class="text-orange-700 text-sm">All available bus seats for this event have been allocated. Please contact the organisers for assistance.</p>
+    </div>
     <p id="formMessage" class="text-green-600 mt-4 hidden"></p>
     <p id="errorMessage" class="text-red-600 mt-4 hidden"></p>
     <a href="index.html" class="block mt-4 text-indigo-600 text-sm">&lt; Back</a>
@@ -95,6 +99,7 @@
 
       const errMsg = document.getElementById('errorMessage');
       errMsg.classList.add('hidden');
+      document.getElementById('seatsFull').style.display = 'none';
 
       // Get bus booking for this runner + event
       const { data: booking } = await db
@@ -111,12 +116,28 @@
         return;
       }
 
-      // Get event details
+      // Get event details (including total_seats for capacity check)
       const { data: event } = await db
         .from('events')
-        .select('seat_cost, upi_id, instructions')
+        .select('seat_cost, upi_id, instructions, total_seats')
         .eq('event_name', marathonName)
         .single();
+
+      // Check remaining bus seats if total_seats is defined
+      if (event?.total_seats) {
+        const { count: paidCount } = await db
+          .from('bus_payments')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_name', marathonName)
+          .eq('payment_received', true);
+
+        const remaining = event.total_seats - (paidCount || 0);
+        if (remaining <= 0) {
+          document.getElementById('busDetails').classList.add('hidden');
+          document.getElementById('seatsFull').style.display = 'block';
+          return;
+        }
+      }
 
       document.getElementById('name').value         = booking.name;
       document.getElementById('flat').value         = booking.flat;

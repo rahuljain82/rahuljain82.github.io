@@ -235,6 +235,10 @@
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export Excel
           </button>
+          <button id="emailBtn" onclick="openEmailModal()" style="display:none;" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+            Email Data
+          </button>
           <button id="newEventBtn" onclick="openEventEditor(null)" style="display:none;" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded">+ New Event</button>
         </div>
       </div>
@@ -365,6 +369,12 @@
               <button id="ar_submit_btn" onclick="submitAddRunner()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Create Runner</button>
             </div>
           </div>
+        </div>
+
+        <!-- Bus seats info bar (bus_payments tab only) -->
+        <div id="seatsInfoBar" style="display:none;" class="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 mb-3 text-sm flex-wrap">
+          <svg width="15" height="15" fill="none" stroke="#2563eb" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="seatsInfoText" class="text-blue-800"></span>
         </div>
 
         <!-- SHARED DATA TABLE (for non-runner tabs) -->
@@ -950,6 +960,32 @@
     </div>
   </div>
 
+  <!-- Email Data Modal -->
+  <div id="emailModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
+    <div class="modal-box" style="max-width:520px; max-height:88vh; overflow-y:auto;">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="emailModalTitle" class="text-lg font-bold text-gray-800">Email Data</h3>
+        <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">Select the columns to include. An Excel file will be downloaded — attach it to the email that opens automatically.</p>
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Columns</p>
+        <div class="flex gap-3 text-xs text-indigo-600">
+          <button onclick="emailSelectAll(true)" class="hover:underline font-semibold">All</button>
+          <button onclick="emailSelectAll(false)" class="hover:underline font-semibold">None</button>
+        </div>
+      </div>
+      <div id="emailColsContainer" class="bg-gray-50 rounded-lg p-3 max-h-64 overflow-y-auto grid grid-cols-2 gap-1 mb-5"></div>
+      <div class="flex gap-3 justify-end border-t pt-4">
+        <button onclick="closeEmailModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button onclick="generateAndEmailData()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-2">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download &amp; Open Email
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/config.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
@@ -977,8 +1013,8 @@
       tshirt2:       { title: 'T-Shirt - Step2 (Payment)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step2' },
       race_volunteering: { title: 'Race Volunteering',      breadcrumb: 'Event Management / Race Volunteering' },
       bus_bookings:  { title: 'Bus - Step1 (Booking)',        breadcrumb: 'Event Management / Event Data / Bus Step1',      tab: 'bus_bookings',  showExport: true, showClear: true, showFilter: true  },
-      bus_payments:  { title: 'Bus - Step2 (Payment)',        breadcrumb: 'Event Management / Event Data / Bus Step2',      tab: 'bus_payments',  showExport: true, showClear: true, showFilter: true  },
-      bib_details:   { title: 'Bib Collection',               breadcrumb: 'Event Management / Event Data / Bib Collection', tab: 'bib_details',   showExport: true, showClear: true, showFilter: true  },
+      bus_payments:  { title: 'Bus - Step2 (Payment)',        breadcrumb: 'Event Management / Event Data / Bus Step2',      tab: 'bus_payments',  showExport: true, showClear: true, showFilter: true, showEmail: true  },
+      bib_details:   { title: 'Bib Collection',               breadcrumb: 'Event Management / Event Data / Bib Collection', tab: 'bib_details',   showExport: true, showClear: true, showFilter: true, showEmail: true  },
       race_feedback: { title: 'Race Feedback',                breadcrumb: 'Event Management / Event Data / Race Feedback',  tab: 'race_feedback', showExport: true, showClear: true, showFilter: true  },
       landing_cards:  { title: 'Landing Page Cards',    breadcrumb: 'Content Management / Landing Page Cards' },
       partners:       { title: 'Partners & Sponsors',   breadcrumb: 'Content Management / Partners & Sponsors' },
@@ -1006,7 +1042,9 @@
       document.getElementById('addRowBtn').style.display = 'none';
       document.getElementById('clearTableBtn').style.display = 'none';
       document.getElementById('exportBtn').style.display = 'none';
+      document.getElementById('emailBtn').style.display = 'none';
       document.getElementById('newEventBtn').style.display = 'none';
+      document.getElementById('seatsInfoBar').style.display = 'none';
 
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       const activeEl = document.querySelector(`.nav-item[data-nav="${key}"]`);
@@ -1036,6 +1074,7 @@
         document.getElementById('addRowBtn').style.display = 'inline-block';
         if (meta.showClear) document.getElementById('clearTableBtn').style.display = 'inline-block';
         if (meta.showFilter) document.getElementById('eventFilterWrap').style.display = 'flex';
+        if (meta.showEmail) document.getElementById('emailBtn').style.display = 'inline-flex';
         document.getElementById('eventDataSearch').value = '';
         loadCurrentTab();
 
@@ -1460,6 +1499,7 @@
       }
       tableData = result.data || [];
       renderTable(tableData);
+      if (currentTab === 'bus_payments') loadBusSeatsInfo();
     }
 
     const PII_FIELDS = new Set(['phone', 'email', 'dob', 'emergency_contact_number', 'emergency_number']);
@@ -1470,14 +1510,19 @@
       const cols = Object.keys(data[0]).filter(c => c !== 'admin_password_hash');
       tableColumns = cols;
       document.getElementById('rowCount').textContent = data.length + ' rows';
+      const isBusPayments = currentTab === 'bus_payments';
       let html = '<table><thead><tr>';
       cols.forEach(c => { html += `<th>${c.replace(/_/g,' ')}</th>`; });
+      if (isBusPayments) html += '<th style="white-space:nowrap;">Payment Status</th>';
       html += '<th style="width:2.5rem;"></th></tr></thead><tbody>';
       data.forEach((row, ri) => {
         html += '<tr>';
         cols.forEach(col => {
           const val = row[col];
-          if (PII_FIELDS.has(col) && val) {
+          if (col === 'payment_received') {
+            const isPaid = !!val;
+            html += `<td><span class="badge ${isPaid ? 'badge-admin' : 'badge-user'}">${isPaid ? 'Received' : 'Pending'}</span></td>`;
+          } else if (PII_FIELDS.has(col) && val) {
             html += `<td class="pii-cell" data-row="${ri}" data-col="${col}" data-val="${encodeURIComponent(val)}" title="Click to reveal">${maskPii(col, val)}</td>`;
           } else if (col === 'is_admin') {
             html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
@@ -1485,6 +1530,10 @@
             html += `<td>${val !== null && val !== undefined ? String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;') : '—'}</td>`;
           }
         });
+        if (isBusPayments) {
+          const isPaid = !!row.payment_received;
+          html += `<td><button onclick="togglePaymentReceived(${row.id}, ${isPaid})" class="text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ${isPaid ? 'bg-amber-100 hover:bg-amber-200 text-amber-700' : 'bg-green-100 hover:bg-green-200 text-green-700'}">${isPaid ? 'Unmark' : '✓ Mark Paid'}</button></td>`;
+        }
         html += `<td class="flex gap-1 items-center"><button onclick="openEditEventDataModal(${ri})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="Edit">✏️</button><button onclick="openDeleteRowModal(${ri})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button></td>`;
         html += '</tr>';
       });
@@ -1497,6 +1546,7 @@
           else { this.textContent = val; this.classList.add('revealed'); }
         });
       });
+      if (isBusPayments) loadBusSeatsInfo();
     }
 
     function showTableLoading() {
@@ -1659,6 +1709,94 @@
       const ev = document.getElementById('eventFilter').value;
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exportData), (currentTab + (ev ? '_' + ev : '')).slice(0,31));
       XLSX.writeFile(wb, 'RN_' + currentTab + (ev ? '_' + ev.replace(/\s+/g,'_') : '') + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
+
+    // ---- Bus Payments: Mark Paid & Seats Info ----
+    async function togglePaymentReceived(rowId, currentValue) {
+      const newValue = !currentValue;
+      const { error } = await db.from('bus_payments').update({ payment_received: newValue }).eq('id', rowId);
+      if (error) {
+        if (error.code === '42703' || (error.message && error.message.includes('column'))) {
+          alert('DB schema update required.\nRun in Supabase SQL editor:\n\nALTER TABLE bus_payments ADD COLUMN payment_received boolean DEFAULT false;');
+        } else {
+          alert('Error: ' + error.message);
+        }
+        return;
+      }
+      loadCurrentTab();
+    }
+
+    async function loadBusSeatsInfo() {
+      const ev = document.getElementById('eventFilter').value;
+      const bar = document.getElementById('seatsInfoBar');
+      const txt = document.getElementById('seatsInfoText');
+      if (!ev) { bar.style.display = 'none'; return; }
+
+      const [evRes, paidRes] = await Promise.all([
+        db.from('events').select('total_seats').eq('event_name', ev).single(),
+        db.from('bus_payments').select('id', { count: 'exact', head: true }).eq('event_name', ev).eq('payment_received', true)
+      ]);
+
+      const totalSeats = evRes.data?.total_seats;
+      if (!totalSeats) { bar.style.display = 'none'; return; }
+
+      const paidCount = paidRes.count || 0;
+      const remaining = totalSeats - paidCount;
+      bar.style.display = 'flex';
+      if (remaining <= 0) {
+        txt.innerHTML = `<strong style="color:#dc2626;">FULL</strong> &nbsp;—&nbsp; ${paidCount} payments received / ${totalSeats} total seats &nbsp;<span style="background:#fecaca;color:#dc2626;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:9999px;">NO SEATS REMAINING</span>`;
+      } else {
+        txt.innerHTML = `<strong>${paidCount}</strong> payments received &nbsp;•&nbsp; <strong>${totalSeats}</strong> total seats &nbsp;•&nbsp; <strong style="color:#16a34a;">${remaining} remaining</strong>`;
+      }
+    }
+
+    // ---- Email Data Modal ----
+    function openEmailModal() {
+      if (!tableColumns.length) { alert('Load data first.'); return; }
+      const ev = document.getElementById('eventFilter').value;
+      const tabLabel = currentTab === 'bus_payments' ? 'Bus Payment Details' : 'Bib Details';
+      document.getElementById('emailModalTitle').textContent = `Email ${tabLabel}${ev ? ' – ' + ev : ''}`;
+      const container = document.getElementById('emailColsContainer');
+      container.innerHTML = tableColumns.map(col => `
+        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer py-0.5">
+          <input type="checkbox" value="${col}" checked class="email-col-check w-4 h-4 accent-indigo-600" />
+          <span>${col.replace(/_/g, ' ')}</span>
+        </label>`).join('');
+      document.getElementById('emailModal').classList.remove('hidden');
+    }
+
+    function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
+
+    function emailSelectAll(checked) {
+      document.querySelectorAll('.email-col-check').forEach(c => { c.checked = checked; });
+    }
+
+    function generateAndEmailData() {
+      const selectedCols = [...document.querySelectorAll('.email-col-check:checked')].map(c => c.value);
+      if (!selectedCols.length) { alert('Select at least one column.'); return; }
+      const ev = document.getElementById('eventFilter').value;
+      const tabLabel = currentTab === 'bus_payments' ? 'Bus Payment Details' : 'Bib Details';
+
+      const exportData = tableData.map(row => {
+        const obj = {};
+        selectedCols.forEach(col => { obj[col.replace(/_/g, ' ')] = row[col] ?? ''; });
+        return obj;
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exportData), tabLabel.slice(0, 31));
+      const filename = `RN_${currentTab}${ev ? '_' + ev.replace(/\s+/g,'_') : ''}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      const subject = encodeURIComponent(`Running Ninjas – ${tabLabel}${ev ? ' – ' + ev : ''}`);
+      const body = encodeURIComponent(
+        `Hi,\n\nPlease find the ${tabLabel} data attached${ev ? ' for ' + ev : ''}.\n\n` +
+        `File: ${filename} (downloaded to your device — please attach it)\n` +
+        `Columns: ${selectedCols.join(', ')}\n` +
+        `Total rows: ${tableData.length}\n\nRegards,\nRunning Ninjas Admin`
+      );
+      setTimeout(() => { window.location.href = `mailto:?subject=${subject}&body=${body}`; }, 300);
+      closeEmailModal();
     }
 
     // ---- Events Tab ----
@@ -2705,7 +2843,7 @@
     // ---- Keyboard shortcuts ----
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
       if (e.key === 'Enter' && !document.getElementById('stepId').classList.contains('hidden') && document.activeElement === document.getElementById('loginUniqueId')) checkAdminId();
     });

@@ -395,7 +395,7 @@
           <div class="card-inner">
             <div class="flex items-start justify-between">
               <h3>${marathon.name}</h3>
-              <button class="info-btn" onclick="alert('${(marathon.description || '').replace(/'/g, "\\'")}')">
+              <button class="info-btn" data-event-name="${(marathon.name || '').replace(/"/g,'&quot;')}" onclick="showRaceInfo(this.dataset.eventName)">
                 <i data-feather="info" class="w-4 h-4"></i>
               </button>
             </div>
@@ -459,6 +459,76 @@
     document.getElementById('toDate')?.addEventListener('change', filterAndDisplay);
 
     window.addEventListener('DOMContentLoaded', loadEvents);
+  </script>
+
+  <!-- Race Info Modal -->
+  <div id="raceInfoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; overflow-y:auto; padding:1rem;">
+    <div style="background:white; border-radius:0.75rem; padding:1.25rem; max-width:500px; margin:2rem auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #e2e8f0;">
+        <h3 id="raceInfoTitle" style="font-size:1rem; font-weight:700; color:#1e293b; margin:0;"></h3>
+        <button onclick="closeRaceInfoModal()" style="color:#94a3b8; font-size:1.4rem; line-height:1; background:none; border:none; cursor:pointer; padding:0 0.25rem;">&times;</button>
+      </div>
+      <div id="raceInfoContent" style="font-size:0.85rem;"></div>
+    </div>
+  </div>
+  <script>
+    async function showRaceInfo(eventName) {
+      const modal = document.getElementById('raceInfoModal');
+      const content = document.getElementById('raceInfoContent');
+      document.getElementById('raceInfoTitle').textContent = eventName + ' — Registrations';
+      content.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:1.5rem 0;">Loading...</div>';
+      modal.style.display = 'block';
+
+      const { data, error } = await db
+        .from('bus_bookings')
+        .select('name, race_category, bus_seats')
+        .eq('event_name', eventName)
+        .order('name');
+
+      if (error) {
+        content.innerHTML = '<p style="color:#64748b; text-align:center; padding:1rem;">Could not load registrations.</p>';
+        return;
+      }
+      if (!data || data.length === 0) {
+        content.innerHTML = '<p style="color:#64748b; text-align:center; padding:1rem;">No registrations found for this event yet.</p>';
+        return;
+      }
+
+      const busCount = data.filter(r => r.bus_seats && parseInt(r.bus_seats) > 0).length;
+      let html = `<p style="font-size:0.75rem; color:#64748b; margin-bottom:0.75rem;">${data.length} registered &nbsp;•&nbsp; ${busCount} with bus</p>
+        <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f8fafc;">
+              <th style="padding:0.4rem 0.65rem; text-align:left; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Name</th>
+              <th style="padding:0.4rem 0.65rem; text-align:left; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Category</th>
+              <th style="padding:0.4rem 0.65rem; text-align:center; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Bus</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      data.forEach(r => {
+        const busOpted = r.bus_seats && parseInt(r.bus_seats) > 0;
+        html += `<tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:0.4rem 0.65rem; color:#1e293b; font-weight:500;">${r.name || '—'}</td>
+          <td style="padding:0.4rem 0.65rem; color:#475569;">${r.race_category || '—'}</td>
+          <td style="padding:0.4rem 0.65rem; text-align:center;">
+            <span style="font-size:0.7rem; font-weight:600; padding:0.15rem 0.5rem; border-radius:9999px; ${busOpted ? 'background:#dcfce7; color:#166534;' : 'background:#f1f5f9; color:#64748b;'}">${busOpted ? 'Yes' : 'No'}</span>
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table></div>';
+      content.innerHTML = html;
+    }
+
+    function closeRaceInfoModal() {
+      document.getElementById('raceInfoModal').style.display = 'none';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeRaceInfoModal();
+    });
   </script>
 
   <!-- Floating T-Shirt Banner -->
