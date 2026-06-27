@@ -1819,6 +1819,12 @@
       const { data, error } = await db.rpc('admin_get_events', { p_unique_id: session.uniqueId, p_password: session.password });
       if (error || data?.error) { document.getElementById('eventsContent').innerHTML = '<p class="text-red-500">Error: ' + (error?.message || data?.error) + '</p>'; return; }
       eventsData = data || [];
+      const { data: rcData } = await db.from('event_race_categories').select('event_name, race_categories');
+      if (rcData) {
+        const rcMap = {};
+        rcData.forEach(r => { rcMap[r.event_name] = r.race_categories; });
+        eventsData.forEach(ev => { ev.race_categories = rcMap[ev.event_name] || []; });
+      }
       filterEventsPanel();
     }
 
@@ -1937,7 +1943,7 @@
       btn.disabled = false; btn.textContent = 'Save Event';
       if (error || !data?.success) { errEl.textContent = data?.error || error?.message || 'Save failed.'; errEl.classList.remove('hidden'); return; }
       const selectedCats = [...document.querySelectorAll('.ef_race_cat:checked')].map(cb => cb.value);
-      await db.from('events').update({ race_categories: selectedCats }).eq('event_name', name);
+      await db.from('event_race_categories').upsert({ event_name: name, race_categories: selectedCats }, { onConflict: 'event_name' });
       closeEventEditor(); loadEventsTab(); loadEventFilter();
     }
 

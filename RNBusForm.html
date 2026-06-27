@@ -116,7 +116,7 @@
       }
 
       const { data: eventData } = await db
-        .from('events')
+        .from('event_race_categories')
         .select('race_categories')
         .eq('event_name', marathonName)
         .maybeSingle();
