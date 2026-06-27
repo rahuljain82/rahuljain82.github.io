@@ -157,14 +157,14 @@
     document.getElementById('busBookingForm').addEventListener('submit', async e => {
       e.preventDefault();
 
-      const { error } = await db.from('bus_bookings').insert([{
+      const { error } = await db.from('bus_bookings').upsert([{
         unique_id:     document.getElementById('uniqueId').value.trim(),
         event_name:    document.getElementById('marathonName').value,
         name:          document.getElementById('name').value,
         flat:          document.getElementById('flat').value,
         race_category: document.getElementById('raceCategory').value,
         bus_seats:     parseInt(document.getElementById('busSeats').value),
-      }]);
+      }], { onConflict: 'unique_id,event_name' });
 
       if (error) {
         alert('Error: ' + error.message);

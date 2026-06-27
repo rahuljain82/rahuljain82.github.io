@@ -147,6 +147,23 @@
       document.getElementById('upiId').value        = event?.upi_id || '—';
       document.getElementById('eventComments').value = event?.instructions || '';
 
+      const { data: existingPayment } = await db
+        .from('bus_payments')
+        .select('amount_paid, transaction_id, comments')
+        .eq('unique_id', uniqueId)
+        .eq('event_name', marathonName)
+        .maybeSingle();
+
+      if (existingPayment) {
+        document.getElementById('amountPaid').value   = existingPayment.amount_paid || '';
+        document.getElementById('transactionId').value = existingPayment.transaction_id || '';
+        document.getElementById('userComments').value  = existingPayment.comments || '';
+        const notice = document.createElement('p');
+        notice.className = 'text-yellow-700 bg-yellow-50 border border-yellow-300 rounded p-2 text-sm mb-2';
+        notice.textContent = '⚠️ An existing payment entry for this race was found and pre-filled above.';
+        document.getElementById('busDetails').prepend(notice);
+      }
+
       document.getElementById('busDetails').classList.remove('hidden');
       document.getElementById('formMessage').classList.add('hidden');
     }
@@ -154,13 +171,13 @@
     document.getElementById('busPaymentForm').addEventListener('submit', async e => {
       e.preventDefault();
 
-      const { error } = await db.from('bus_payments').insert([{
+      const { error } = await db.from('bus_payments').upsert([{
         unique_id:      document.getElementById('uniqueId').value.trim(),
         event_name:     document.getElementById('marathonName').value,
         amount_paid:    parseFloat(document.getElementById('amountPaid').value),
         transaction_id: document.getElementById('transactionId').value.trim(),
         comments:       document.getElementById('userComments').value,
-      }]);
+      }], { onConflict: 'unique_id,event_name' });
 
       if (error) { alert('Error: ' + error.message); return; }
 

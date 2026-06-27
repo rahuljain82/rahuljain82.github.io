@@ -162,7 +162,7 @@
     document.getElementById('bibForm').addEventListener('submit', async e => {
       e.preventDefault();
 
-      const { error } = await db.from('bib_details').insert([{
+      const { error } = await db.from('bib_details').upsert([{
         unique_id:        document.getElementById('uniqueId').value.trim(),
         event_name:       document.getElementById('marathonName').value,
         name:             document.getElementById('name').value,
@@ -175,7 +175,7 @@
         distance:         document.getElementById('distance').value,
         bib_number:       document.getElementById('bibNumber').value,
         email_proof:      document.getElementById('comments').value,
-      }]);
+      }], { onConflict: 'unique_id,event_name' });
 
       if (error) { alert('Error: ' + error.message); return; }
 
