@@ -115,19 +115,16 @@
         document.getElementById('flat').value = '';
       }
 
-      const { data: eventData } = await db
+      const { data: eventData, error: catError } = await db
         .from('event_race_categories')
         .select('race_categories')
         .eq('event_name', marathonName)
         .maybeSingle();
+      if (catError) console.error('event_race_categories error:', catError.message);
       const cats = eventData?.race_categories || [];
       const catSel = document.getElementById('raceCategory');
       catSel.innerHTML = '<option value="">-- Select Race Category --</option>';
-      if (cats.length) {
-        cats.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = RACE_CAT_LABELS[c] || c; catSel.appendChild(opt); });
-      } else {
-        [['5K','5K'],['10K','10K'],['21K','21K (Half Marathon)'],['42K','42K (Full Marathon)'],['50K','50K (Ultra)'],['70K','70K (Ultra)'],['100K','100K (Ultra)']].forEach(([v,l]) => { const opt = document.createElement('option'); opt.value = v; opt.textContent = l; catSel.appendChild(opt); });
-      }
+      cats.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = RACE_CAT_LABELS[c] || c; catSel.appendChild(opt); });
 
       const { data: existingBus } = await db
         .from('bus_bookings')
