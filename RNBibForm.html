@@ -56,7 +56,7 @@
           ⚠️ An existing bib registration for this race was found and pre-filled above.
         </div>
 
-        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded">Submit for Bib Collection</button>
+        <button id="bibSubmitBtn" type="submit" class="w-full bg-green-600 text-white py-2 rounded">Submit for Bib Collection</button>
       </div>
     </form>
 
@@ -152,8 +152,10 @@
         document.getElementById('bibNumber').value = existingBib.bib_number || '';
         document.getElementById('comments').value = existingBib.email_proof || '';
         notice.classList.remove('hidden');
+        document.getElementById('bibSubmitBtn').textContent = 'Update Bib Details';
       } else {
         notice.classList.add('hidden');
+        document.getElementById('bibSubmitBtn').textContent = 'Submit for Bib Collection';
       }
 
       document.getElementById('runnerDetails').classList.remove('hidden');
@@ -185,6 +187,7 @@
       document.getElementById('formMessage').classList.remove('hidden');
       document.getElementById('bibForm').reset();
       document.getElementById('runnerDetails').classList.add('hidden');
+      document.getElementById('bibSubmitBtn').textContent = 'Submit for Bib Collection';
 
       const { data: eventInfo } = await db
         .from('events')

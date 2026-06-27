@@ -54,7 +54,7 @@
           ⚠️ An existing bus registration for this race was found and pre-filled above.
         </div>
 
-        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Count me In</button>
+        <button id="busSubmitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Count me In</button>
       </div>
     </form>
 
@@ -147,8 +147,10 @@
         document.getElementById('raceCategory').value = existingBus.race_category || '';
         document.getElementById('busSeats').value = existingBus.bus_seats || '';
         notice.classList.remove('hidden');
+        document.getElementById('busSubmitBtn').textContent = 'Update Bus Registration';
       } else {
         notice.classList.add('hidden');
+        document.getElementById('busSubmitBtn').textContent = 'Count me In';
       }
 
       document.getElementById('runnerDetails').classList.remove('hidden');
@@ -174,6 +176,7 @@
       document.getElementById('formMessage').classList.remove('hidden');
       document.getElementById('busBookingForm').reset();
       document.getElementById('runnerDetails').classList.add('hidden');
+      document.getElementById('busSubmitBtn').textContent = 'Count me In';
     });
   </script>
 </body>
