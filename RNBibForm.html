@@ -63,6 +63,18 @@
     <p id="formMessage" class="text-green-600 mt-4 hidden">Bib collection submitted successfully!</p>
   </div>
 
+  <!-- Bus Interest Prompt -->
+  <div id="busPromptModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center">
+      <p class="text-lg font-semibold text-gray-800 mb-2">Interested in Bus?</p>
+      <p class="text-sm text-gray-500 mb-5">Bus registration is open for this race. Would you like to register now?</p>
+      <div class="flex gap-3 justify-center">
+        <button id="busPromptNo" class="px-5 py-2 rounded border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">No thanks</button>
+        <button id="busPromptYes" class="px-5 py-2 rounded bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">Yes, register</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/config.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
@@ -167,9 +179,28 @@
 
       if (error) { alert('Error: ' + error.message); return; }
 
+      const submittedUniqueId = document.getElementById('uniqueId').value.trim();
+      const submittedEvent = document.getElementById('marathonName').value;
+
       document.getElementById('formMessage').classList.remove('hidden');
       document.getElementById('bibForm').reset();
       document.getElementById('runnerDetails').classList.add('hidden');
+
+      const { data: eventInfo } = await db
+        .from('events')
+        .select('bus_available')
+        .eq('event_name', submittedEvent)
+        .maybeSingle();
+
+      if (eventInfo?.bus_available) {
+        document.getElementById('busPromptModal').classList.remove('hidden');
+        document.getElementById('busPromptYes').onclick = () => {
+          window.location.href = 'RNBusForm.html?uniqueId=' + encodeURIComponent(submittedUniqueId) + '&event=' + encodeURIComponent(submittedEvent);
+        };
+        document.getElementById('busPromptNo').onclick = () => {
+          document.getElementById('busPromptModal').classList.add('hidden');
+        };
+      }
     });
   </script>
 </body>

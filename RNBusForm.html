@@ -91,6 +91,15 @@
         opt.textContent = e.event_name;
         dropdown.appendChild(opt);
       });
+
+      const params = new URLSearchParams(window.location.search);
+      const preUniqueId = params.get('uniqueId');
+      const preEvent = params.get('event');
+      if (preUniqueId && preEvent) {
+        document.getElementById('uniqueId').value = preUniqueId;
+        dropdown.value = preEvent;
+        await showForm();
+      }
     };
 
     const RACE_CAT_LABELS = { '5K':'5K', '10K':'10K', '21K':'21K (Half Marathon)', '42K':'42K (Full Marathon)', '50K':'50K (Ultra)', '70K':'70K (Ultra)', '100K':'100K (Ultra)' };
