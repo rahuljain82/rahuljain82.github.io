@@ -909,6 +909,18 @@
           <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_feedback" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Feedback</span></label>
         </div>
       </div>
+      <div class="border-t pt-4 mb-5">
+        <p class="form-label mb-3">Race Categories (shown in Bib &amp; Bus forms)</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="5K" /> 5K</label>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="10K" /> 10K</label>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="21K" /> 21K (Half Marathon)</label>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="42K" /> 42K (Full Marathon)</label>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="50K" /> 50K (Ultra)</label>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="70K" /> 70K (Ultra)</label>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="100K" /> 100K (Ultra)</label>
+        </div>
+      </div>
       <p id="eventEditorError" class="text-red-500 text-sm mb-3 hidden"></p>
       <div class="flex gap-3 justify-end">
         <button onclick="closeEventEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -1854,6 +1866,7 @@
             ${ev.upi_id ? `<span class="bg-gray-100 text-gray-600 rounded px-2 py-1">UPI: ${esc(ev.upi_id)}</span>` : ''}
             ${ev.registration_link ? `<a href="${esc(ev.registration_link)}" target="_blank" class="bg-green-50 text-green-700 rounded px-2 py-1 underline hover:bg-green-100">Reg Link</a>` : ''}
           </div>
+          ${ev.race_categories && ev.race_categories.length ? `<div class="flex flex-wrap gap-1 mt-2">${ev.race_categories.map(c => `<span class="bg-indigo-50 text-indigo-700 text-xs font-medium rounded px-2 py-0.5">${esc(c)}</span>`).join('')}</div>` : ''}
         </div>`).join('');
     }
 
@@ -1894,6 +1907,8 @@
       document.getElementById('ef_ninja_discount').checked  = !!ev?.ninja_discount;
       document.getElementById('ef_bus_payment').checked     = !!ev?.bus_payment;
       document.getElementById('ef_feedback').checked        = !!ev?.feedback;
+      const existingCats = ev?.race_categories || [];
+      document.querySelectorAll('.ef_race_cat').forEach(cb => { cb.checked = existingCats.includes(cb.value); });
       const btn = document.getElementById('saveEventBtn'); btn.disabled = false; btn.textContent = 'Save Event';
       document.getElementById('eventEditorError').classList.add('hidden');
       document.getElementById('eventEditorModal').classList.remove('hidden');
@@ -1921,6 +1936,8 @@
       });
       btn.disabled = false; btn.textContent = 'Save Event';
       if (error || !data?.success) { errEl.textContent = data?.error || error?.message || 'Save failed.'; errEl.classList.remove('hidden'); return; }
+      const selectedCats = [...document.querySelectorAll('.ef_race_cat:checked')].map(cb => cb.value);
+      await db.from('events').update({ race_categories: selectedCats }).eq('event_name', name);
       closeEventEditor(); loadEventsTab(); loadEventFilter();
     }
 

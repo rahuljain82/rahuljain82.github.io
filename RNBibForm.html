@@ -46,18 +46,15 @@
         <label class="block mb-2">Select Distance
           <select id="distance" required class="w-full mt-1 p-2 border rounded">
             <option value="">-- Select Distance --</option>
-            <option value="5K">5K</option>
-            <option value="10K">10K</option>
-            <option value="21K">21K (Half Marathon)</option>
-            <option value="42K">42K (Full Marathon)</option>
-            <option value="ultra50">50k (ultra50)</option>
-            <option value="ultra70">70k (ultra70)</option>
-            <option value="ultra100">100k (ultra100)</option>
           </select>
         </label>
 
         <label class="block mb-2">Enter Bib Number <input id="bibNumber" type="text" required class="w-full mt-1 p-2 border rounded" /></label>
         <label class="block mb-2">Email Proof <textarea id="comments" class="w-full mt-1 p-2 border rounded"></textarea></label>
+
+        <div id="existingBibNotice" class="hidden bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm rounded p-3 mb-3">
+          ⚠️ An existing bib registration for this race was found and pre-filled above.
+        </div>
 
         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded">Submit for Bib Collection</button>
       </div>
@@ -96,6 +93,8 @@
       });
     };
 
+    const RACE_CAT_LABELS = { '5K':'5K', '10K':'10K', '21K':'21K (Half Marathon)', '42K':'42K (Full Marathon)', '50K':'50K (Ultra)', '70K':'70K (Ultra)', '100K':'100K (Ultra)' };
+
     async function fetchRunnerData() {
       const uniqueId = document.getElementById('uniqueId').value.trim();
       const marathonName = document.getElementById('marathonName').value;
@@ -116,6 +115,38 @@
       document.getElementById('emergencyName').value = runner.emergency_contact_name || '';
       document.getElementById('emergencyNumber').value = runner.emergency_contact_number || '';
       document.getElementById('tshirtSize').value = runner.tshirt_size || '';
+
+      const { data: eventData } = await db
+        .from('events')
+        .select('race_categories')
+        .eq('event_name', marathonName)
+        .maybeSingle();
+      const cats = eventData?.race_categories || [];
+      const distSel = document.getElementById('distance');
+      distSel.innerHTML = '<option value="">-- Select Distance --</option>';
+      if (cats.length) {
+        cats.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = RACE_CAT_LABELS[c] || c; distSel.appendChild(opt); });
+      } else {
+        [['5K','5K'],['10K','10K'],['21K','21K (Half Marathon)'],['42K','42K (Full Marathon)'],['50K','50K (Ultra)'],['70K','70K (Ultra)'],['100K','100K (Ultra)']].forEach(([v,l]) => { const opt = document.createElement('option'); opt.value = v; opt.textContent = l; distSel.appendChild(opt); });
+      }
+
+      const { data: existingBib } = await db
+        .from('bib_details')
+        .select('distance, bib_number, email_proof')
+        .eq('unique_id', uniqueId)
+        .eq('event_name', marathonName)
+        .maybeSingle();
+
+      const notice = document.getElementById('existingBibNotice');
+      if (existingBib) {
+        document.getElementById('distance').value = existingBib.distance || '';
+        document.getElementById('bibNumber').value = existingBib.bib_number || '';
+        document.getElementById('comments').value = existingBib.email_proof || '';
+        notice.classList.remove('hidden');
+      } else {
+        notice.classList.add('hidden');
+      }
+
       document.getElementById('runnerDetails').classList.remove('hidden');
     }
 
