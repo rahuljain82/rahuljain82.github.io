@@ -28,7 +28,14 @@
         </select>
       </label>
 
-      <label class="block mb-2">Enter Unique ID
+      <label class="block mb-2">
+        <span class="flex items-center gap-1">Enter Unique ID
+          <button type="button" onclick="document.getElementById('uniqueIdInfo').classList.toggle('hidden')" class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold leading-none flex items-center justify-center hover:bg-indigo-200" title="What is my Unique ID?">i</button>
+        </span>
+        <div id="uniqueIdInfo" class="hidden mt-1 mb-2 text-xs text-gray-600 bg-indigo-50 border border-indigo-100 rounded p-2 leading-relaxed">
+          Your Unique ID is the first 4 letters of your first name in capitals, followed by your flat number.<br/>
+          <span class="font-medium">Example:</span> John Doe living in flat B204 → <span class="font-mono font-semibold text-indigo-700">JOHNB204</span>
+        </div>
         <input id="uniqueId" type="text" required class="w-full mt-1 p-2 border rounded" />
       </label>
 
