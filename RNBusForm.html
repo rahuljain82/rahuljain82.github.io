@@ -61,6 +61,7 @@
           ⚠️ An existing bus registration for this race was found and pre-filled above.
         </div>
 
+        <p id="submitError" class="hidden text-red-600 text-sm mb-2"></p>
         <button id="busSubmitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded mt-2">Count me In</button>
       </div>
     </form>
@@ -122,14 +123,14 @@
         .eq('unique_id', uniqueId)
         .single();
 
-      if (runner) {
-        document.getElementById('name').value = runner.first_name + ' ' + (runner.last_name || '');
-        document.getElementById('flat').value = runner.flat_number;
-      } else {
-        alert('Runner not found. Please enter your details manually.');
-        document.getElementById('name').value = '';
-        document.getElementById('flat').value = '';
-      }
+      if (!runner) { alert('Runner not found. Please check your Unique ID.'); return; }
+
+      document.getElementById('name').value = runner.first_name + ' ' + (runner.last_name || '');
+      document.getElementById('flat').value = runner.flat_number;
+
+      document.getElementById('uniqueId').setAttribute('readonly', true);
+      document.getElementById('uniqueId').classList.add('bg-gray-100', 'text-gray-500');
+      document.getElementById('marathonName').setAttribute('disabled', true);
 
       const { data: eventData, error: catError } = await db
         .from('event_race_categories')
@@ -166,6 +167,26 @@
     document.getElementById('busBookingForm').addEventListener('submit', async e => {
       e.preventDefault();
 
+      const uniqueId    = document.getElementById('uniqueId').value.trim();
+      const eventName   = document.getElementById('marathonName').value;
+      const raceCategory = document.getElementById('raceCategory').value;
+      const busSeats    = document.getElementById('busSeats').value;
+      const errEl       = document.getElementById('submitError');
+
+      if (!uniqueId || !eventName) {
+        errEl.textContent = 'Missing event or Unique ID. Please refresh and start again.';
+        errEl.classList.remove('hidden'); return;
+      }
+      if (!raceCategory) {
+        errEl.textContent = 'Please select a race category.';
+        errEl.classList.remove('hidden'); return;
+      }
+      if (!busSeats || parseInt(busSeats) < 1) {
+        errEl.textContent = 'Please enter the number of bus seats required.';
+        errEl.classList.remove('hidden'); return;
+      }
+      errEl.classList.add('hidden');
+
       const { error } = await db.from('bus_bookings').upsert([{
         unique_id:     document.getElementById('uniqueId').value.trim(),
         event_name:    document.getElementById('marathonName').value,
@@ -176,7 +197,8 @@
       }], { onConflict: 'unique_id,event_name' });
 
       if (error) {
-        alert('Error: ' + error.message);
+        document.getElementById('submitError').textContent = 'Something went wrong. Please check your details and try again.';
+        document.getElementById('submitError').classList.remove('hidden');
         return;
       }
 
@@ -184,6 +206,10 @@
       document.getElementById('busBookingForm').reset();
       document.getElementById('runnerDetails').classList.add('hidden');
       document.getElementById('busSubmitBtn').textContent = 'Count me In';
+      document.getElementById('submitError').classList.add('hidden');
+      document.getElementById('uniqueId').removeAttribute('readonly');
+      document.getElementById('uniqueId').classList.remove('bg-gray-100', 'text-gray-500');
+      document.getElementById('marathonName').removeAttribute('disabled');
     });
   </script>
 </body>

@@ -63,6 +63,7 @@
           ⚠️ An existing bib registration for this race was found and pre-filled above.
         </div>
 
+        <p id="submitError" class="hidden text-red-600 text-sm mb-2"></p>
         <button id="bibSubmitBtn" type="submit" class="w-full bg-green-600 text-white py-2 rounded">Submit for Bib Collection</button>
       </div>
     </form>
@@ -165,11 +166,34 @@
         document.getElementById('bibSubmitBtn').textContent = 'Submit for Bib Collection';
       }
 
+      document.getElementById('uniqueId').setAttribute('readonly', true);
+      document.getElementById('uniqueId').classList.add('bg-gray-100', 'text-gray-500');
+      document.getElementById('marathonName').setAttribute('disabled', true);
       document.getElementById('runnerDetails').classList.remove('hidden');
     }
 
     document.getElementById('bibForm').addEventListener('submit', async e => {
       e.preventDefault();
+
+      const uniqueId   = document.getElementById('uniqueId').value.trim();
+      const eventName  = document.getElementById('marathonName').value;
+      const distance   = document.getElementById('distance').value;
+      const bibNumber  = document.getElementById('bibNumber').value.trim();
+      const errEl      = document.getElementById('submitError');
+
+      if (!uniqueId || !eventName) {
+        errEl.textContent = 'Missing event or Unique ID. Please refresh and start again.';
+        errEl.classList.remove('hidden'); return;
+      }
+      if (!distance) {
+        errEl.textContent = 'Please select a distance.';
+        errEl.classList.remove('hidden'); return;
+      }
+      if (!bibNumber) {
+        errEl.textContent = 'Please enter your Bib Number.';
+        errEl.classList.remove('hidden'); return;
+      }
+      errEl.classList.add('hidden');
 
       const { error } = await db.from('bib_details').upsert([{
         unique_id:        document.getElementById('uniqueId').value.trim(),
@@ -186,7 +210,11 @@
         email_proof:      document.getElementById('comments').value,
       }], { onConflict: 'unique_id,event_name' });
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) {
+        document.getElementById('submitError').textContent = 'Something went wrong. Please check your details and try again.';
+        document.getElementById('submitError').classList.remove('hidden');
+        return;
+      }
 
       const submittedUniqueId = document.getElementById('uniqueId').value.trim();
       const submittedEvent = document.getElementById('marathonName').value;
@@ -195,6 +223,10 @@
       document.getElementById('bibForm').reset();
       document.getElementById('runnerDetails').classList.add('hidden');
       document.getElementById('bibSubmitBtn').textContent = 'Submit for Bib Collection';
+      document.getElementById('submitError').classList.add('hidden');
+      document.getElementById('uniqueId').removeAttribute('readonly');
+      document.getElementById('uniqueId').classList.remove('bg-gray-100', 'text-gray-500');
+      document.getElementById('marathonName').removeAttribute('disabled');
 
       const { data: eventInfo } = await db
         .from('events')

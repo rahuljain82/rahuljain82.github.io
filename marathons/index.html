@@ -468,6 +468,7 @@
         <h3 id="raceInfoTitle" style="font-size:1rem; font-weight:700; color:#1e293b; margin:0;"></h3>
         <button onclick="closeRaceInfoModal()" style="color:#94a3b8; font-size:1.4rem; line-height:1; background:none; border:none; cursor:pointer; padding:0 0.25rem;">&times;</button>
       </div>
+      <input id="raceInfoSearch" type="text" placeholder="Search by name..." oninput="filterRaceInfoTable()" style="width:100%; padding:0.45rem 0.7rem; border:1px solid #e2e8f0; border-radius:0.4rem; font-size:0.82rem; color:#1e293b; outline:none; margin-bottom:0.75rem; box-sizing:border-box;" />
       <div id="raceInfoContent" style="font-size:0.85rem;"></div>
     </div>
   </div>
@@ -477,6 +478,7 @@
       const content = document.getElementById('raceInfoContent');
       document.getElementById('raceInfoTitle').textContent = eventName + ' — Registrations';
       content.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:1.5rem 0;">Loading...</div>';
+      document.getElementById('raceInfoSearch').value = '';
       modal.style.display = 'block';
 
       const [busRes, bibRes] = await Promise.all([
@@ -539,10 +541,10 @@
         const badge = (has, yes, no) => `<span style="font-size:0.7rem; font-weight:600; padding:0.15rem 0.5rem; border-radius:9999px; ${has ? 'background:#dcfce7; color:#166534;' : 'background:#f1f5f9; color:#64748b;'}">${has ? yes : no}</span>`;
         const flagged = hasBib !== hasBus;
         html += `<tr style="border-bottom:1px solid #f1f5f9; ${flagged ? 'background:#fffbeb;' : ''}">
-          <td style="padding:0.4rem 0.65rem; color:#1e293b; font-weight:500;">${name}${flagged ? ' <span style="font-size:0.65rem; font-weight:700; color:#b45309; background:#fef3c7; padding:0.1rem 0.35rem; border-radius:9999px; vertical-align:middle;">!</span>' : ''}</td>
+          <td style="padding:0.4rem 0.65rem; color:#1e293b; font-weight:500;">${name}</td>
           <td style="padding:0.4rem 0.65rem; color:#475569;">${category}</td>
-          <td style="padding:0.4rem 0.65rem; text-align:center;">${badge(hasBib, '✓', '—')}</td>
-          <td style="padding:0.4rem 0.65rem; text-align:center;">${badge(hasBus, '✓', '—')}</td>
+          <td style="padding:0.4rem 0.65rem; text-align:center;">${badge(hasBib, '✓', '✕')}</td>
+          <td style="padding:0.4rem 0.65rem; text-align:center;">${badge(hasBus, '✓', '✕')}</td>
         </tr>`;
       });
 
@@ -550,8 +552,17 @@
       content.innerHTML = html;
     }
 
+    function filterRaceInfoTable() {
+      const q = document.getElementById('raceInfoSearch').value.toLowerCase();
+      document.querySelectorAll('#raceInfoContent tbody tr').forEach(row => {
+        const name = row.cells[0]?.textContent.toLowerCase() || '';
+        row.style.display = name.includes(q) ? '' : 'none';
+      });
+    }
+
     function closeRaceInfoModal() {
       document.getElementById('raceInfoModal').style.display = 'none';
+      document.getElementById('raceInfoSearch').value = '';
     }
 
     document.addEventListener('keydown', function(e) {
