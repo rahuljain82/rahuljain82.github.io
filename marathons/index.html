@@ -479,42 +479,70 @@
       content.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:1.5rem 0;">Loading...</div>';
       modal.style.display = 'block';
 
-      const { data, error } = await db
-        .from('bus_bookings')
-        .select('name, race_category, bus_seats')
-        .eq('event_name', eventName)
-        .order('name');
+      const [busRes, bibRes] = await Promise.all([
+        db.from('bus_bookings').select('unique_id, name, race_category, bus_seats').eq('event_name', eventName),
+        db.from('bib_details').select('unique_id, name, distance').eq('event_name', eventName),
+      ]);
 
-      if (error) {
+      if (busRes.error && bibRes.error) {
         content.innerHTML = '<p style="color:#64748b; text-align:center; padding:1rem;">Could not load registrations.</p>';
         return;
       }
-      if (!data || data.length === 0) {
+
+      const busMap = {};
+      (busRes.data || []).forEach(r => { busMap[r.unique_id] = r; });
+      const bibMap = {};
+      (bibRes.data || []).forEach(r => { bibMap[r.unique_id] = r; });
+
+      const allIds = [...new Set([...Object.keys(busMap), ...Object.keys(bibMap)])].sort((a, b) => {
+        const aHasBib = !!bibMap[a], aHasBus = !!(busMap[a]?.bus_seats && parseInt(busMap[a].bus_seats) > 0);
+        const bHasBib = !!bibMap[b], bHasBus = !!(busMap[b]?.bus_seats && parseInt(busMap[b].bus_seats) > 0);
+        const aMissing = (aHasBib !== aHasBus) ? 0 : 1;
+        const bMissing = (bHasBib !== bHasBus) ? 0 : 1;
+        if (aMissing !== bMissing) return aMissing - bMissing;
+        const nameA = (busMap[a]?.name || bibMap[a]?.name || '').toLowerCase();
+        const nameB = (busMap[b]?.name || bibMap[b]?.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+
+      if (!allIds.length) {
         content.innerHTML = '<p style="color:#64748b; text-align:center; padding:1rem;">No registrations found for this event yet.</p>';
         return;
       }
 
-      const busCount = data.filter(r => r.bus_seats && parseInt(r.bus_seats) > 0).length;
-      let html = `<p style="font-size:0.75rem; color:#64748b; margin-bottom:0.75rem;">${data.length} registered &nbsp;•&nbsp; ${busCount} with bus</p>
-        <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse;">
-          <thead>
-            <tr style="background:#f8fafc;">
-              <th style="padding:0.4rem 0.65rem; text-align:left; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Name</th>
-              <th style="padding:0.4rem 0.65rem; text-align:left; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Category</th>
-              <th style="padding:0.4rem 0.65rem; text-align:center; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Bus</th>
-            </tr>
-          </thead>
-          <tbody>`;
+      const bibCount = Object.keys(bibMap).length;
+      const busCount = Object.keys(busMap).length;
+      const bothCount = allIds.filter(id => busMap[id] && bibMap[id]).length;
 
-      data.forEach(r => {
-        const busOpted = r.bus_seats && parseInt(r.bus_seats) > 0;
-        html += `<tr style="border-bottom:1px solid #f1f5f9;">
-          <td style="padding:0.4rem 0.65rem; color:#1e293b; font-weight:500;">${r.name || '—'}</td>
-          <td style="padding:0.4rem 0.65rem; color:#475569;">${r.race_category || '—'}</td>
-          <td style="padding:0.4rem 0.65rem; text-align:center;">
-            <span style="font-size:0.7rem; font-weight:600; padding:0.15rem 0.5rem; border-radius:9999px; ${busOpted ? 'background:#dcfce7; color:#166534;' : 'background:#f1f5f9; color:#64748b;'}">${busOpted ? 'Yes' : 'No'}</span>
-          </td>
+      let html = `<p style="font-size:0.75rem; color:#64748b; margin-bottom:0.75rem;">
+        ${allIds.length} unique &nbsp;•&nbsp; ${bibCount} bib &nbsp;•&nbsp; ${busCount} bus &nbsp;•&nbsp; ${bothCount} both
+      </p>
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f8fafc;">
+            <th style="padding:0.4rem 0.65rem; text-align:left; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Name</th>
+            <th style="padding:0.4rem 0.65rem; text-align:left; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Category</th>
+            <th style="padding:0.4rem 0.65rem; text-align:center; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Bib</th>
+            <th style="padding:0.4rem 0.65rem; text-align:center; font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap;">Bus</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      allIds.forEach(id => {
+        const bus = busMap[id];
+        const bib = bibMap[id];
+        const name = bus?.name || bib?.name || '—';
+        const category = bus?.race_category || bib?.distance || '—';
+        const hasBib = !!bib;
+        const hasBus = !!(bus?.bus_seats && parseInt(bus.bus_seats) > 0);
+        const badge = (has, yes, no) => `<span style="font-size:0.7rem; font-weight:600; padding:0.15rem 0.5rem; border-radius:9999px; ${has ? 'background:#dcfce7; color:#166534;' : 'background:#f1f5f9; color:#64748b;'}">${has ? yes : no}</span>`;
+        const flagged = hasBib !== hasBus;
+        html += `<tr style="border-bottom:1px solid #f1f5f9; ${flagged ? 'background:#fffbeb;' : ''}">
+          <td style="padding:0.4rem 0.65rem; color:#1e293b; font-weight:500;">${name}${flagged ? ' <span style="font-size:0.65rem; font-weight:700; color:#b45309; background:#fef3c7; padding:0.1rem 0.35rem; border-radius:9999px; vertical-align:middle;">!</span>' : ''}</td>
+          <td style="padding:0.4rem 0.65rem; color:#475569;">${category}</td>
+          <td style="padding:0.4rem 0.65rem; text-align:center;">${badge(hasBib, '✓', '—')}</td>
+          <td style="padding:0.4rem 0.65rem; text-align:center;">${badge(hasBus, '✓', '—')}</td>
         </tr>`;
       });
 
