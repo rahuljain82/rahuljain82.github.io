@@ -1517,19 +1517,50 @@
       }
       tableData = result.data || [];
 
-      // For bus_payments, merge in id + payment_received which the RPC may not return
+      // For bus_payments: merge id, payment_received, recipient_name, source_upi_id + name from bus_bookings
       if (currentTab === 'bus_payments' && tableData.length > 0) {
-        const { data: pmtMeta } = await db
-          .from('bus_payments')
-          .select('id, unique_id, event_name, payment_received');
-        if (pmtMeta) {
+        const [pmtRes, bookRes] = await Promise.all([
+          db.from('bus_payments').select('id, unique_id, event_name, payment_received, recipient_name, source_upi_id'),
+          db.from('bus_bookings').select('unique_id, event_name, name')
+        ]);
+        const bookMap = {};
+        (bookRes.data || []).forEach(b => { bookMap[b.unique_id + '|' + b.event_name] = b; });
+        if (pmtRes.data) {
           const metaMap = {};
-          pmtMeta.forEach(m => { metaMap[m.unique_id + '|' + m.event_name] = m; });
+          pmtRes.data.forEach(m => { metaMap[m.unique_id + '|' + m.event_name] = m; });
           tableData.forEach(row => {
             const key = row.unique_id + '|' + row.event_name;
             const meta = metaMap[key];
-            if (meta) { row.id = meta.id; row.payment_received = meta.payment_received; }
+            const book = bookMap[key];
+            if (meta) {
+              row.id = meta.id;
+              row.payment_received = meta.payment_received;
+              if (!row.recipient_name) row.recipient_name = meta.recipient_name;
+              if (!row.source_upi_id) row.source_upi_id = meta.source_upi_id;
+            }
+            if (book && !row.name) row.name = book.name;
           });
+        }
+      }
+
+      // For bib_details: merge in phone from runners
+      if (currentTab === 'bib_details' && tableData.length > 0) {
+        const uniqueIds = [...new Set(tableData.map(r => r.unique_id).filter(Boolean))];
+        if (uniqueIds.length > 0) {
+          const { data: runnersMeta } = await db
+            .from('runners')
+            .select('unique_id, phone')
+            .in('unique_id', uniqueIds);
+          if (runnersMeta) {
+            const runMap = {};
+            runnersMeta.forEach(r => { runMap[r.unique_id] = r; });
+            tableData.forEach(row => {
+              if (!row.phone) {
+                const runner = runMap[row.unique_id];
+                if (runner) row.phone = runner.phone;
+              }
+            });
+          }
         }
       }
 
@@ -1542,7 +1573,10 @@
     function renderTable(data) {
       const wrap = document.getElementById('tableContent');
       if (!data || data.length === 0) { wrap.innerHTML = '<p class="text-gray-400 p-4">No data found.</p>'; document.getElementById('rowCount').textContent = '0 rows'; return; }
-      const cols = Object.keys(data[0]).filter(c => c !== 'admin_password_hash');
+      const cols = Object.keys(data[0]).filter(c =>
+        c !== 'admin_password_hash' &&
+        !(currentTab === 'bib_details' && c === 'emergency_contact_number')
+      );
       tableColumns = cols;
       document.getElementById('rowCount').textContent = data.length + ' rows';
       const isBusPayments = currentTab === 'bus_payments';
