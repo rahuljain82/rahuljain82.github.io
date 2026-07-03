@@ -48,6 +48,12 @@
         <p class="text-sm mt-1">Your payment submission for this race is currently under review. Please contact the organisers if you have any concerns.</p>
       </div>
 
+      <div id="seatConfirmedNotice" class="hidden bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-2">
+        <p class="font-semibold text-sm">Your bus seat is confirmed!</p>
+        <p class="text-sm mt-1">Number of seats: <span id="confirmedSeats" class="font-semibold">—</span></p>
+        <p class="text-sm mt-1">Your payment has been verified by the organisers. See you at the race!</p>
+      </div>
+
       <div id="busDetails" class="hidden space-y-3">
         <div><label class="block mb-1 text-sm font-medium text-gray-700">Name</label><input id="name" type="text" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-sm" /></div>
         <div><label class="block mb-1 text-sm font-medium text-gray-700">Flat Number</label><input id="flat" type="text" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-sm" /></div>
@@ -69,9 +75,8 @@
         </div>
 
         <div>
-          <label class="block mb-1 text-sm font-medium text-gray-700">Source UPI ID <span class="text-gray-400 font-normal">(optional)</span></label>
-          <input id="sourceUpiId" type="text" placeholder="e.g. yourname@upi" class="w-full mt-1 p-2 border rounded text-sm" />
-          <p class="text-xs text-gray-400 mt-1">Only enter this if you are paying from a UPI ID not registered in your name</p>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Source UPI ID / Phone Number</label>
+          <input id="sourceUpiId" type="text" placeholder="e.g. yourname@upi or 9876543210" class="w-full mt-1 p-2 border rounded text-sm" required />
         </div>
 
         <div><label class="block mb-1 text-sm font-medium text-gray-700">Comments <span class="text-gray-400 font-normal">(optional)</span></label><textarea id="userComments" rows="2" class="w-full mt-1 p-2 border rounded text-sm"></textarea></div>
@@ -176,16 +181,21 @@
       // Lock if already submitted
       const { data: existingPayment } = await db
         .from('bus_payments')
-        .select('id')
+        .select('id, payment_received')
         .eq('unique_id', uniqueId)
         .eq('event_name', marathonName)
         .maybeSingle();
 
       if (existingPayment) {
-        document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
         document.getElementById('uniqueId').setAttribute('readonly', true);
         document.getElementById('uniqueId').classList.add('bg-gray-100', 'text-gray-500');
         document.getElementById('marathonName').setAttribute('disabled', true);
+        if (existingPayment.payment_received) {
+          document.getElementById('confirmedSeats').textContent = booking.bus_seats || '—';
+          document.getElementById('seatConfirmedNotice').classList.remove('hidden');
+        } else {
+          document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
+        }
         return;
       }
 
@@ -260,6 +270,11 @@
         alert('Please select a recipient to pay to.');
         return;
       }
+      const sourceUpi = document.getElementById('sourceUpiId').value.trim();
+      if (!sourceUpi) {
+        alert('Please enter your Source UPI ID or phone number.');
+        return;
+      }
       document.getElementById('payConfirmModal').classList.remove('hidden');
     });
 
@@ -270,13 +285,20 @@
       const marathonName = document.getElementById('marathonName').value;
       const amountStr    = document.getElementById('amountToPay').value.replace('₹', '').trim();
       const amount       = parseFloat(amountStr) || null;
+      const sourceUpiId  = document.getElementById('sourceUpiId').value.trim();
+
+      if (!sourceUpiId) {
+        document.getElementById('errorMessage').textContent = 'Please enter your Source UPI ID or phone number.';
+        document.getElementById('errorMessage').classList.remove('hidden');
+        return;
+      }
 
       const { error } = await db.from('bus_payments').insert([{
         unique_id:        uniqueId,
         event_name:       marathonName,
         amount_paid:      amount,
         recipient_name:   document.getElementById('recipientSelect').value,
-        source_upi_id:    document.getElementById('sourceUpiId').value.trim() || null,
+        source_upi_id:    sourceUpiId || null,
         comments:         document.getElementById('userComments').value || null,
       }]);
 
