@@ -921,6 +921,12 @@
           <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700"><input type="checkbox" class="ef_race_cat w-4 h-4 accent-indigo-600" value="100K" /> 100K (Ultra)</label>
         </div>
       </div>
+      <div class="border-t pt-4 mb-5">
+        <p class="form-label mb-1">Payment Recipients</p>
+        <p class="text-xs text-gray-400 mb-3">Each recipient needs a display name, UPI ID, and QR code image URL. Shown to users on the bus payment page.</p>
+        <div id="ef_recipients_list" class="space-y-2 mb-3"></div>
+        <button type="button" onclick="addRecipientRow()" class="text-sm text-indigo-600 hover:text-indigo-800 font-semibold">+ Add Recipient</button>
+      </div>
       <p id="eventEditorError" class="text-red-500 text-sm mb-3 hidden"></p>
       <div class="flex gap-3 justify-end">
         <button onclick="closeEventEditor()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -1892,8 +1898,21 @@
     }
 
     // ---- Event Editor ----
+    function addRecipientRow(name='', upi='', qr='') {
+      const list = document.getElementById('ef_recipients_list');
+      const row = document.createElement('div');
+      row.className = 'ef_recipient_row grid gap-2 items-start';
+      row.style.gridTemplateColumns = '1fr 1fr 1fr auto';
+      row.innerHTML = `
+        <input type="text" placeholder="Name" value="${name.replace(/"/g,'&quot;')}" class="form-input ef_rcpt_name" />
+        <input type="text" placeholder="UPI ID" value="${upi.replace(/"/g,'&quot;')}" class="form-input ef_rcpt_upi" />
+        <input type="text" placeholder="QR Image URL" value="${qr.replace(/"/g,'&quot;')}" class="form-input ef_rcpt_qr" />
+        <button type="button" onclick="this.closest('.ef_recipient_row').remove()" class="text-red-400 hover:text-red-600 font-bold text-lg px-1 self-center">&times;</button>`;
+      list.appendChild(row);
+    }
+
     let editingEventId = null;
-    function openEventEditor(eventId) {
+    async function openEventEditor(eventId) {
       editingEventId = eventId;
       const ev = eventId ? eventsData.find(e => e.id === eventId) : null;
       document.getElementById('eventEditorTitle').textContent = ev ? 'Edit Event' : 'New Event';
@@ -1915,6 +1934,11 @@
       document.getElementById('ef_feedback').checked        = !!ev?.feedback;
       const existingCats = ev?.race_categories || [];
       document.querySelectorAll('.ef_race_cat').forEach(cb => { cb.checked = existingCats.includes(cb.value); });
+      document.getElementById('ef_recipients_list').innerHTML = '';
+      if (ev?.event_name) {
+        const { data: rcpts } = await db.from('event_payment_recipients').select('*').eq('event_name', ev.event_name).order('display_order');
+        (rcpts || []).forEach(r => addRecipientRow(r.recipient_name, r.upi_id || '', r.qr_image_url || ''));
+      }
       const btn = document.getElementById('saveEventBtn'); btn.disabled = false; btn.textContent = 'Save Event';
       document.getElementById('eventEditorError').classList.add('hidden');
       document.getElementById('eventEditorModal').classList.remove('hidden');
@@ -1944,6 +1968,16 @@
       if (error || !data?.success) { errEl.textContent = data?.error || error?.message || 'Save failed.'; errEl.classList.remove('hidden'); return; }
       const selectedCats = [...document.querySelectorAll('.ef_race_cat:checked')].map(cb => cb.value);
       await db.from('event_race_categories').upsert({ event_name: name, race_categories: selectedCats }, { onConflict: 'event_name' });
+      await db.from('event_payment_recipients').delete().eq('event_name', name);
+      const rcptRows = document.querySelectorAll('.ef_recipient_row');
+      const recipients = [...rcptRows].map((row, i) => ({
+        event_name: name,
+        recipient_name: row.querySelector('.ef_rcpt_name').value.trim(),
+        upi_id: row.querySelector('.ef_rcpt_upi').value.trim() || null,
+        qr_image_url: row.querySelector('.ef_rcpt_qr').value.trim() || null,
+        display_order: i,
+      })).filter(r => r.recipient_name);
+      if (recipients.length) await db.from('event_payment_recipients').insert(recipients);
       closeEventEditor(); loadEventsTab(); loadEventFilter();
     }
 
