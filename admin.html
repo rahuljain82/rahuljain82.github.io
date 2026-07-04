@@ -377,6 +377,11 @@
           <span id="seatsInfoText" class="text-blue-800"></span>
         </div>
 
+        <!-- Payment summary bar (bus_payments tab only, shown when event filtered) -->
+        <div id="paymentSummaryBar" style="display:none;" class="bg-white border border-gray-200 rounded-lg px-4 py-3 mb-3 text-sm">
+          <div id="paymentSummaryContent"></div>
+        </div>
+
         <!-- SHARED DATA TABLE (for non-runner tabs) -->
         <div id="tableWrap" style="display:none;" class="bg-white border border-gray-200 rounded-xl shadow overflow-x-auto" style="max-height:calc(100vh - 190px); overflow-y:auto;">
           <div id="tableContent" class="p-4 text-gray-400 text-sm">Select a section to load data.</div>
@@ -1063,6 +1068,7 @@
       document.getElementById('emailBtn').style.display = 'none';
       document.getElementById('newEventBtn').style.display = 'none';
       document.getElementById('seatsInfoBar').style.display = 'none';
+      document.getElementById('paymentSummaryBar').style.display = 'none';
 
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       const activeEl = document.querySelector(`.nav-item[data-nav="${key}"]`);
@@ -1517,6 +1523,23 @@
       }
       tableData = result.data || [];
 
+      // For bus_bookings: merge payment status from bus_payments
+      if (currentTab === 'bus_bookings' && tableData.length > 0) {
+        const { data: pmtData } = await db
+          .from('bus_payments')
+          .select('unique_id, event_name, payment_received');
+        if (pmtData) {
+          const pmtMap = {};
+          pmtData.forEach(p => { pmtMap[p.unique_id + '|' + p.event_name] = p; });
+          tableData.forEach(row => {
+            const key = (row.unique_id || '') + '|' + (row.event_name || '');
+            const pmt = pmtMap[key];
+            if (!pmt) row.payment_status = 'not_done';
+            else row.payment_status = pmt.payment_received ? 'verified' : 'under_review';
+          });
+        }
+      }
+
       // For bus_payments: merge id, payment_received, recipient_name, source_upi_id + name from bus_bookings
       if (currentTab === 'bus_payments' && tableData.length > 0) {
         const [pmtRes, bookRes] = await Promise.all([
@@ -1588,7 +1611,11 @@
         html += '<tr>';
         cols.forEach(col => {
           const val = row[col];
-          if (col === 'payment_received') {
+          if (col === 'payment_status') {
+            const labels = { not_done: 'Not Done', under_review: 'Under Review', verified: 'Verified by Admin' };
+            const colors = { not_done: 'background:#fee2e2;color:#991b1b;', under_review: 'background:#fef9c3;color:#854d0e;', verified: 'background:#dcfce7;color:#166534;' };
+            html += `<td><span style="font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;${colors[val] || ''}">${labels[val] || '—'}</span></td>`;
+          } else if (col === 'payment_received') {
             const isPaid = !!val;
             html += `<td><span class="badge ${isPaid ? 'badge-admin' : 'badge-user'}">${isPaid ? '✓ Received' : 'Pending'}</span></td>`;
           } else if (PII_FIELDS.has(col) && val) {
@@ -1673,7 +1700,7 @@
     }
 
     // ---- Event Data Edit ----
-    const ED_SKIP = new Set(['id', 'created_at']);
+    const ED_SKIP = new Set(['id', 'created_at', 'payment_status']);
     let editEventDataTarget = null;
 
     function openEditEventDataModal(ri) {
@@ -1795,24 +1822,78 @@
       const ev = document.getElementById('eventFilter').value;
       const bar = document.getElementById('seatsInfoBar');
       const txt = document.getElementById('seatsInfoText');
-      if (!ev) { bar.style.display = 'none'; return; }
+      const summaryBar = document.getElementById('paymentSummaryBar');
+      const summaryContent = document.getElementById('paymentSummaryContent');
 
-      const [evRes, paidRes] = await Promise.all([
+      if (!ev) {
+        bar.style.display = 'none';
+        summaryBar.style.display = 'none';
+        return;
+      }
+
+      const [evRes, verifiedPmtsRes] = await Promise.all([
         db.from('events').select('total_seats').eq('event_name', ev).single(),
-        db.from('bus_payments').select('id', { count: 'exact', head: true }).eq('event_name', ev).eq('payment_received', true)
+        db.from('bus_payments').select('unique_id, recipient_name, amount_paid').eq('event_name', ev).eq('payment_received', true)
       ]);
 
+      // ---- Seats capacity bar ----
       const totalSeats = evRes.data?.total_seats;
-      if (!totalSeats) { bar.style.display = 'none'; return; }
+      const verifiedPmts = verifiedPmtsRes.data || [];
+      const paidCount = verifiedPmts.length;
 
-      const paidCount = paidRes.count || 0;
-      const remaining = totalSeats - paidCount;
-      bar.style.display = 'flex';
-      if (remaining <= 0) {
-        txt.innerHTML = `<strong style="color:#dc2626;">FULL</strong> &nbsp;—&nbsp; ${paidCount} payments received / ${totalSeats} total seats &nbsp;<span style="background:#fecaca;color:#dc2626;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:9999px;">NO SEATS REMAINING</span>`;
+      if (totalSeats) {
+        const remaining = totalSeats - paidCount;
+        bar.style.display = 'flex';
+        if (remaining <= 0) {
+          txt.innerHTML = `<strong style="color:#dc2626;">FULL</strong> &nbsp;—&nbsp; ${paidCount} payments verified / ${totalSeats} total seats &nbsp;<span style="background:#fecaca;color:#dc2626;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:9999px;">NO SEATS REMAINING</span>`;
+        } else {
+          txt.innerHTML = `<strong>${paidCount}</strong> payments verified &nbsp;•&nbsp; <strong>${totalSeats}</strong> total seats &nbsp;•&nbsp; <strong style="color:#16a34a;">${remaining} remaining</strong>`;
+        }
       } else {
-        txt.innerHTML = `<strong>${paidCount}</strong> payments received &nbsp;•&nbsp; <strong>${totalSeats}</strong> total seats &nbsp;•&nbsp; <strong style="color:#16a34a;">${remaining} remaining</strong>`;
+        bar.style.display = 'none';
       }
+
+      // ---- Per-recipient payment summary ----
+      if (verifiedPmts.length === 0) { summaryBar.style.display = 'none'; return; }
+
+      // Fetch bus_seats for each verified payer
+      const verifiedIds = verifiedPmts.map(p => p.unique_id);
+      const { data: bookings } = await db
+        .from('bus_bookings')
+        .select('unique_id, bus_seats')
+        .eq('event_name', ev)
+        .in('unique_id', verifiedIds);
+
+      const seatMap = {};
+      (bookings || []).forEach(b => { seatMap[b.unique_id] = b.bus_seats || 0; });
+
+      // Group by recipient
+      const groups = {};
+      verifiedPmts.forEach(p => {
+        const name = p.recipient_name || 'Unknown';
+        if (!groups[name]) groups[name] = { seats: 0, amount: 0 };
+        groups[name].seats += seatMap[p.unique_id] || 0;
+        groups[name].amount += p.amount_paid || 0;
+      });
+
+      const totalVerifiedSeats = Object.values(groups).reduce((s, g) => s + g.seats, 0);
+      const totalVerifiedAmount = Object.values(groups).reduce((s, g) => s + g.amount, 0);
+
+      let html = `<div style="font-weight:600;color:#1f2937;margin-bottom:0.5rem;">
+        Payment Summary &nbsp;—&nbsp; ${totalVerifiedSeats} seats &nbsp;•&nbsp; ₹${totalVerifiedAmount.toLocaleString('en-IN')} total
+      </div><div style="display:flex;flex-wrap:wrap;gap:0.5rem;">`;
+
+      Object.entries(groups).forEach(([name, g]) => {
+        html += `<div style="display:flex;align-items:center;gap:0.4rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:0.5rem;padding:0.35rem 0.75rem;font-size:0.75rem;">
+          <span style="font-weight:700;color:#166534;">${name}</span>
+          <span style="color:#9ca3af;">—</span>
+          <span style="color:#374151;">${g.seats} seat${g.seats !== 1 ? 's' : ''} &nbsp;•&nbsp; ₹${g.amount.toLocaleString('en-IN')}</span>
+        </div>`;
+      });
+
+      html += '</div>';
+      summaryContent.innerHTML = html;
+      summaryBar.style.display = 'block';
     }
 
     // ---- Email Data Modal ----
