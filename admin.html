@@ -231,7 +231,7 @@
           <span id="rowCount" class="text-sm text-gray-500 whitespace-nowrap" style="display:none;"></span>
           <button id="addRowBtn" onclick="openAddEventDataModal()" style="display:none;" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-1.5 rounded">+ Add Row</button>
           <button id="clearTableBtn" onclick="openClearModal()" style="display:none;" class="bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold px-3 py-1.5 rounded">Clear All</button>
-          <button id="exportBtn" onclick="exportToExcel()" style="display:none;" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+          <button id="exportBtn" onclick="openExportColModal()" style="display:none;" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded flex items-center gap-1">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export Excel
           </button>
@@ -853,6 +853,27 @@
       <div class="flex gap-3 justify-end mt-5 border-t pt-4">
         <button onclick="closeLandingCardModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
         <button id="lc_save_btn" onclick="saveLandingCard()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Column Picker Modal -->
+  <div id="exportColModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:480px;">
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Export to Excel</h3>
+      <p class="text-sm text-gray-500 mb-3">Choose which columns to include:</p>
+      <div class="flex gap-2 mb-3">
+        <button onclick="exportColSelectAll(true)" class="text-xs text-indigo-600 hover:underline">Select all</button>
+        <span class="text-gray-300">|</span>
+        <button onclick="exportColSelectAll(false)" class="text-xs text-indigo-600 hover:underline">Deselect all</button>
+      </div>
+      <div id="exportColList" class="grid grid-cols-2 gap-x-4 gap-y-2 max-h-64 overflow-y-auto mb-5 pr-1"></div>
+      <div class="flex gap-3 justify-end border-t pt-4">
+        <button onclick="document.getElementById('exportColModal').classList.add('hidden')" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button onclick="confirmExportToExcel()" class="px-5 py-2 text-sm rounded bg-green-600 hover:bg-green-700 text-white font-semibold flex items-center gap-1">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
       </div>
     </div>
   </div>
@@ -1564,6 +1585,16 @@
             if (book && !row.name) row.name = book.name;
           });
         }
+        // Merge phone from runners
+        const pmtUniqueIds = [...new Set(tableData.map(r => r.unique_id).filter(Boolean))];
+        if (pmtUniqueIds.length > 0) {
+          const { data: pmtRunners } = await db.from('runners').select('unique_id, phone').in('unique_id', pmtUniqueIds);
+          if (pmtRunners) {
+            const phoneMap = {};
+            pmtRunners.forEach(r => { phoneMap[r.unique_id] = r.phone; });
+            tableData.forEach(row => { if (!row.phone) row.phone = phoneMap[row.unique_id] || null; });
+          }
+        }
       }
 
       // For bib_details: merge in phone from runners
@@ -1798,13 +1829,35 @@
     }
 
     // ---- Export (shared table) ----
-    function exportToExcel() {
+    function openExportColModal() {
       if (!tableData || tableData.length === 0) { alert('No data to export.'); return; }
-      const exportData = tableData.map(row => { const clean = {}; tableColumns.forEach(col => { clean[col] = row[col] ?? ''; }); return clean; });
+      const list = document.getElementById('exportColList');
+      list.innerHTML = tableColumns.map(col =>
+        `<label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" class="export-col-cb rounded" value="${col}" checked />
+          <span>${col.replace(/_/g, ' ')}</span>
+        </label>`
+      ).join('');
+      document.getElementById('exportColModal').classList.remove('hidden');
+    }
+
+    function exportColSelectAll(checked) {
+      document.querySelectorAll('.export-col-cb').forEach(cb => { cb.checked = checked; });
+    }
+
+    function confirmExportToExcel() {
+      const selected = [...document.querySelectorAll('.export-col-cb:checked')].map(cb => cb.value);
+      if (selected.length === 0) { alert('Please select at least one column.'); return; }
+      document.getElementById('exportColModal').classList.add('hidden');
+      const exportData = tableData.map(row => {
+        const clean = {};
+        selected.forEach(col => { clean[col.replace(/_/g, ' ')] = row[col] ?? ''; });
+        return clean;
+      });
       const wb = XLSX.utils.book_new();
       const ev = document.getElementById('eventFilter').value;
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exportData), (currentTab + (ev ? '_' + ev : '')).slice(0,31));
-      XLSX.writeFile(wb, 'RN_' + currentTab + (ev ? '_' + ev.replace(/\s+/g,'_') : '') + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exportData), (currentTab + (ev ? '_' + ev : '')).slice(0, 31));
+      XLSX.writeFile(wb, 'RN_' + currentTab + (ev ? '_' + ev.replace(/\s+/g, '_') : '') + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
     }
 
     // ---- Bus Payments: Mark Paid (in-place, no reload) ----
