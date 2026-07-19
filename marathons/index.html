@@ -331,9 +331,14 @@
     let marathons = [];
     let filteredMarathons = [];
     let showAll = false;
+    let offlineRegEvents = new Set();
 
     async function loadEvents() {
       const cached = getCached(CACHE_KEY, CACHE_TTL);
+      // Always fetch offline reg status fresh (not cached)
+      const { data: orData } = await db.from('event_offline_reg_config').select('event_name').eq('enabled', true);
+      offlineRegEvents = new Set((orData || []).map(r => r.event_name));
+
       if (cached && cached.length > 0) {
         marathons = cached;
         filterAndDisplay();
@@ -362,6 +367,7 @@
         busPayment: e.bus_payment,
         bibdetails: e.bib_details,
         feedback: e.feedback,
+        offlineReg: offlineRegEvents.has(e.event_name),
       }));
 
       setCached(CACHE_KEY, marathons);
@@ -403,7 +409,14 @@
             <div class="meta"><i data-feather="map-pin" class="w-4 h-4"></i><span>${marathon.city}</span></div>
             <div class="desc">${marathon.description || ''}</div>
             <div class="card-actions">
-              ${marathon.registrationLink ? `<a href="${marathon.registrationLink}" target="_blank" class="btn-primary"><i data-feather="external-link" class="w-4 h-4"></i>Register Now</a>` : ''}
+              ${(marathon.registrationLink && marathon.offlineReg)
+                ? `<button onclick="openRegChoiceModal('${(marathon.name||'').replace(/'/g,"\\'")}','${(marathon.registrationLink||'').replace(/'/g,"\\'")}',true)" class="btn-primary"><i data-feather="edit-3" class="w-4 h-4"></i>Register Now</button>`
+                : marathon.registrationLink
+                  ? `<a href="${marathon.registrationLink}" target="_blank" class="btn-primary"><i data-feather="external-link" class="w-4 h-4"></i>Register Now</a>`
+                  : marathon.offlineReg
+                    ? `<a href="../RNOfflineRegForm.html?event=${encodeURIComponent(marathon.name)}" class="btn-primary"><i data-feather="edit-3" class="w-4 h-4"></i>Register Now</a>`
+                    : ''
+              }
               ${marathon.busAvailable ? `<a href="RNBusForm.html" class="bus-btn"><i data-feather="truck" class="w-4 h-4"></i>Ninja Discount &amp; Bus Interest</a>` : ''}
               ${marathon.busPayment ? `<a href="BusPaymentStep2.html" class="bus-btn"><i data-feather="truck" class="w-4 h-4"></i>Bus Payment</a>` : ''}
               ${marathon.bibdetails ? `<a href="RNBibForm.html" class="bib-btn"><i data-feather="file-text" class="w-4 h-4"></i>Bib Details</a>` : ''}
@@ -460,6 +473,26 @@
 
     window.addEventListener('DOMContentLoaded', loadEvents);
   </script>
+
+  <!-- Registration Choice Modal -->
+  <div id="regChoiceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:none; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:white; border-radius:0.75rem; padding:1.5rem; max-width:360px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="font-size:1rem; font-weight:700; color:#1e293b; margin:0;">How would you like to register?</h3>
+        <button onclick="closeRegChoiceModal()" style="color:#94a3b8; font-size:1.4rem; line-height:1; background:none; border:none; cursor:pointer;">&times;</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        <a id="regChoiceExternal" href="#" target="_blank" style="display:flex; align-items:center; gap:0.75rem; padding:0.9rem 1rem; border:1.5px solid #e2e8f0; border-radius:0.6rem; text-decoration:none; color:#1e293b; font-weight:600; font-size:0.9rem; transition:border-color 0.15s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <span style="font-size:1.2rem;">🌐</span>
+          <div><div style="font-size:0.88rem; font-weight:700; color:#1e293b;">Register Online</div><div style="font-size:0.75rem; color:#64748b; font-weight:400;">Opens the external registration site</div></div>
+        </a>
+        <a id="regChoiceOffline" href="#" style="display:flex; align-items:center; gap:0.75rem; padding:0.9rem 1rem; border:1.5px solid #e2e8f0; border-radius:0.6rem; text-decoration:none; color:#1e293b; font-weight:600; font-size:0.9rem; transition:border-color 0.15s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <span style="font-size:1.2rem;">📋</span>
+          <div><div style="font-size:0.88rem; font-weight:700; color:#1e293b;">Register via Ninjas Team</div><div style="font-size:0.75rem; color:#64748b; font-weight:400;">Fill the offline registration form</div></div>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- Race Info Modal -->
   <div id="raceInfoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; overflow-y:auto; padding:1rem;">
@@ -564,6 +597,19 @@
       document.getElementById('raceInfoModal').style.display = 'none';
       document.getElementById('raceInfoSearch').value = '';
     }
+
+    function openRegChoiceModal(eventName, externalLink, hasOffline) {
+      const modal = document.getElementById('regChoiceModal');
+      document.getElementById('regChoiceExternal').href = externalLink;
+      document.getElementById('regChoiceOffline').href = '../RNOfflineRegForm.html?event=' + encodeURIComponent(eventName);
+      modal.style.display = 'flex';
+    }
+    function closeRegChoiceModal() {
+      document.getElementById('regChoiceModal').style.display = 'none';
+    }
+    document.getElementById('regChoiceModal').addEventListener('click', function(e) {
+      if (e.target === this) closeRegChoiceModal();
+    });
 
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeRaceInfoModal();

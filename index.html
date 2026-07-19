@@ -941,9 +941,14 @@
                 ${e.location}
               </div>
               ${e.summary ? `<div class="desc">${e.summary}</div>` : ''}
-              <a href="${e.registration_link || '/marathons'}" target="${e.registration_link ? '_blank' : '_self'}" class="event-register">
-                ${e.registration_link ? 'Register Now →' : 'View Details →'}
-              </a>
+              ${(e.registration_link && indexOfflineRegEvents.has(e.event_name))
+                ? `<button onclick="openIndexRegChoice('${(e.event_name||'').replace(/'/g,"\\'")}','${(e.registration_link||'').replace(/'/g,"\\'")}'); event.stopPropagation();" class="event-register" style="cursor:pointer;">Register Now →</button>`
+                : e.registration_link
+                  ? `<a href="${e.registration_link}" target="_blank" class="event-register">Register Now →</a>`
+                  : indexOfflineRegEvents.has(e.event_name)
+                    ? `<a href="RNOfflineRegForm.html?event=${encodeURIComponent(e.event_name)}" class="event-register">Register Now →</a>`
+                    : `<a href="/marathons" class="event-register">View Details →</a>`
+              }
             </div>
           </div>`;
         track.appendChild(slide);
@@ -982,22 +987,31 @@
       if (Math.abs(dx) > 40) { evtGoTo(evtSlide + (dx < 0 ? 1 : -1)); evtStartAuto(); }
     });
 
+    let indexOfflineRegEvents = new Set();
+
     async function loadUpcomingEvents() {
       if (!db) { buildEventsCarousel([]); return; }
       try {
         const today = new Date().toISOString().split('T')[0];
-        const { data, error } = await db
-          .from('events')
-          .select('event_name,event_date,location,summary,registration_link')
-          .eq('display', true)
-          .gte('event_date', today)
-          .order('event_date', { ascending: true })
-          .limit(4);
-        buildEventsCarousel(error ? [] : (data || []));
+        const [eventsRes, orRes] = await Promise.all([
+          db.from('events').select('event_name,event_date,location,summary,registration_link').eq('display', true).gte('event_date', today).order('event_date', { ascending: true }).limit(4),
+          db.from('event_offline_reg_config').select('event_name').eq('enabled', true)
+        ]);
+        indexOfflineRegEvents = new Set((orRes.data || []).map(r => r.event_name));
+        buildEventsCarousel(eventsRes.error ? [] : (eventsRes.data || []));
       } catch(e) {
         buildEventsCarousel([]);
       }
     }
+
+    function openIndexRegChoice(eventName, externalLink) {
+      const offlineUrl = 'RNOfflineRegForm.html?event=' + encodeURIComponent(eventName);
+      const modal = document.getElementById('indexRegChoiceModal');
+      document.getElementById('indexRegChoiceExt').href = externalLink;
+      document.getElementById('indexRegChoiceOfl').href = offlineUrl;
+      modal.style.display = 'flex';
+    }
+    function closeIndexRegChoice() { document.getElementById('indexRegChoiceModal').style.display = 'none'; }
 
     // ---- HAMBURGER MENU (dynamic from Supabase) ----
     async function loadMenuLinks() {
@@ -1056,5 +1070,25 @@
   <style>
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+
+  <!-- Registration Choice Modal -->
+  <div id="indexRegChoiceModal" onclick="if(event.target===this)closeIndexRegChoice()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:white; border-radius:0.75rem; padding:1.5rem; max-width:340px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="font-size:0.95rem; font-weight:700; color:#1e293b; margin:0;">How would you like to register?</h3>
+        <button onclick="closeIndexRegChoice()" style="color:#94a3b8; font-size:1.4rem; line-height:1; background:none; border:none; cursor:pointer;">&times;</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        <a id="indexRegChoiceExt" href="#" target="_blank" onclick="closeIndexRegChoice()" style="display:flex; align-items:center; gap:0.75rem; padding:0.85rem 1rem; border:1.5px solid #e2e8f0; border-radius:0.6rem; text-decoration:none; color:#1e293b;">
+          <span style="font-size:1.2rem;">🌐</span>
+          <div><div style="font-size:0.85rem; font-weight:700; color:#1e293b;">Register Online</div><div style="font-size:0.73rem; color:#64748b;">Opens the external registration site</div></div>
+        </a>
+        <a id="indexRegChoiceOfl" href="#" onclick="closeIndexRegChoice()" style="display:flex; align-items:center; gap:0.75rem; padding:0.85rem 1rem; border:1.5px solid #e2e8f0; border-radius:0.6rem; text-decoration:none; color:#1e293b;">
+          <span style="font-size:1.2rem;">📋</span>
+          <div><div style="font-size:0.85rem; font-weight:700; color:#1e293b;">Register via Ninjas Team</div><div style="font-size:0.73rem; color:#64748b;">Fill the offline registration form</div></div>
+        </a>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

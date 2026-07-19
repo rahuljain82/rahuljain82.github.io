@@ -162,7 +162,7 @@
           Dashboard
         </button>
 
-        <div class="nav-section-label" style="margin-top:0.5rem;">User Management</div>
+        <div class="nav-section-label" id="navLabel-users" style="margin-top:0.5rem;">User Management</div>
         <button class="nav-section-toggle" id="secToggle-users" onclick="toggleSection('sec-users','secToggle-users')">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           &nbsp;Users <span class="chevron">&#9660;</span>
@@ -184,13 +184,14 @@
           <button class="nav-item" data-nav="bus_payments"  onclick="navigateTo('bus_payments')">Bus - Step2 (Payment)</button>
           <button class="nav-item" data-nav="bib_details"   onclick="navigateTo('bib_details')">Bib Collection</button>
           <button class="nav-item" data-nav="race_feedback" onclick="navigateTo('race_feedback')">Race Feedback</button>
+          <button class="nav-item" data-nav="offline_registrations" onclick="navigateTo('offline_registrations')">Offline Registrations</button>
           <button class="nav-item" data-nav="tshirt"        onclick="navigateTo('tshirt')">T-Shirt - Step1 (Booking)</button>
           <button class="nav-item" data-nav="tshirt2"       onclick="navigateTo('tshirt2')">T-Shirt - Step2 (Payment)</button>
-          <div style="padding: 0.5rem 1rem 0.15rem 1.35rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; white-space: nowrap;">Volunteering</div>
+          <div id="navLabel-volunteering" style="padding: 0.5rem 1rem 0.15rem 1.35rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; white-space: nowrap;">Volunteering</div>
           <button class="nav-item" data-nav="race_volunteering" onclick="navigateTo('race_volunteering')">Race Volunteering</button>
         </div>
 
-        <div class="nav-section-label" style="margin-top:0.5rem;">Content Management</div>
+        <div class="nav-section-label" id="navLabel-content" style="margin-top:0.5rem;">Content Management</div>
         <button class="nav-section-toggle" id="secToggle-content" onclick="toggleSection('sec-content','secToggle-content')">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
           &nbsp;Content <span class="chevron">&#9660;</span>
@@ -400,6 +401,34 @@
           </div>
           <div id="eventsCount" class="text-xs text-gray-400 mb-2"></div>
           <div id="eventsContent" class="text-gray-400 text-sm">Loading...</div>
+        </div>
+
+        <!-- OFFLINE REGISTRATIONS -->
+        <div id="ws-offline_registrations" style="display:none;">
+          <div class="content-card mb-4">
+            <div class="flex items-center gap-3 flex-wrap">
+              <label class="text-sm font-medium text-gray-700">Event:</label>
+              <select id="ofl_event_filter" class="form-input py-1.5 text-sm w-auto" onchange="loadOflRegistrations()">
+                <option value="">All Events</option>
+              </select>
+              <span id="ofl_row_count" class="text-sm text-gray-500 ml-2"></span>
+              <button onclick="loadOflRegistrations()" class="ml-auto text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="content-card overflow-x-auto">
+            <div id="ofl_table_content"><p class="text-gray-400 text-sm p-2">Loading...</p></div>
+          </div>
+        </div>
+
+        <!-- Offline Registration Detail Modal -->
+        <div id="oflDetailModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:520px;max-height:80vh;overflow-y:auto;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">Registration Details</h3>
+              <button onclick="document.getElementById('oflDetailModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <div id="ofl_detail_content" class="space-y-2 text-sm text-gray-700"></div>
+          </div>
         </div>
 
         <!-- RACE VOLUNTEERING -->
@@ -670,6 +699,50 @@
 
   <!-- MODALS -->
 
+  <!-- Grant / Edit Admin Access Modal -->
+  <div id="adminAccessModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:480px; max-height:85vh; overflow-y:auto;">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="adminAccessModalTitle" class="text-lg font-bold text-gray-800">Grant Admin Access</h3>
+        <button onclick="closeAdminAccessModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+      </div>
+      <div id="adminAccessModalSubtitle" class="text-sm text-gray-500 mb-4"></div>
+
+      <p class="form-label mb-2">Access Level</p>
+      <div class="space-y-3 mb-5">
+        <label class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+          <input type="radio" name="adminRole" id="roleFullAdmin" value="full" class="mt-0.5 accent-indigo-600" checked />
+          <div>
+            <p class="text-sm font-semibold text-gray-800">Full Admin</p>
+            <p class="text-xs text-gray-500 mt-0.5">Access to all sections — user management, event data, content, and volunteering.</p>
+          </div>
+        </label>
+        <label class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+          <input type="radio" name="adminRole" id="roleEventAdmin" value="event" class="mt-0.5 accent-indigo-600" onchange="toggleEventPicker()" />
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-gray-800">Event Admin</p>
+            <p class="text-xs text-gray-500 mt-0.5">Only sees event data (bookings, payments, registrations etc.) for the selected events. No user management or content access.</p>
+          </div>
+        </label>
+      </div>
+      <script>document.getElementById('roleFullAdmin').addEventListener('change', toggleEventPicker);</script>
+
+      <div id="eventPickerSection" class="hidden mb-5">
+        <p class="form-label mb-2">Allowed Events <span class="text-red-500">*</span></p>
+        <p class="text-xs text-gray-400 mb-2">Select the events this admin can access. They will only see data filtered to these events.</p>
+        <div id="adminEventPickerList" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100 bg-white">
+          <p class="text-xs text-gray-400 p-3">Loading events...</p>
+        </div>
+      </div>
+
+      <p id="adminAccessModalError" class="text-red-500 text-sm mb-3 hidden"></p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="closeAdminAccessModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="adminAccessSaveBtn" onclick="saveAdminAccess()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Grant Access</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Runner Editor Modal -->
   <div id="runnerEditorModal" class="modal-overlay hidden" style="align-items:flex-start; padding-top:2rem; overflow-y:auto;">
     <div class="modal-box" style="max-width:600px; max-height:88vh; overflow-y:auto;">
@@ -933,6 +1006,7 @@
           <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_ninja_discount" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Ninja Discount</span></label>
           <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_bus_payment" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Bus Payment</span></label>
           <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_feedback" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Feedback</span></label>
+          <label class="flex items-center gap-2 cursor-pointer select-none"><span class="toggle"><input type="checkbox" id="ef_offline_reg" onchange="toggleOfflineRegConfig()" /><span class="toggle-slider"></span></span><span class="text-sm text-gray-700 font-medium">Offline Reg</span></label>
         </div>
       </div>
       <div class="border-t pt-4 mb-5">
@@ -952,6 +1026,27 @@
           <button type="button" onclick="addCustomRaceCat()" class="px-3 py-1.5 text-sm rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold border border-indigo-200">+ Add Custom</button>
         </div>
       </div>
+      <div id="ef_offline_reg_config" class="border-t pt-4 mb-5 hidden">
+        <p class="form-label mb-1">Offline Registration Config</p>
+        <p class="text-xs text-gray-400 mb-4">Configure which fields appear on the offline registration form for this event.</p>
+
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Default Fields</p>
+        <div id="ef_ofl_default_fields" class="rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100 mb-4"></div>
+
+        <div class="flex items-center justify-between mb-1 mt-4">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category Fees</p>
+          <button type="button" onclick="refreshOflCategoryFees()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Sync from categories above</button>
+        </div>
+        <p class="text-xs text-gray-400 mb-2">Set registration fee per race category. Used to auto-populate fees on the form.</p>
+        <div id="ef_ofl_category_fees" class="space-y-1.5 mb-4"></div>
+
+        <div class="flex items-center justify-between mb-2 mt-4">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Custom Fields</p>
+          <button type="button" onclick="addOflCustomField()" class="text-sm text-indigo-600 hover:text-indigo-800 font-semibold">+ Add Field</button>
+        </div>
+        <div id="ef_ofl_custom_fields" class="space-y-2"></div>
+      </div>
+
       <div class="border-t pt-4 mb-5">
         <p class="form-label mb-1">Payment Recipients</p>
         <p class="text-xs text-gray-400 mb-3">Each recipient needs a display name, UPI ID, and QR code image URL. Shown to users on the bus payment page.</p>
@@ -1065,6 +1160,7 @@
       bus_payments:  { title: 'Bus - Step2 (Payment)',        breadcrumb: 'Event Management / Event Data / Bus Step2',      tab: 'bus_payments',  showExport: true, showClear: true, showFilter: true, showEmail: true  },
       bib_details:   { title: 'Bib Collection',               breadcrumb: 'Event Management / Event Data / Bib Collection', tab: 'bib_details',   showExport: true, showClear: true, showFilter: true, showEmail: true  },
       race_feedback: { title: 'Race Feedback',                breadcrumb: 'Event Management / Event Data / Race Feedback',  tab: 'race_feedback', showExport: true, showClear: true, showFilter: true  },
+      offline_registrations: { title: 'Offline Registrations', breadcrumb: 'Event Management / Offline Registrations' },
       landing_cards:  { title: 'Landing Page Cards',    breadcrumb: 'Content Management / Landing Page Cards' },
       partners:       { title: 'Partners & Sponsors',   breadcrumb: 'Content Management / Partners & Sponsors' },
       hamburger_menu: { title: 'Hamburger Menu',        breadcrumb: 'Content Management / Hamburger Menu' },
@@ -1074,12 +1170,14 @@
 
     const ALL_PANELS = [
       'ws-home', 'ws-all_runners', 'ws-add_runner', 'tableWrap', 'eventsPanel',
-      'ws-tshirt2', 'ws-race_volunteering', 'ws-landing_cards', 'ws-partners', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt'
+      'ws-tshirt2', 'ws-race_volunteering', 'ws-landing_cards', 'ws-partners', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt',
+      'ws-offline_registrations'
     ];
 
     function navigateTo(key) {
       const meta = NAV_META[key];
       if (!meta) return;
+      if (session && isEventAdmin() && !EVENT_ADMIN_ALLOWED.has(key)) return;
 
       document.getElementById('wsTitle').textContent = meta.title;
       document.getElementById('wsBreadcrumb').textContent = meta.breadcrumb;
@@ -1152,6 +1250,10 @@
         document.getElementById('qz-editor-view').style.display = 'none';
         loadQuizzes();
 
+      } else if (key === 'offline_registrations') {
+        document.getElementById('ws-offline_registrations').style.display = 'block';
+        initOflRegistrationsPanel();
+
       } else if (key === 'race_volunteering') {
         document.getElementById('ws-race_volunteering').style.display = 'block';
         initRvRaceList();
@@ -1194,9 +1296,18 @@
       if (pwd !== cpwd)   { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
       const { data, error } = await db.rpc('set_admin_password', { p_unique_id: uid, p_password: pwd });
       if (error || !data?.success) { errEl.textContent = data?.error || 'Failed to set password.'; errEl.classList.remove('hidden'); return; }
-      const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
-      session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
+      const [statusData, roleData] = await Promise.all([
+        db.rpc('check_admin_status', { p_unique_id: uid }),
+        loadAdminRole(uid)
+      ]);
+      session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid, role: roleData.role, eventAccess: roleData.event_names || [] };
       openDashboard();
+    }
+
+    async function loadAdminRole(uid) {
+      if (SUPER_ADMINS.includes(uid)) return { role: 'full', event_names: [] };
+      const { data } = await db.from('admin_access').select('role, event_names').eq('unique_id', uid).maybeSingle();
+      return data || { role: 'full', event_names: [] };
     }
 
     async function verifyAndLogin() {
@@ -1205,9 +1316,37 @@
       const errEl = document.getElementById('passwordError');
       const { data, error } = await db.rpc('verify_admin', { p_unique_id: uid, p_password: pwd });
       if (error || !data) { errEl.textContent = 'Incorrect password.'; errEl.classList.remove('hidden'); return; }
-      const statusData = await db.rpc('check_admin_status', { p_unique_id: uid });
-      session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid };
+      const [statusData, roleData] = await Promise.all([
+        db.rpc('check_admin_status', { p_unique_id: uid }),
+        loadAdminRole(uid)
+      ]);
+      session = { uniqueId: uid, password: pwd, name: statusData.data?.name || uid, role: roleData.role, eventAccess: roleData.event_names || [] };
       openDashboard();
+    }
+
+    const EVENT_ADMIN_ALLOWED = new Set(['home','bus_bookings','bus_payments','bib_details','race_feedback','offline_registrations','tshirt','tshirt2']);
+
+    function isEventAdmin() { return !isSuperAdmin() && session?.role === 'event'; }
+
+    function applyRoleRestrictions() {
+      const eventAdm = isEventAdmin();
+      const els = {
+        'navLabel-users':        eventAdm,
+        'secToggle-users':       eventAdm,
+        'sec-users':             eventAdm,
+        'navLabel-volunteering': eventAdm,
+        'navLabel-content':      eventAdm,
+        'secToggle-content':     eventAdm,
+        'sec-content':           eventAdm,
+      };
+      Object.entries(els).forEach(([id, hide]) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = hide ? 'none' : '';
+      });
+      const raceEventsBtn = document.querySelector('.nav-item[data-nav="race_events"]');
+      const raceVolBtn    = document.querySelector('.nav-item[data-nav="race_volunteering"]');
+      if (raceEventsBtn) raceEventsBtn.style.display = eventAdm ? 'none' : '';
+      if (raceVolBtn)    raceVolBtn.style.display    = eventAdm ? 'none' : '';
     }
 
     function openDashboard() {
@@ -1219,11 +1358,14 @@
       document.getElementById('welcomeName').textContent = session.name.split(' ')[0];
       document.getElementById('sidebarAvatar').textContent = session.name.charAt(0).toUpperCase();
       const superAdmin = isSuperAdmin();
-      document.getElementById('sidebarRole').textContent = superAdmin ? 'Super Admin' : 'Administrator';
+      const eventAdm = isEventAdmin();
+      const roleLabel = superAdmin ? 'Super Admin' : eventAdm ? 'Event Admin' : 'Administrator';
+      document.getElementById('sidebarRole').textContent = roleLabel;
       if (superAdmin) document.getElementById('sidebarRole').classList.add('super');
-      document.getElementById('adminRoleLabel').textContent = superAdmin ? 'Super Admin' : 'Administrator';
+      document.getElementById('adminRoleLabel').textContent = roleLabel;
+      applyRoleRestrictions();
       loadEventFilter();
-      navigateTo('home');
+      navigateTo(isEventAdmin() ? 'bus_bookings' : 'home');
     }
 
     function logout() {
@@ -1245,11 +1387,16 @@
     async function loadRunnersData() {
       document.getElementById('runnersTableContent').innerHTML = `<div class="flex items-center gap-3 p-6 text-gray-400"><div class="animate-spin rounded-full h-6 w-6 border-t-2 border-indigo-500"></div><span>Loading runners...</span></div>`;
       document.getElementById('runnersCount').textContent = '';
-      const result = await db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password });
+      const [result, accessRes] = await Promise.all([
+        db.rpc('admin_get_runners', { p_unique_id: session.uniqueId, p_password: session.password }),
+        db.from('admin_access').select('unique_id, role, event_names')
+      ]);
       if (result.error || result.data?.error) {
         document.getElementById('runnersTableContent').innerHTML = '<p class="text-red-500 p-4">Error: ' + (result.error?.message || result.data?.error) + '</p>';
         return;
       }
+      adminRolesMap = {};
+      (accessRes.data || []).forEach(r => { adminRolesMap[r.unique_id] = r; });
       allRunnersData = result.data || [];
       document.getElementById('runnersSearch').value = '';
       renderRunnersTable(allRunnersData);
@@ -1305,8 +1452,14 @@
             const isSuperRow = SUPER_ADMINS.includes(row.unique_id);
             if (isSuperRow) {
               html += `<td><span class="badge badge-super">Super Admin</span></td>`;
+            } else if (val) {
+              const access = adminRolesMap[row.unique_id];
+              const roleLabel = (access?.role === 'event')
+                ? `Event Admin<br><span style="font-size:0.65rem;font-weight:400;color:#6366f1;">${(access.event_names||[]).join(', ') || 'No events'}</span>`
+                : 'Admin';
+              html += `<td><span class="badge badge-admin" style="line-height:1.4;">${roleLabel}</span></td>`;
             } else {
-              html += `<td><span class="badge ${val ? 'badge-admin' : 'badge-user'}">${val ? 'Admin' : 'User'}</span></td>`;
+              html += `<td><span class="badge badge-user">User</span></td>`;
             }
           } else if (col.pii && val) {
             html += `<td class="pii-cell" data-val="${encodeURIComponent(val)}" data-field="${col.key}" title="Click to reveal">${maskPii(col.key, val)}</td>`;
@@ -1318,15 +1471,19 @@
         // Actions column
         const isSuperRow = SUPER_ADMINS.includes(row.unique_id);
         const canToggleAdmin = superAdmin && !isSuperRow && row.unique_id !== session.uniqueId;
-        const adminToggleBtn = canToggleAdmin
-          ? (row.is_admin
-              ? `<button onclick="toggleAdminFromTable('${row.unique_id}',true)" class="text-xs font-semibold px-2 py-1 rounded bg-red-100 hover:bg-red-200 text-red-700 whitespace-nowrap">Revoke Admin</button>`
-              : `<button onclick="toggleAdminFromTable('${row.unique_id}',false)" class="text-xs font-semibold px-2 py-1 rounded bg-green-100 hover:bg-green-200 text-green-700 whitespace-nowrap">Grant Admin</button>`)
-          : '';
+        let adminBtns = '';
+        if (canToggleAdmin) {
+          if (row.is_admin) {
+            adminBtns = `<button onclick="openEditAdminModal('${row.unique_id}')" class="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 whitespace-nowrap">Edit Access</button>
+              <button onclick="revokeAdminFromTable('${row.unique_id}')" class="text-xs font-semibold px-2 py-1 rounded bg-red-100 hover:bg-red-200 text-red-700 whitespace-nowrap">Revoke Admin</button>`;
+          } else {
+            adminBtns = `<button onclick="openGrantAdminModal('${row.unique_id}')" class="text-xs font-semibold px-2 py-1 rounded bg-green-100 hover:bg-green-200 text-green-700 whitespace-nowrap">Grant Admin</button>`;
+          }
+        }
 
         html += `<td class="flex gap-1.5 flex-wrap items-center">
           <button onclick="openRunnerEditor('${row.unique_id}')" class="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700">Edit</button>
-          ${adminToggleBtn}
+          ${adminBtns}
         </td>`;
         html += '</tr>';
       });
@@ -1357,16 +1514,104 @@
       return '••••••';
     }
 
-    async function toggleAdminFromTable(targetId, revoking) {
+    // ---- Admin Access Control ----
+    let adminRolesMap = {}; // uniqueId -> { role, event_names }
+    let adminAccessTarget = null; // { uniqueId, name, isEditing }
+
+    async function openGrantAdminModal(targetId) {
       const runner = allRunnersData.find(r => r.unique_id === targetId);
-      const name = runner ? runner.first_name : targetId;
-      const action = revoking ? 'revoke admin access from' : 'grant admin access to';
-      if (!confirm(`Are you sure you want to ${action} ${name}?`)) return;
+      adminAccessTarget = { uniqueId: targetId, name: runner?.first_name || targetId, isEditing: false };
+      document.getElementById('adminAccessModalTitle').textContent = 'Grant Admin Access';
+      document.getElementById('adminAccessModalSubtitle').textContent = `You are granting admin access to ${runner?.first_name || ''} ${runner?.last_name || ''} (${targetId}).`;
+      document.getElementById('adminAccessSaveBtn').textContent = 'Grant Access';
+      document.getElementById('adminAccessModalError').classList.add('hidden');
+      document.getElementById('roleFullAdmin').checked = true;
+      document.getElementById('roleEventAdmin').checked = false;
+      document.getElementById('eventPickerSection').classList.add('hidden');
+      await loadEventPickerList([]);
+      document.getElementById('adminAccessModal').classList.remove('hidden');
+    }
+
+    async function openEditAdminModal(targetId) {
+      const runner = allRunnersData.find(r => r.unique_id === targetId);
+      const existing = adminRolesMap[targetId] || { role: 'full', event_names: [] };
+      adminAccessTarget = { uniqueId: targetId, name: runner?.first_name || targetId, isEditing: true };
+      document.getElementById('adminAccessModalTitle').textContent = 'Edit Admin Access';
+      document.getElementById('adminAccessModalSubtitle').textContent = `Editing admin access for ${runner?.first_name || ''} ${runner?.last_name || ''} (${targetId}).`;
+      document.getElementById('adminAccessSaveBtn').textContent = 'Save Changes';
+      document.getElementById('adminAccessModalError').classList.add('hidden');
+      const isEvent = existing.role === 'event';
+      document.getElementById('roleFullAdmin').checked = !isEvent;
+      document.getElementById('roleEventAdmin').checked = isEvent;
+      document.getElementById('eventPickerSection').classList.toggle('hidden', !isEvent);
+      await loadEventPickerList(existing.event_names || []);
+      document.getElementById('adminAccessModal').classList.remove('hidden');
+    }
+
+    async function loadEventPickerList(selectedNames) {
+      const container = document.getElementById('adminEventPickerList');
+      container.innerHTML = '<p class="text-xs text-gray-400 p-3">Loading...</p>';
+      const { data } = await db.from('events').select('event_name').order('event_date', { ascending: false });
+      if (!data?.length) { container.innerHTML = '<p class="text-xs text-gray-400 p-3">No events found.</p>'; return; }
+      container.innerHTML = data.map(e => `
+        <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" class="admin_event_pick w-4 h-4 accent-indigo-600" value="${esc(e.event_name)}" ${selectedNames.includes(e.event_name) ? 'checked' : ''} />
+          <span class="text-sm text-gray-700">${esc(e.event_name)}</span>
+        </label>`).join('');
+    }
+
+    function toggleEventPicker() {
+      const isEvent = document.getElementById('roleEventAdmin').checked;
+      document.getElementById('eventPickerSection').classList.toggle('hidden', !isEvent);
+    }
+
+    async function saveAdminAccess() {
+      const errEl = document.getElementById('adminAccessModalError');
+      errEl.classList.add('hidden');
+      const btn = document.getElementById('adminAccessSaveBtn');
+      const role = document.querySelector('input[name="adminRole"]:checked')?.value || 'full';
+      const selectedEvents = [...document.querySelectorAll('.admin_event_pick:checked')].map(cb => cb.value);
+      if (role === 'event' && selectedEvents.length === 0) {
+        errEl.textContent = 'Please select at least one event for Event Admin access.';
+        errEl.classList.remove('hidden'); return;
+      }
+      btn.disabled = true; btn.textContent = 'Saving...';
+      const targetId = adminAccessTarget.uniqueId;
+
+      if (!adminAccessTarget.isEditing) {
+        // Grant admin via RPC
+        const { data: rpcData, error: rpcErr } = await db.rpc('admin_toggle_user_admin', {
+          p_admin_id: session.uniqueId, p_password: session.password, p_target_id: targetId, p_new_status: true,
+        });
+        if (rpcErr || !rpcData?.success) {
+          btn.disabled = false; btn.textContent = adminAccessTarget.isEditing ? 'Save Changes' : 'Grant Access';
+          errEl.textContent = rpcData?.error || rpcErr?.message || 'Failed to grant admin.';
+          errEl.classList.remove('hidden'); return;
+        }
+      }
+
+      // Upsert admin_access
+      await db.from('admin_access').upsert({ unique_id: targetId, role, event_names: selectedEvents }, { onConflict: 'unique_id' });
+
+      btn.disabled = false; btn.textContent = adminAccessTarget.isEditing ? 'Save Changes' : 'Grant Access';
+      closeAdminAccessModal();
+      loadRunnersData();
+    }
+
+    function closeAdminAccessModal() {
+      adminAccessTarget = null;
+      document.getElementById('adminAccessModal').classList.add('hidden');
+    }
+
+    async function revokeAdminFromTable(targetId) {
+      const runner = allRunnersData.find(r => r.unique_id === targetId);
+      if (!confirm(`Revoke admin access from ${runner?.first_name || targetId}? They will no longer be able to access the admin panel.`)) return;
       const { data, error } = await db.rpc('admin_toggle_user_admin', {
-        p_admin_id: session.uniqueId, p_password: session.password,
-        p_target_id: targetId, p_new_status: !revoking,
+        p_admin_id: session.uniqueId, p_password: session.password, p_target_id: targetId, p_new_status: false,
       });
       if (error || !data?.success) { alert('Error: ' + (data?.error || error?.message)); return; }
+      // Also remove from admin_access
+      await db.from('admin_access').delete().eq('unique_id', targetId);
       loadRunnersData();
     }
 
@@ -1526,13 +1771,24 @@
     async function loadEventFilter() {
       const { data } = await db.from('events').select('event_name').order('event_date', { ascending: false });
       const sel = document.getElementById('eventFilter');
-      sel.innerHTML = '<option value="">All Events</option>';
-      (data || []).forEach(e => { const opt = document.createElement('option'); opt.value = e.event_name; opt.textContent = e.event_name; sel.appendChild(opt); });
+      let events = data || [];
+      if (isEventAdmin()) {
+        events = events.filter(e => (session.eventAccess || []).includes(e.event_name));
+        sel.innerHTML = '<option value="">All My Events</option>';
+      } else {
+        sel.innerHTML = '<option value="">All Events</option>';
+      }
+      events.forEach(e => { const opt = document.createElement('option'); opt.value = e.event_name; opt.textContent = e.event_name; sel.appendChild(opt); });
+      if (isEventAdmin() && session.eventAccess?.length === 1) sel.value = session.eventAccess[0];
     }
 
     async function loadCurrentTab() {
       if (!session) return;
-      const ev = document.getElementById('eventFilter').value;
+      let ev = document.getElementById('eventFilter').value;
+      // For event admins, enforce their allowed events
+      if (isEventAdmin() && session.eventAccess?.length > 0) {
+        if (!ev || !session.eventAccess.includes(ev)) ev = session.eventAccess[0] || '';
+      }
       showTableLoading();
       let result;
       switch (currentTab) {
@@ -2171,6 +2427,22 @@
       clearCustomRaceCats();
       existingCats.filter(c => !PREDEFINED_CATS.includes(c)).forEach(c => addCustomRaceCat(c));
       document.getElementById('ef_custom_cat_input').value = '';
+      // Load offline registration config
+      document.getElementById('ef_offline_reg').checked = false;
+      document.getElementById('ef_offline_reg_config').classList.add('hidden');
+      document.getElementById('ef_ofl_custom_fields').innerHTML = '';
+      oflCustomFieldCount = 0;
+      renderOflDefaultFields([]);
+      if (ev?.event_name) {
+        const { data: orCfg } = await db.from('event_offline_reg_config').select('*').eq('event_name', ev.event_name).maybeSingle();
+        if (orCfg) {
+          document.getElementById('ef_offline_reg').checked = orCfg.enabled;
+          renderOflDefaultFields(orCfg.default_fields || []);
+          renderOflCategoryFees(orCfg.category_fees || {});
+          (orCfg.custom_fields || []).forEach(f => addOflCustomField(f));
+          if (orCfg.enabled) document.getElementById('ef_offline_reg_config').classList.remove('hidden');
+        } else { renderOflCategoryFees({}); }
+      } else { renderOflCategoryFees({}); }
       document.getElementById('ef_recipients_list').innerHTML = '';
       if (ev?.event_name) {
         const { data: rcpts } = await db.from('event_payment_recipients').select('*').eq('event_name', ev.event_name).order('display_order');
@@ -2181,6 +2453,202 @@
       document.getElementById('eventEditorModal').classList.remove('hidden');
     }
     function closeEventEditor() { editingEventId = null; clearCustomRaceCats(); document.getElementById('eventEditorModal').classList.add('hidden'); }
+
+    // ---- Offline Registration Config (Event Editor) ----
+    const OFFLINE_DEFAULT_FIELDS = [
+      { id: 'full_name',          label: 'Full Name',          masterKey: 'name',        canUpdate: false },
+      { id: 'gender',             label: 'Gender',             masterKey: 'gender',      canUpdate: false },
+      { id: 'dob',                label: 'Date of Birth',      masterKey: 'dob',         canUpdate: false },
+      { id: 'mobile',             label: 'Mobile Number',      masterKey: 'phone',       canUpdate: true  },
+      { id: 'email',              label: 'Email ID',           masterKey: 'email',       canUpdate: true  },
+      { id: 'tshirt_size',        label: 'T-Shirt Size',       masterKey: 'tshirt_size', canUpdate: true  },
+      { id: 'category',           label: 'Category',           masterKey: null,          canUpdate: false },
+      { id: 'registration_fees',  label: 'Registration Fees',  masterKey: null,          canUpdate: false },
+      { id: 'transport_required', label: 'Transport Required', masterKey: null,          canUpdate: false },
+    ];
+
+    function renderOflDefaultFields(savedFields) {
+      const savedMap = {};
+      (savedFields || []).forEach(f => { savedMap[f.id] = f; });
+      const container = document.getElementById('ef_ofl_default_fields');
+      container.innerHTML = OFFLINE_DEFAULT_FIELDS.map(f => {
+        const saved = savedMap[f.id] ?? { enabled: true, required: true };
+        const masterBadge = f.masterKey ? `<span class="text-xs text-blue-500 bg-blue-50 rounded px-1.5 py-0.5 ml-1">profile</span>` : '';
+        const updateBadge = f.canUpdate ? `<span class="text-xs text-green-600 bg-green-50 rounded px-1.5 py-0.5 ml-1">can update profile</span>` : '';
+        return `<div class="flex items-center gap-3 px-3 py-2 bg-white" data-field-id="${f.id}">
+          <input type="checkbox" class="ofl_field_enabled w-4 h-4 accent-indigo-600" ${saved.enabled ? 'checked' : ''} />
+          <span class="text-sm text-gray-700 flex-1">${f.label}${masterBadge}${updateBadge}</span>
+          <label class="flex items-center gap-1 text-xs text-gray-500 cursor-pointer select-none">
+            <input type="checkbox" class="ofl_field_required w-3.5 h-3.5 accent-red-500" ${saved.required ? 'checked' : ''} /> Required
+          </label>
+        </div>`;
+      }).join('');
+    }
+
+    function getOflDefaultFields() {
+      return OFFLINE_DEFAULT_FIELDS.map((f, i) => {
+        const row = document.getElementById('ef_ofl_default_fields').children[i];
+        return { id: f.id, enabled: row.querySelector('.ofl_field_enabled').checked, required: row.querySelector('.ofl_field_required').checked };
+      });
+    }
+
+    function getCurrentEventCats() {
+      return [...document.querySelectorAll('.ef_race_cat:checked')].map(cb => cb.value);
+    }
+
+    function renderOflCategoryFees(savedFees) {
+      const cats = getCurrentEventCats();
+      const container = document.getElementById('ef_ofl_category_fees');
+      if (!cats.length) { container.innerHTML = '<p class="text-xs text-gray-400">No categories selected above. Add race categories first.</p>'; return; }
+      container.innerHTML = cats.map(cat => `
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-700 font-medium w-20">${cat}</span>
+          <span class="text-xs text-gray-400">₹</span>
+          <input type="number" min="0" class="ofl_cat_fee form-input py-1 flex-1" data-cat="${cat}" value="${savedFees?.[cat] ?? ''}" placeholder="Fee amount" />
+        </div>`).join('');
+    }
+
+    function refreshOflCategoryFees() {
+      const existing = getOflCategoryFees();
+      renderOflCategoryFees(existing);
+    }
+
+    function getOflCategoryFees() {
+      const fees = {};
+      document.querySelectorAll('.ofl_cat_fee').forEach(inp => { if (inp.value !== '') fees[inp.dataset.cat] = parseFloat(inp.value); });
+      return fees;
+    }
+
+    let oflCustomFieldCount = 0;
+    function addOflCustomField(saved) {
+      oflCustomFieldCount++;
+      const container = document.getElementById('ef_ofl_custom_fields');
+      const div = document.createElement('div');
+      div.className = 'ofl_custom_field border border-gray-200 rounded-lg p-3 space-y-2 bg-white';
+      div.innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap">
+          <input type="text" placeholder="Field label" class="ofl_cf_label form-input flex-1 py-1.5 min-w-0" value="${esc(saved?.label || '')}" />
+          <select class="ofl_cf_type form-input w-32 py-1.5" onchange="onOflCfTypeChange(this)">
+            <option value="text"         ${saved?.type==='text'         ?'selected':''}>Text</option>
+            <option value="number"       ${saved?.type==='number'       ?'selected':''}>Number</option>
+            <option value="date"         ${saved?.type==='date'         ?'selected':''}>Date</option>
+            <option value="boolean"      ${saved?.type==='boolean'      ?'selected':''}>Yes / No</option>
+            <option value="select"       ${saved?.type==='select'       ?'selected':''}>Select (Options)</option>
+            <option value="alphanumeric" ${saved?.type==='alphanumeric' ?'selected':''}>Alphanumeric</option>
+          </select>
+          <label class="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap cursor-pointer select-none">
+            <input type="checkbox" class="ofl_cf_required w-3.5 h-3.5 accent-red-500" ${saved?.required?'checked':''} /> Required
+          </label>
+          <button type="button" onclick="this.closest('.ofl_custom_field').remove()" class="text-red-400 hover:text-red-600 font-bold text-xl leading-none">&times;</button>
+        </div>
+        <div class="ofl_cf_options_row ${saved?.type==='select'?'':'hidden'} flex items-center gap-2">
+          <span class="text-xs text-gray-500 whitespace-nowrap">Options:</span>
+          <input type="text" class="ofl_cf_options form-input flex-1 py-1" value="${esc((saved?.options||[]).join(', '))}" placeholder="Option A, Option B, Option C" />
+        </div>`;
+      container.appendChild(div);
+    }
+
+    function onOflCfTypeChange(sel) {
+      sel.closest('.ofl_custom_field').querySelector('.ofl_cf_options_row').classList.toggle('hidden', sel.value !== 'select');
+    }
+
+    function getOflCustomFields() {
+      return [...document.querySelectorAll('.ofl_custom_field')].map(div => {
+        const type = div.querySelector('.ofl_cf_type').value;
+        const field = { label: div.querySelector('.ofl_cf_label').value.trim(), type, required: div.querySelector('.ofl_cf_required').checked };
+        if (type === 'select') field.options = div.querySelector('.ofl_cf_options').value.split(',').map(s => s.trim()).filter(Boolean);
+        return field;
+      }).filter(f => f.label);
+    }
+
+    function toggleOfflineRegConfig() {
+      const on = document.getElementById('ef_offline_reg').checked;
+      document.getElementById('ef_offline_reg_config').classList.toggle('hidden', !on);
+      if (on) refreshOflCategoryFees();
+    }
+
+    // ---- Offline Registrations Admin Panel ----
+    let oflRegsData = [];
+    let oflEventsLoaded = false;
+
+    async function initOflRegistrationsPanel() {
+      if (!oflEventsLoaded) {
+        const { data } = await db.from('event_offline_reg_config').select('event_name').eq('enabled', true);
+        const sel = document.getElementById('ofl_event_filter');
+        sel.innerHTML = '<option value="">All Events</option>';
+        (data || []).forEach(r => { const o = document.createElement('option'); o.value = r.event_name; o.textContent = r.event_name; sel.appendChild(o); });
+        oflEventsLoaded = false; // allow refresh on revisit
+      }
+      loadOflRegistrations();
+    }
+
+    async function loadOflRegistrations() {
+      const eventFilter = document.getElementById('ofl_event_filter').value;
+      document.getElementById('ofl_table_content').innerHTML = '<div class="text-gray-400 text-sm p-2">Loading...</div>';
+      let query = db.from('event_offline_registrations').select('*').order('created_at', { ascending: false });
+      if (eventFilter) query = query.eq('event_name', eventFilter);
+      const { data, error } = await query;
+      if (error) { document.getElementById('ofl_table_content').innerHTML = '<p class="text-red-500 p-2">Error loading data.</p>'; return; }
+      oflRegsData = data || [];
+      document.getElementById('ofl_row_count').textContent = oflRegsData.length + ' registration' + (oflRegsData.length !== 1 ? 's' : '');
+      renderOflRegistrations(oflRegsData);
+    }
+
+    function renderOflRegistrations(data) {
+      const content = document.getElementById('ofl_table_content');
+      if (!data.length) { content.innerHTML = '<p class="text-gray-400 text-sm p-2">No registrations found.</p>'; return; }
+      let html = `<table><thead><tr><th>ID</th><th>Event</th><th>Unique ID</th><th>Name</th><th>Category</th><th>Fees (₹)</th><th>Transport</th><th>Pay To</th><th>Submitted</th><th>Payment</th><th></th></tr></thead><tbody>`;
+      data.forEach(row => {
+        const fd = row.form_data || {};
+        const isPaid = !!row.payment_done;
+        const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString() : '—';
+        html += `<tr>
+          <td>${row.id}</td>
+          <td>${esc(row.event_name||'')}</td>
+          <td>${esc(row.runner_unique_id||'')}</td>
+          <td>${esc(fd.full_name||'')}</td>
+          <td>${esc(fd.category||'')}</td>
+          <td>${fd.registration_fees??'—'}</td>
+          <td>${fd.transport_required!==undefined?(fd.transport_required?'Yes':'No'):'—'}</td>
+          <td>${esc(row.recipient_name||'')}</td>
+          <td>${dateStr}</td>
+          <td><span class="badge ${isPaid?'badge-admin':'badge-user'}">${isPaid?'✓ Done':'Pending'}</span></td>
+          <td class="flex gap-1 items-center">
+            <button onclick="toggleOflPayment(${row.id},${isPaid})" title="${isPaid?'Unmark':'Mark as paid'}" class="w-7 h-7 rounded border-2 flex items-center justify-center transition-colors ${isPaid?'bg-green-500 border-green-600 text-white hover:bg-red-100 hover:border-red-400 hover:text-red-600':'bg-white border-gray-300 text-transparent hover:border-green-400'}" style="font-size:14px;line-height:1;">✓</button>
+            <button onclick="openOflRegDetail(${row.id})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="View details">👁</button>
+            <button onclick="deleteOflReg(${row.id})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button>
+          </td></tr>`;
+      });
+      content.innerHTML = html + '</tbody></table>';
+    }
+
+    async function toggleOflPayment(id, currentlyPaid) {
+      const { error } = await db.from('event_offline_registrations').update({ payment_done: !currentlyPaid }).eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadOflRegistrations();
+    }
+
+    function openOflRegDetail(id) {
+      const row = oflRegsData.find(r => r.id === id); if (!row) return;
+      const fd = row.form_data || {};
+      const modal = document.getElementById('oflDetailModal');
+      const content = document.getElementById('ofl_detail_content');
+      const rows = [
+        ['Event', row.event_name], ['Unique ID', row.runner_unique_id], ['Recipient', row.recipient_name],
+        ['Source UPI', row.source_upi_id], ['Payment Done', row.payment_done ? 'Yes' : 'No'],
+        ['Submitted', row.created_at ? new Date(row.created_at).toLocaleString() : '—'],
+        ...Object.entries(fd).map(([k,v]) => [k.replace(/_/g,' '), v === true ? 'Yes' : v === false ? 'No' : String(v ?? '—')])
+      ];
+      content.innerHTML = rows.map(([k,v]) => `<div class="flex gap-2"><span class="font-semibold text-gray-500 w-36 shrink-0 capitalize">${esc(k)}</span><span class="text-gray-800">${esc(String(v??'—'))}</span></div>`).join('');
+      modal.classList.remove('hidden');
+    }
+
+    async function deleteOflReg(id) {
+      if (!confirm('Delete this registration?')) return;
+      const { error } = await db.from('event_offline_registrations').delete().eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadOflRegistrations();
+    }
 
     const PREDEFINED_CATS = ['5K','10K','21K','42K','50K','70K','100K'];
     function clearCustomRaceCats() {
@@ -2229,6 +2697,10 @@
       if (error || !data?.success) { errEl.textContent = data?.error || error?.message || 'Save failed.'; errEl.classList.remove('hidden'); return; }
       const selectedCats = [...document.querySelectorAll('.ef_race_cat:checked')].map(cb => cb.value);
       await db.from('event_race_categories').upsert({ event_name: name, race_categories: selectedCats }, { onConflict: 'event_name' });
+      await db.from('event_offline_reg_config').upsert({
+        event_name: name, enabled: document.getElementById('ef_offline_reg').checked,
+        default_fields: getOflDefaultFields(), custom_fields: getOflCustomFields(), category_fees: getOflCategoryFees(),
+      }, { onConflict: 'event_name' });
       await db.from('event_payment_recipients').delete().eq('event_name', name);
       const rcptRows = document.querySelectorAll('.ef_recipient_row');
       const recipients = [...rcptRows].map((row, i) => ({
