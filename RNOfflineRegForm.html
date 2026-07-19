@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline Registration - Running Ninjas</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9WH7YSXZ94');
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 py-10 pb-20">
+  <div class="w-full flex justify-center mb-6">
+    <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Running Ninjas Logo" class="w-16 h-16 rounded-full" />
+  </div>
+
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-1">Offline Registration</h2>
+    <p class="text-sm text-gray-500 mb-5">Register for a race event directly through the Ninjas team.</p>
+
+    <!-- Step 1: Event + Unique ID -->
+    <div id="step1">
+      <label class="block mb-3">
+        <span class="block text-sm font-medium text-gray-700 mb-1">Select Event</span>
+        <select id="eventSelect" class="w-full p-2 border rounded text-sm">
+          <option value="">Loading events...</option>
+        </select>
+      </label>
+
+      <label class="block mb-1">
+        <span class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">Enter Unique ID
+          <button type="button" onclick="document.getElementById('uidInfo').classList.toggle('hidden')" class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold leading-none flex items-center justify-center hover:bg-indigo-200">i</button>
+        </span>
+        <div id="uidInfo" class="hidden mb-2 text-xs text-gray-600 bg-indigo-50 border border-indigo-100 rounded p-2 leading-relaxed">
+          Your Unique ID is the first 4 letters of your first name in capitals, followed by your flat number.<br/>
+          <span class="font-medium">Example:</span> John Doe in flat B204 → <span class="font-mono font-semibold text-indigo-700">JOHNB204</span>
+        </div>
+        <input id="uniqueIdInput" type="text" placeholder="e.g. JOHNB204" class="w-full p-2 border rounded text-sm uppercase" oninput="this.value=this.value.toUpperCase()" />
+      </label>
+
+      <button onclick="fetchDetails()" class="w-full mt-4 bg-indigo-600 text-white font-semibold py-2 rounded text-sm hover:bg-indigo-700">
+        Fetch Details
+      </button>
+      <p id="fetchError" class="text-red-500 text-sm mt-2 hidden"></p>
+    </div>
+
+    <!-- Already submitted notice -->
+    <div id="alreadySubmittedNotice" class="hidden bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4">
+      <p class="font-semibold text-sm">Registration Under Review</p>
+      <p class="text-sm mt-1">Your registration for this event has been submitted and is pending payment confirmation.</p>
+    </div>
+
+    <!-- Payment confirmed notice -->
+    <div id="paymentConfirmedNotice" class="hidden bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-4">
+      <p class="font-semibold text-sm">Registration Confirmed!</p>
+      <p class="text-sm mt-1">Your payment has been verified by the organisers. See you at the race!</p>
+    </div>
+
+    <!-- Step 2: Registration Form -->
+    <div id="regForm" class="hidden mt-4 space-y-4">
+      <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-sm text-indigo-800">
+        Fields marked with <span class="text-red-500 font-bold">*</span> are required.
+        Fields with a <span class="text-blue-600 font-semibold">profile</span> tag are pre-filled from your profile.
+      </div>
+
+      <div id="dynamicFields" class="space-y-3"></div>
+
+      <!-- Payment Section -->
+      <div class="border-t pt-4 mt-4">
+        <p class="text-sm font-semibold text-gray-700 mb-3">Payment Details</p>
+
+        <div class="mb-3">
+          <label class="block mb-1 text-sm font-medium text-gray-700">Pay To <span class="text-red-500">*</span></label>
+          <select id="recipientSelect" class="w-full p-2 border rounded text-sm" onchange="onRecipientChange()" required>
+            <option value="">-- Select recipient --</option>
+          </select>
+        </div>
+
+        <div id="qrDisplay" class="hidden text-center py-3 bg-gray-50 rounded-lg border border-gray-200 mb-3">
+          <img id="qrImage" src="" alt="QR Code" class="mx-auto rounded border border-gray-200" style="max-width:180px;" />
+          <p class="text-xs text-gray-500 mt-2">Scan this QR code to pay the amount shown above</p>
+        </div>
+
+        <div class="mb-3">
+          <label class="block mb-1 text-sm font-medium text-gray-700">Your UPI ID / Phone Number <span class="text-red-500">*</span></label>
+          <input id="sourceUpiId" type="text" placeholder="e.g. yourname@upi or 9876543210" class="w-full p-2 border rounded text-sm" />
+        </div>
+      </div>
+
+      <p id="formError" class="text-red-500 text-sm hidden"></p>
+
+      <button onclick="showPayConfirm()" class="w-full bg-green-600 text-white font-semibold py-2.5 rounded text-sm hover:bg-green-700 mt-2">
+        Submit Registration
+      </button>
+    </div>
+
+    <p id="successMsg" class="text-green-600 mt-4 hidden text-sm font-medium"></p>
+    <a href="marathons/index.html" class="block mt-5 text-indigo-600 text-sm">&lt; Back to Events</a>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="payConfirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+      <p class="text-base font-semibold text-gray-800 mb-2">Confirm Registration Submission</p>
+      <p class="text-sm text-gray-600 mb-1">Only submit if you have <strong>actually completed the payment</strong>.</p>
+      <p class="text-sm text-gray-500 mb-5">False submissions may result in your registration being cancelled.</p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="document.getElementById('payConfirmModal').classList.add('hidden')" class="px-4 py-2 rounded border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">Cancel</button>
+        <button id="confirmSubmitBtn" onclick="submitRegistration()" class="px-4 py-2 rounded bg-green-600 text-white text-sm font-semibold hover:bg-green-700">Yes, I have paid</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let eventConfig = null;
+    let recipientsData = [];
+    let runnerData = null;
+    let masterUpdateFields = []; // track fields that can update master data
+
+    // ---- Helpers ----
+    function esc(v) {
+      return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function getFieldValue(id) {
+      const el = document.getElementById('ofl_field_' + id);
+      if (!el) return undefined;
+      if (el.type === 'checkbox') return el.checked;
+      return el.value;
+    }
+
+    // ---- Load Events on Page Load ----
+    window.onload = async function() {
+      // Pre-select event from URL param if provided
+      const params = new URLSearchParams(window.location.search);
+      const preEvent = params.get('event');
+
+      const { data, error } = await db
+        .from('event_offline_reg_config')
+        .select('event_name')
+        .eq('enabled', true);
+
+      const sel = document.getElementById('eventSelect');
+      sel.innerHTML = '';
+
+      if (error || !data || data.length === 0) {
+        sel.innerHTML = '<option value="">No offline registration events available</option>';
+        return;
+      }
+
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = ''; defaultOpt.textContent = '-- Select an event --';
+      sel.appendChild(defaultOpt);
+
+      data.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.event_name;
+        opt.textContent = e.event_name;
+        if (preEvent && e.event_name === preEvent) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    };
+
+    // ---- Fetch Runner Details ----
+    async function fetchDetails() {
+      const uniqueId = document.getElementById('uniqueIdInput').value.trim().toUpperCase();
+      const eventName = document.getElementById('eventSelect').value;
+      const errEl = document.getElementById('fetchError');
+      errEl.classList.add('hidden');
+
+      if (!eventName) { errEl.textContent = 'Please select an event.'; errEl.classList.remove('hidden'); return; }
+      if (!uniqueId)  { errEl.textContent = 'Please enter your Unique ID.'; errEl.classList.remove('hidden'); return; }
+
+      // Validate runner
+      const { data: runner, error: runnerErr } = await db
+        .from('runners')
+        .select('first_name, last_name, gender, dob, phone, email, tshirt_size')
+        .eq('unique_id', uniqueId)
+        .maybeSingle();
+
+      if (runnerErr || !runner) {
+        errEl.textContent = 'Unique ID not found. Please check and try again.';
+        errEl.classList.remove('hidden'); return;
+      }
+      runnerData = runner;
+
+      // Check for existing registration
+      const { data: existing } = await db
+        .from('event_offline_registrations')
+        .select('id, payment_done')
+        .eq('runner_unique_id', uniqueId)
+        .eq('event_name', eventName)
+        .maybeSingle();
+
+      if (existing) {
+        document.getElementById('eventSelect').setAttribute('disabled', true);
+        document.getElementById('uniqueIdInput').setAttribute('readonly', true);
+        document.getElementById('uniqueIdInput').classList.add('bg-gray-100', 'text-gray-500');
+        if (existing.payment_done) {
+          document.getElementById('paymentConfirmedNotice').classList.remove('hidden');
+        } else {
+          document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Fetch event config
+      const { data: cfg } = await db
+        .from('event_offline_reg_config')
+        .select('*')
+        .eq('event_name', eventName)
+        .maybeSingle();
+
+      if (!cfg || !cfg.enabled) {
+        errEl.textContent = 'Offline registration is not available for this event.';
+        errEl.classList.remove('hidden'); return;
+      }
+      eventConfig = cfg;
+
+      // Fetch payment recipients
+      const { data: rcpts } = await db
+        .from('event_payment_recipients')
+        .select('*')
+        .eq('event_name', eventName)
+        .order('display_order');
+      recipientsData = rcpts || [];
+
+      // Lock step 1 inputs
+      document.getElementById('eventSelect').setAttribute('disabled', true);
+      document.getElementById('uniqueIdInput').setAttribute('readonly', true);
+      document.getElementById('uniqueIdInput').classList.add('bg-gray-100', 'text-gray-500');
+
+      renderForm(runner, cfg);
+      renderRecipients(rcpts || []);
+      document.getElementById('regForm').classList.remove('hidden');
+    }
+
+    // ---- Render Form Fields ----
+    function renderForm(runner, cfg) {
+      const container = document.getElementById('dynamicFields');
+      masterUpdateFields = [];
+      let html = '';
+
+      const defaultFieldDefs = {
+        full_name:          { label: 'Full Name',           type: 'text',    masterKey: 'name',        canUpdate: false },
+        gender:             { label: 'Gender',              type: 'select',  masterKey: 'gender',      canUpdate: false, options: ['Male','Female','Other','Prefer not to say'] },
+        dob:                { label: 'Date of Birth',       type: 'date',    masterKey: 'dob',         canUpdate: false },
+        mobile:             { label: 'Mobile Number',       type: 'tel',     masterKey: 'phone',       canUpdate: true  },
+        email:              { label: 'Email ID',            type: 'email',   masterKey: 'email',       canUpdate: true  },
+        tshirt_size:        { label: 'T-Shirt Size',        type: 'select',  masterKey: 'tshirt_size', canUpdate: true,  options: ['XS','S','M','L','XL','2XL','3XL'] },
+        category:           { label: 'Category',            type: 'category',masterKey: null,          canUpdate: false },
+        registration_fees:  { label: 'Registration Fees (₹)', type: 'number', masterKey: null,         canUpdate: false },
+        transport_required: { label: 'Transport Required',  type: 'boolean', masterKey: null,          canUpdate: false },
+      };
+
+      const enabledDefaults = (cfg.default_fields || []).filter(f => f.enabled);
+
+      enabledDefaults.forEach(fc => {
+        const def = defaultFieldDefs[fc.id];
+        if (!def) return;
+
+        const required = fc.required;
+        const reqMark = required ? '<span class="text-red-500">*</span>' : '';
+
+        // Resolve master data value
+        let masterVal = null;
+        if (def.masterKey === 'name') masterVal = (runner.first_name + ' ' + (runner.last_name || '')).trim();
+        else if (def.masterKey) masterVal = runner[def.masterKey] || null;
+
+        const profileBadge = def.masterKey ? `<span class="text-xs text-blue-500 bg-blue-50 rounded px-1.5 py-0.5 ml-1">profile</span>` : '';
+        const labelHtml = `<label class="block mb-1 text-sm font-medium text-gray-700">${def.label}${profileBadge} ${reqMark}</label>`;
+
+        if (def.type === 'text' || def.type === 'tel' || def.type === 'email' || def.type === 'number') {
+          const readonly = (def.masterKey && masterVal && !def.canUpdate) ? 'readonly class="w-full p-2 border rounded text-sm bg-gray-50"' : 'class="w-full p-2 border rounded text-sm"';
+          html += `<div>${labelHtml}<input id="ofl_field_${fc.id}" type="${def.type}" ${readonly} value="${esc(masterVal || '')}" placeholder="${def.label}" /></div>`;
+          if (def.canUpdate) {
+            const missing = !masterVal;
+            const updateChecked = missing ? 'checked' : '';
+            masterUpdateFields.push(fc.id);
+            html += `<label class="flex items-center gap-2 -mt-1 cursor-pointer select-none text-xs text-gray-500">
+              <input type="checkbox" id="ofl_update_${fc.id}" ${updateChecked} class="w-3.5 h-3.5 accent-indigo-600" />
+              Save${missing ? ' (missing — please fill in)' : ''} to my profile
+            </label>`;
+          }
+
+        } else if (def.type === 'select') {
+          const readonly = (def.masterKey && masterVal && !def.canUpdate);
+          const attrs = readonly ? 'disabled class="w-full p-2 border rounded text-sm bg-gray-50"' : 'class="w-full p-2 border rounded text-sm"';
+          let opts = (def.options || []).map(o => `<option value="${esc(o)}" ${masterVal===o?'selected':''}>${esc(o)}</option>`).join('');
+          html += `<div>${labelHtml}<select id="ofl_field_${fc.id}" ${attrs}><option value="">-- Select --</option>${opts}</select></div>`;
+          if (def.canUpdate) {
+            const missing = !masterVal;
+            masterUpdateFields.push(fc.id);
+            html += `<label class="flex items-center gap-2 -mt-1 cursor-pointer select-none text-xs text-gray-500">
+              <input type="checkbox" id="ofl_update_${fc.id}" ${missing?'checked':''} class="w-3.5 h-3.5 accent-indigo-600" />
+              Save${missing?' (missing — please fill in)':''} to my profile
+            </label>`;
+          }
+
+        } else if (def.type === 'date') {
+          const readonly = (def.masterKey && masterVal && !def.canUpdate) ? 'readonly class="w-full p-2 border rounded text-sm bg-gray-50"' : 'class="w-full p-2 border rounded text-sm"';
+          html += `<div>${labelHtml}<input id="ofl_field_${fc.id}" type="date" ${readonly} value="${esc(masterVal || '')}" /></div>`;
+
+        } else if (def.type === 'category') {
+          const cats = Object.keys(cfg.category_fees || {});
+          // If no category_fees keys, fall back to showing a text input
+          if (cats.length > 0) {
+            const opts = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+            html += `<div>${labelHtml}<select id="ofl_field_category" class="w-full p-2 border rounded text-sm" onchange="onCategoryChange(this.value)"><option value="">-- Select Category --</option>${opts}</select></div>`;
+          } else {
+            html += `<div>${labelHtml}<input id="ofl_field_category" type="text" class="w-full p-2 border rounded text-sm" placeholder="e.g. 10K" /></div>`;
+          }
+
+        } else if (def.type === 'boolean') {
+          html += `<div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-gray-700">${def.label} ${reqMark}</span>
+            <label class="flex items-center gap-1 text-sm text-gray-600 cursor-pointer"><input type="radio" name="ofl_field_${fc.id}" id="ofl_field_${fc.id}_yes" value="yes" class="accent-indigo-600" /> Yes</label>
+            <label class="flex items-center gap-1 text-sm text-gray-600 cursor-pointer"><input type="radio" name="ofl_field_${fc.id}" id="ofl_field_${fc.id}_no" value="no" class="accent-indigo-600" /> No</label>
+          </div>`;
+        }
+      });
+
+      // Registration fees display (read-only, auto-filled from category selection)
+      const feesEnabled = enabledDefaults.find(f => f.id === 'registration_fees');
+      if (!feesEnabled) {
+        // Still add a hidden field for fees if category is enabled
+      }
+
+      // Custom fields
+      (cfg.custom_fields || []).forEach((cf, i) => {
+        const id = 'ofl_custom_' + i;
+        const reqMark = cf.required ? '<span class="text-red-500">*</span>' : '';
+        const labelHtml = `<label class="block mb-1 text-sm font-medium text-gray-700">${esc(cf.label)} ${reqMark}</label>`;
+        if (cf.type === 'text' || cf.type === 'alphanumeric') {
+          html += `<div>${labelHtml}<input id="${id}" type="text" class="w-full p-2 border rounded text-sm" placeholder="${esc(cf.label)}" /></div>`;
+        } else if (cf.type === 'number') {
+          html += `<div>${labelHtml}<input id="${id}" type="number" class="w-full p-2 border rounded text-sm" placeholder="${esc(cf.label)}" /></div>`;
+        } else if (cf.type === 'date') {
+          html += `<div>${labelHtml}<input id="${id}" type="date" class="w-full p-2 border rounded text-sm" /></div>`;
+        } else if (cf.type === 'boolean') {
+          html += `<div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-gray-700">${esc(cf.label)} ${reqMark}</span>
+            <label class="flex items-center gap-1 text-sm text-gray-600 cursor-pointer"><input type="radio" name="${id}" value="yes" class="accent-indigo-600" /> Yes</label>
+            <label class="flex items-center gap-1 text-sm text-gray-600 cursor-pointer"><input type="radio" name="${id}" value="no" class="accent-indigo-600" /> No</label>
+          </div>`;
+        } else if (cf.type === 'select' && cf.options?.length) {
+          const opts = cf.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+          html += `<div>${labelHtml}<select id="${id}" class="w-full p-2 border rounded text-sm"><option value="">-- Select --</option>${opts}</select></div>`;
+        }
+      });
+
+      container.innerHTML = html;
+    }
+
+    function onCategoryChange(val) {
+      const fees = eventConfig?.category_fees || {};
+      const feeField = document.getElementById('ofl_field_registration_fees');
+      if (feeField && fees[val] !== undefined) {
+        feeField.value = fees[val];
+      }
+    }
+
+    // ---- Render Payment Recipients ----
+    function renderRecipients(rcpts) {
+      const sel = document.getElementById('recipientSelect');
+      sel.innerHTML = '<option value="">-- Select recipient --</option>';
+      rcpts.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.recipient_name;
+        opt.textContent = r.recipient_name;
+        sel.appendChild(opt);
+      });
+    }
+
+    function onRecipientChange() {
+      const val = document.getElementById('recipientSelect').value;
+      const r = recipientsData.find(x => x.recipient_name === val);
+      const qrDiv = document.getElementById('qrDisplay');
+      const qrImg = document.getElementById('qrImage');
+      if (r?.qr_image_url) { qrImg.src = r.qr_image_url; qrDiv.classList.remove('hidden'); }
+      else { qrDiv.classList.add('hidden'); qrImg.src = ''; }
+    }
+
+    // ---- Validation + Confirm ----
+    function showPayConfirm() {
+      const errEl = document.getElementById('formError');
+      errEl.classList.add('hidden');
+
+      const cfg = eventConfig;
+      const enabledDefaults = (cfg?.default_fields || []).filter(f => f.enabled);
+      const defaultFieldTypes = {
+        full_name:'text', gender:'select', dob:'date', mobile:'tel', email:'email',
+        tshirt_size:'select', category:'category', registration_fees:'number', transport_required:'boolean'
+      };
+
+      // Validate required default fields
+      for (const fc of enabledDefaults) {
+        if (!fc.required) continue;
+        const type = defaultFieldTypes[fc.id];
+        if (type === 'boolean') {
+          const checked = document.querySelector(`input[name="ofl_field_${fc.id}"]:checked`);
+          if (!checked) { errEl.textContent = `Please answer: ${fc.id.replace(/_/g,' ')}`; errEl.classList.remove('hidden'); return; }
+        } else {
+          const el = document.getElementById('ofl_field_' + fc.id);
+          if (!el || !el.value.trim()) { errEl.textContent = `Please fill in: ${fc.id.replace(/_/g,' ')}`; errEl.classList.remove('hidden'); return; }
+        }
+      }
+
+      // Validate required custom fields
+      (cfg?.custom_fields || []).forEach((cf, i) => {
+        if (!cf.required) return;
+        const id = 'ofl_custom_' + i;
+        if (cf.type === 'boolean') {
+          const checked = document.querySelector(`input[name="${id}"]:checked`);
+          if (!checked) { errEl.textContent = `Please answer: ${cf.label}`; errEl.classList.remove('hidden'); return; }
+        } else {
+          const el = document.getElementById(id);
+          if (!el || !el.value.trim()) { errEl.textContent = `Please fill in: ${cf.label}`; errEl.classList.remove('hidden'); return; }
+        }
+      });
+
+      if (!document.getElementById('recipientSelect').value) { errEl.textContent = 'Please select who you paid to.'; errEl.classList.remove('hidden'); return; }
+      if (!document.getElementById('sourceUpiId').value.trim()) { errEl.textContent = 'Please enter your UPI ID or phone number.'; errEl.classList.remove('hidden'); return; }
+
+      document.getElementById('payConfirmModal').classList.remove('hidden');
+    }
+
+    // ---- Submit Registration ----
+    async function submitRegistration() {
+      const btn = document.getElementById('confirmSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+
+      const uniqueId = document.getElementById('uniqueIdInput').value.trim();
+      const eventName = document.getElementById('eventSelect').value;
+      const cfg = eventConfig;
+
+      // Collect form_data
+      const formData = {};
+      const enabledDefaults = (cfg?.default_fields || []).filter(f => f.enabled);
+      const booleanFields = new Set(['transport_required']);
+
+      enabledDefaults.forEach(fc => {
+        if (booleanFields.has(fc.id)) {
+          const checked = document.querySelector(`input[name="ofl_field_${fc.id}"]:checked`);
+          formData[fc.id] = checked ? (checked.value === 'yes') : null;
+        } else {
+          const el = document.getElementById('ofl_field_' + fc.id);
+          if (el) formData[fc.id] = el.value || null;
+        }
+      });
+
+      // Registration fees (ensure numeric)
+      if (formData.registration_fees) formData.registration_fees = parseFloat(formData.registration_fees);
+
+      // Custom fields
+      (cfg?.custom_fields || []).forEach((cf, i) => {
+        const id = 'ofl_custom_' + i;
+        if (cf.type === 'boolean') {
+          const checked = document.querySelector(`input[name="${id}"]:checked`);
+          formData[cf.label] = checked ? (checked.value === 'yes') : null;
+        } else {
+          const el = document.getElementById(id);
+          formData[cf.label] = el?.value || null;
+        }
+      });
+
+      const recipientName = document.getElementById('recipientSelect').value;
+      const sourceUpi = document.getElementById('sourceUpiId').value.trim();
+
+      // Insert registration
+      const { error } = await db.from('event_offline_registrations').insert([{
+        event_name: eventName,
+        runner_unique_id: uniqueId,
+        form_data: formData,
+        recipient_name: recipientName,
+        source_upi_id: sourceUpi,
+      }]);
+
+      if (error) {
+        btn.disabled = false; btn.textContent = 'Yes, I have paid';
+        document.getElementById('formError').textContent = 'Submission failed: ' + error.message;
+        document.getElementById('formError').classList.remove('hidden');
+        document.getElementById('payConfirmModal').classList.add('hidden');
+        return;
+      }
+
+      // Update master data for opted-in fields
+      const masterUpdates = {};
+      for (const fieldId of masterUpdateFields) {
+        const updateCb = document.getElementById('ofl_update_' + fieldId);
+        if (!updateCb?.checked) continue;
+        const el = document.getElementById('ofl_field_' + fieldId);
+        if (!el?.value) continue;
+        const masterKeyMap = { mobile: 'phone', email: 'email', tshirt_size: 'tshirt_size' };
+        const key = masterKeyMap[fieldId];
+        if (key) masterUpdates[key] = el.value;
+      }
+      if (Object.keys(masterUpdates).length > 0) {
+        await db.from('runners').update(masterUpdates).eq('unique_id', uniqueId);
+      }
+
+      document.getElementById('payConfirmModal').classList.add('hidden');
+      document.getElementById('regForm').classList.add('hidden');
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('successMsg').textContent = 'Registration submitted successfully! The team will verify your payment and confirm your spot.';
+      document.getElementById('successMsg').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
