@@ -405,18 +405,64 @@
 
         <!-- OFFLINE REGISTRATIONS -->
         <div id="ws-offline_registrations" style="display:none;">
+          <!-- Filter + actions bar -->
           <div class="content-card mb-4">
             <div class="flex items-center gap-3 flex-wrap">
               <label class="text-sm font-medium text-gray-700">Event:</label>
               <select id="ofl_event_filter" class="form-input py-1.5 text-sm w-auto" onchange="loadOflRegistrations()">
                 <option value="">All Events</option>
               </select>
-              <span id="ofl_row_count" class="text-sm text-gray-500 ml-2"></span>
-              <button onclick="loadOflRegistrations()" class="ml-auto text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
+              <button onclick="loadOflRegistrations()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
+              <button onclick="openOflDownloadModal()" class="ml-auto flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Sheet
+              </button>
             </div>
           </div>
+
+          <!-- Summary bar -->
+          <div id="ofl_summary_bar" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div class="content-card text-center py-3">
+              <p class="text-2xl font-bold text-indigo-600" id="ofl_stat_total">—</p>
+              <p class="text-xs text-gray-500 mt-0.5">Registered</p>
+            </div>
+            <div class="content-card text-center py-3">
+              <p class="text-2xl font-bold text-green-600" id="ofl_stat_paid">—</p>
+              <p class="text-xs text-gray-500 mt-0.5">Payment Done</p>
+            </div>
+            <div class="content-card text-center py-3">
+              <p class="text-2xl font-bold text-amber-500" id="ofl_stat_pending">—</p>
+              <p class="text-xs text-gray-500 mt-0.5">Payment Pending</p>
+            </div>
+            <div class="content-card text-center py-3">
+              <p class="text-2xl font-bold text-blue-500" id="ofl_stat_transport">—</p>
+              <p class="text-xs text-gray-500 mt-0.5">Need Transport</p>
+            </div>
+          </div>
+
+          <!-- Table -->
           <div class="content-card overflow-x-auto">
             <div id="ofl_table_content"><p class="text-gray-400 text-sm p-2">Loading...</p></div>
+          </div>
+        </div>
+
+        <!-- Offline Registration Download Modal -->
+        <div id="oflDownloadModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:440px;max-height:80vh;overflow-y:auto;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">Download Sheet</h3>
+              <button onclick="document.getElementById('oflDownloadModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Select the columns to include in the downloaded Excel file.</p>
+            <div class="flex gap-3 text-xs text-indigo-600 mb-2">
+              <button onclick="oflSelectAllCols(true)" class="hover:underline font-semibold">Select All</button>
+              <button onclick="oflSelectAllCols(false)" class="hover:underline font-semibold">Deselect All</button>
+            </div>
+            <div id="ofl_col_picker" class="bg-gray-50 rounded-lg p-3 max-h-56 overflow-y-auto grid grid-cols-2 gap-1 mb-5"></div>
+            <div class="flex gap-3 justify-end border-t pt-4">
+              <button onclick="document.getElementById('oflDownloadModal').classList.add('hidden')" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onclick="downloadOflSheet()" class="px-4 py-2 text-sm rounded bg-green-600 hover:bg-green-700 text-white font-semibold">Download</button>
+            </div>
           </div>
         </div>
 
@@ -2583,44 +2629,142 @@
       loadOflRegistrations();
     }
 
+    let oflDynamicCols = []; // ordered list of form_data keys found in current dataset
+
     async function loadOflRegistrations() {
       const eventFilter = document.getElementById('ofl_event_filter').value;
+      // Enforce event admin scope
+      const effectiveFilter = isEventAdmin() && session.eventAccess?.length === 1
+        ? session.eventAccess[0]
+        : eventFilter;
       document.getElementById('ofl_table_content').innerHTML = '<div class="text-gray-400 text-sm p-2">Loading...</div>';
+      document.getElementById('ofl_summary_bar').classList.add('hidden');
       let query = db.from('event_offline_registrations').select('*').order('created_at', { ascending: false });
-      if (eventFilter) query = query.eq('event_name', eventFilter);
+      if (effectiveFilter) query = query.eq('event_name', effectiveFilter);
+      else if (isEventAdmin() && session.eventAccess?.length > 0) query = query.in('event_name', session.eventAccess);
       const { data, error } = await query;
       if (error) { document.getElementById('ofl_table_content').innerHTML = '<p class="text-red-500 p-2">Error loading data.</p>'; return; }
       oflRegsData = data || [];
-      document.getElementById('ofl_row_count').textContent = oflRegsData.length + ' registration' + (oflRegsData.length !== 1 ? 's' : '');
+      renderOflSummary(oflRegsData);
       renderOflRegistrations(oflRegsData);
+    }
+
+    function renderOflSummary(data) {
+      const total     = data.length;
+      const paid      = data.filter(r => r.payment_done).length;
+      const transport = data.filter(r => r.form_data?.transport_required === true).length;
+      document.getElementById('ofl_stat_total').textContent     = total;
+      document.getElementById('ofl_stat_paid').textContent      = paid;
+      document.getElementById('ofl_stat_pending').textContent   = total - paid;
+      document.getElementById('ofl_stat_transport').textContent = transport;
+      document.getElementById('ofl_summary_bar').classList.toggle('hidden', total === 0);
+    }
+
+    function getOflDynamicCols(data) {
+      // Collect all unique form_data keys across all rows, preserving first-seen order
+      const seen = new Set();
+      const cols = [];
+      data.forEach(row => {
+        Object.keys(row.form_data || {}).forEach(k => { if (!seen.has(k)) { seen.add(k); cols.push(k); } });
+      });
+      return cols;
+    }
+
+    function oflFmtVal(v) {
+      if (v === true)  return 'Yes';
+      if (v === false) return 'No';
+      if (v === null || v === undefined) return '—';
+      return String(v);
     }
 
     function renderOflRegistrations(data) {
       const content = document.getElementById('ofl_table_content');
       if (!data.length) { content.innerHTML = '<p class="text-gray-400 text-sm p-2">No registrations found.</p>'; return; }
-      let html = `<table><thead><tr><th>ID</th><th>Event</th><th>Unique ID</th><th>Name</th><th>Category</th><th>Fees (₹)</th><th>Transport</th><th>Pay To</th><th>Submitted</th><th>Payment</th><th></th></tr></thead><tbody>`;
+
+      oflDynamicCols = getOflDynamicCols(data);
+
+      // Fixed prefix cols + dynamic form_data cols + fixed suffix cols
+      const fixedPrefix = ['ID', 'Event', 'Unique ID', 'Submitted'];
+      const fixedSuffix = ['Pay To', 'Source UPI', 'Payment Done'];
+      const dynHeaders  = oflDynamicCols.map(k => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+
+      let html = '<table><thead><tr>';
+      [...fixedPrefix, ...dynHeaders, ...fixedSuffix].forEach(h => { html += `<th>${h}</th>`; });
+      html += '<th></th></tr></thead><tbody>';
+
       data.forEach(row => {
         const fd = row.form_data || {};
         const isPaid = !!row.payment_done;
         const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString() : '—';
-        html += `<tr>
-          <td>${row.id}</td>
-          <td>${esc(row.event_name||'')}</td>
-          <td>${esc(row.runner_unique_id||'')}</td>
-          <td>${esc(fd.full_name||'')}</td>
-          <td>${esc(fd.category||'')}</td>
-          <td>${fd.registration_fees??'—'}</td>
-          <td>${fd.transport_required!==undefined?(fd.transport_required?'Yes':'No'):'—'}</td>
-          <td>${esc(row.recipient_name||'')}</td>
-          <td>${dateStr}</td>
-          <td><span class="badge ${isPaid?'badge-admin':'badge-user'}">${isPaid?'✓ Done':'Pending'}</span></td>
-          <td class="flex gap-1 items-center">
-            <button onclick="toggleOflPayment(${row.id},${isPaid})" title="${isPaid?'Unmark':'Mark as paid'}" class="w-7 h-7 rounded border-2 flex items-center justify-center transition-colors ${isPaid?'bg-green-500 border-green-600 text-white hover:bg-red-100 hover:border-red-400 hover:text-red-600':'bg-white border-gray-300 text-transparent hover:border-green-400'}" style="font-size:14px;line-height:1;">✓</button>
-            <button onclick="openOflRegDetail(${row.id})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="View details">👁</button>
-            <button onclick="deleteOflReg(${row.id})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button>
-          </td></tr>`;
+        html += '<tr>';
+        // Fixed prefix
+        html += `<td>${row.id}</td><td>${esc(row.event_name||'')}</td><td>${esc(row.runner_unique_id||'')}</td><td>${dateStr}</td>`;
+        // Dynamic form_data cols
+        oflDynamicCols.forEach(k => { html += `<td>${esc(oflFmtVal(fd[k]))}</td>`; });
+        // Fixed suffix
+        html += `<td>${esc(row.recipient_name||'')}</td><td>${esc(row.source_upi_id||'')}</td>`;
+        html += `<td><span class="badge ${isPaid?'badge-admin':'badge-user'}">${isPaid?'✓ Done':'Pending'}</span></td>`;
+        // Actions
+        html += `<td class="flex gap-1 items-center">
+          <button onclick="toggleOflPayment(${row.id},${isPaid})" title="${isPaid?'Unmark':'Mark as paid'}" class="w-7 h-7 rounded border-2 flex items-center justify-center transition-colors ${isPaid?'bg-green-500 border-green-600 text-white hover:bg-red-100 hover:border-red-400 hover:text-red-600':'bg-white border-gray-300 text-transparent hover:border-green-400'}" style="font-size:14px;line-height:1;">✓</button>
+          <button onclick="openOflRegDetail(${row.id})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="View details">👁</button>
+          <button onclick="deleteOflReg(${row.id})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button>
+        </td></tr>`;
       });
       content.innerHTML = html + '</tbody></table>';
+    }
+
+    // ---- Download with column picker ----
+    function openOflDownloadModal() {
+      if (!oflRegsData.length) { alert('No data to download.'); return; }
+      const fixedCols  = ['ID', 'Event', 'Unique ID', 'Submitted', 'Pay To', 'Source UPI', 'Payment Done'];
+      const dynHeaders = oflDynamicCols.map(k => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+      const allCols    = [...fixedCols.slice(0, 4), ...dynHeaders, ...fixedCols.slice(4)];
+      const picker = document.getElementById('ofl_col_picker');
+      picker.innerHTML = allCols.map(col => `
+        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" class="ofl_dl_col w-3.5 h-3.5 accent-indigo-600" value="${esc(col)}" checked />
+          ${esc(col)}
+        </label>`).join('');
+      document.getElementById('oflDownloadModal').classList.remove('hidden');
+    }
+
+    function oflSelectAllCols(checked) {
+      document.querySelectorAll('.ofl_dl_col').forEach(cb => { cb.checked = checked; });
+    }
+
+    function downloadOflSheet() {
+      const selected = new Set([...document.querySelectorAll('.ofl_dl_col:checked')].map(cb => cb.value));
+      if (!selected.size) { alert('Please select at least one column.'); return; }
+
+      const fixedKeyMap = {
+        'ID': r => r.id,
+        'Event': r => r.event_name,
+        'Unique ID': r => r.runner_unique_id,
+        'Submitted': r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
+        'Pay To': r => r.recipient_name,
+        'Source UPI': r => r.source_upi_id,
+        'Payment Done': r => r.payment_done ? 'Yes' : 'No',
+      };
+      const dynKeyMap = {};
+      oflDynamicCols.forEach(k => {
+        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        dynKeyMap[label] = r => oflFmtVal((r.form_data || {})[k]);
+      });
+      const allKeyMap = { ...fixedKeyMap, ...dynKeyMap };
+
+      const rows = oflRegsData.map(r => {
+        const obj = {};
+        selected.forEach(col => { if (allKeyMap[col]) obj[col] = allKeyMap[col](r); });
+        return obj;
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
+      const eventLabel = document.getElementById('ofl_event_filter').value || 'All';
+      XLSX.writeFile(wb, `RN_OfflineReg_${eventLabel}_${new Date().toISOString().slice(0,10)}.xlsx`);
+      document.getElementById('oflDownloadModal').classList.add('hidden');
     }
 
     async function toggleOflPayment(id, currentlyPaid) {
