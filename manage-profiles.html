@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Profiles - Running Ninjas</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9WH7YSXZ94"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9WH7YSXZ94');
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 py-10 pb-20">
+
+  <div class="w-full flex justify-center mb-6">
+    <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" alt="Running Ninjas Logo" class="w-16 h-16 rounded-full" />
+  </div>
+
+  <div class="max-w-md mx-auto px-4">
+
+    <!-- Mode selector -->
+    <div id="modeSelector">
+      <div class="bg-white rounded-xl shadow p-6 mb-4">
+        <h2 class="text-xl font-semibold text-gray-800 mb-1">Manage Profiles</h2>
+        <p class="text-sm text-gray-500 mb-5">What would you like to do?</p>
+
+        <button onclick="selectMode('new_runner')"
+          class="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors mb-3 text-left">
+          <span class="text-2xl">🏃</span>
+          <div>
+            <p class="font-semibold text-gray-800 text-sm">Register as a new Running Ninja</p>
+            <p class="text-xs text-gray-500 mt-0.5">First time? Create your personal profile and get a unique ID.</p>
+          </div>
+        </button>
+
+        <button onclick="selectMode('secondary')"
+          class="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors text-left">
+          <span class="text-2xl">👨‍👩‍👧</span>
+          <div>
+            <p class="font-semibold text-gray-800 text-sm">Add a guest or kid profile</p>
+            <p class="text-xs text-gray-500 mt-0.5">Already a member? Link a guest or kid profile to your existing ID.</p>
+          </div>
+        </button>
+      </div>
+      <a href="marathons/index.html" class="block text-center text-sm text-indigo-600">&larr; Back to Events</a>
+    </div>
+
+    <!-- ── Mode 1: Register New Runner ── -->
+    <div id="formNewRunner" class="hidden">
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <button onclick="resetMode()" class="text-gray-400 hover:text-gray-600 text-sm">&larr;</button>
+          <h2 class="text-xl font-semibold text-gray-800">Add Runner Details</h2>
+        </div>
+
+        <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+          Your registration will be reviewed by an admin before you can register for events.
+        </p>
+
+        <label class="block mb-2">Unique ID
+          <input id="nr_uid" type="text" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed text-sm" placeholder="Auto-generated from first name + flat number" />
+        </label>
+
+        <label class="block mb-2">First Name *
+          <input id="nr_first_name" type="text" class="w-full mt-1 p-2 border rounded" oninput="nrGenerateId()" />
+          <span id="nr_fn_err" class="text-red-500 text-xs hidden">Please enter a valid first name (letters only)</span>
+        </label>
+
+        <label class="block mb-2">Last Name
+          <input id="nr_last_name" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+
+        <label class="block mb-2">Flat Number *
+          <input id="nr_flat" type="number" min="1001" max="23188" class="w-full mt-1 p-2 border rounded" oninput="nrGenerateId()" />
+          <span class="text-xs text-gray-500">Enter your PSN flat number</span>
+          <span id="nr_flat_err" class="text-red-500 text-xs hidden">Flat number must be between 1001 and 23188</span>
+        </label>
+
+        <label class="block mb-2">Community Code *
+          <input id="nr_code" type="password" class="w-full mt-1 p-2 border rounded" />
+          <span class="text-xs text-gray-500">Contact your running group admin for the code</span>
+          <span id="nr_code_err" class="text-red-500 text-xs hidden">Invalid community code</span>
+        </label>
+
+        <label class="block mb-2">Phone Number
+          <input id="nr_phone" type="tel" class="w-full mt-1 p-2 border rounded" />
+          <span id="nr_phone_err" class="text-red-500 text-xs hidden">Please enter a valid 10-digit phone number</span>
+        </label>
+
+        <label class="block mb-2">Date of Birth
+          <input id="nr_dob" type="date" class="w-full mt-1 p-2 border rounded" oninput="nrCalcAge()" />
+        </label>
+
+        <label class="block mb-2">Age
+          <input id="nr_age" type="number" disabled class="w-full mt-1 p-2 border rounded bg-gray-100 cursor-not-allowed text-sm" />
+        </label>
+
+        <label class="block mb-4">Gender
+          <select id="nr_gender" class="w-full mt-1 p-2 border rounded">
+            <option value="">Select...</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Do not wish to disclose</option>
+          </select>
+        </label>
+
+        <label class="block mb-4">T-Shirt Size
+          <select id="nr_tshirt" class="w-full mt-1 p-2 border rounded">
+            <option value="">Select...</option>
+            <option value="kids-xs">Kids XS</option><option value="kids-s">Kids S</option>
+            <option value="kids-m">Kids M</option><option value="kids-l">Kids L</option>
+            <option value="kids-xl">Kids XL</option>
+            <option value="xxs">XXS</option><option value="xs">XS</option><option value="s">S</option>
+            <option value="m">M</option><option value="l">L</option><option value="xl">XL</option><option value="xxl">XXL</option>
+          </select>
+        </label>
+
+        <label class="block mb-2">Email Address *
+          <input id="nr_email" type="email" class="w-full mt-1 p-2 border rounded" />
+          <span id="nr_email_err" class="text-red-500 text-xs hidden">Please enter a valid email address</span>
+        </label>
+
+        <label class="block mb-2">Blood Group
+          <select id="nr_blood" class="w-full mt-1 p-2 border rounded">
+            <option value="">Select Blood Group...</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+          </select>
+        </label>
+
+        <label class="block mb-2">Emergency Contact Name
+          <input id="nr_ec_name" type="text" class="w-full mt-1 p-2 border rounded" />
+        </label>
+
+        <label class="block mb-4">Emergency Contact Number
+          <input id="nr_ec_num" type="tel" class="w-full mt-1 p-2 border rounded" />
+        </label>
+
+        <p id="nr_error" class="text-red-500 text-sm mb-3 hidden"></p>
+
+        <button id="nr_submit_btn" onclick="submitNewRunner()"
+          class="w-full bg-indigo-600 text-white font-semibold py-2 rounded">
+          Submit Registration
+        </button>
+
+        <div id="nr_success" class="hidden mt-4 bg-green-50 border border-green-200 rounded p-4 text-sm text-green-800">
+          <p class="font-semibold">Registration submitted!</p>
+          <p class="mt-1">Your Unique ID is <strong id="nr_success_uid"></strong>. An admin will review and approve your profile — you can register for events once approved.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Mode 2: Add Secondary Profile ── -->
+    <div id="formSecondary" class="hidden">
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <button onclick="resetMode()" class="text-gray-400 hover:text-gray-600 text-sm">&larr;</button>
+          <h2 class="text-xl font-semibold text-gray-800">Add Guest / Kid Profile</h2>
+        </div>
+
+        <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+          New profiles are reviewed by an admin before they can register for events.
+        </p>
+
+        <!-- Step A: verify primary unique_id -->
+        <div id="sp_step_verify">
+          <label class="block mb-2">Your Primary Unique ID *
+            <input id="sp_primary_uid" type="text" placeholder="e.g. JOHN204"
+              class="w-full mt-1 p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 uppercase"
+              oninput="this.value=this.value.toUpperCase()" />
+            <span id="sp_verify_err" class="text-red-500 text-xs hidden">Unique ID not found or not yet approved.</span>
+          </label>
+          <button id="sp_verify_btn" onclick="verifyPrimaryId()"
+            class="w-full mt-2 bg-indigo-600 text-white font-semibold py-2 rounded">
+            Verify ID
+          </button>
+        </div>
+
+        <!-- Step B: profile details -->
+        <div id="sp_step_form" class="hidden">
+          <div class="bg-indigo-50 border border-indigo-100 rounded p-3 mb-4 text-sm text-indigo-800">
+            Adding profile under ID: <strong id="sp_primary_uid_display"></strong>
+          </div>
+
+          <label class="block mb-2">Profile Type *
+            <select id="sp_type" class="w-full mt-1 p-2 border rounded">
+              <option value="">Select...</option>
+              <option value="guest">Guest</option>
+              <option value="kid">Kid</option>
+            </select>
+            <span id="sp_type_err" class="text-red-500 text-xs hidden">Please select a profile type.</span>
+          </label>
+
+          <label class="block mb-2">Full Name *
+            <input id="sp_name" type="text" class="w-full mt-1 p-2 border rounded" placeholder="Full name" />
+            <span id="sp_name_err" class="text-red-500 text-xs hidden">Name is required.</span>
+          </label>
+
+          <label class="block mb-2">Date of Birth
+            <input id="sp_dob" type="date" class="w-full mt-1 p-2 border rounded" />
+          </label>
+
+          <label class="block mb-4">T-Shirt Size
+            <select id="sp_tshirt" class="w-full mt-1 p-2 border rounded">
+              <option value="">Select...</option>
+              <option value="kids-xs">Kids XS</option><option value="kids-s">Kids S</option>
+              <option value="kids-m">Kids M</option><option value="kids-l">Kids L</option>
+              <option value="kids-xl">Kids XL</option>
+              <option value="xxs">XXS</option><option value="xs">XS</option><option value="s">S</option>
+              <option value="m">M</option><option value="l">L</option><option value="xl">XL</option><option value="xxl">XXL</option>
+            </select>
+          </label>
+
+          <label class="block mb-2">Email <span class="text-gray-400 font-normal">(optional)</span>
+            <input id="sp_email" type="email" class="w-full mt-1 p-2 border rounded" />
+          </label>
+
+          <label class="block mb-4">Phone <span class="text-gray-400 font-normal">(optional)</span>
+            <input id="sp_phone" type="tel" class="w-full mt-1 p-2 border rounded" />
+          </label>
+
+          <p id="sp_error" class="text-red-500 text-sm mb-3 hidden"></p>
+
+          <button id="sp_submit_btn" onclick="submitSecondaryProfile()"
+            class="w-full bg-indigo-600 text-white font-semibold py-2 rounded">
+            Add Profile
+          </button>
+
+          <div id="sp_success" class="hidden mt-4 bg-green-50 border border-green-200 rounded p-4 text-sm text-green-800">
+            <p class="font-semibold">Profile submitted for approval!</p>
+            <p class="mt-1">Profile ID: <strong id="sp_success_pid"></strong>. Once an admin approves it, this profile can be selected when registering for events.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const COMMUNITY_CODE = 'PSNinja';
+
+    function selectMode(mode) {
+      document.getElementById('modeSelector').classList.add('hidden');
+      document.getElementById(mode === 'new_runner' ? 'formNewRunner' : 'formSecondary').classList.remove('hidden');
+    }
+
+    function resetMode() {
+      document.getElementById('modeSelector').classList.remove('hidden');
+      document.getElementById('formNewRunner').classList.add('hidden');
+      document.getElementById('formSecondary').classList.add('hidden');
+      document.getElementById('sp_step_form').classList.add('hidden');
+      document.getElementById('sp_step_verify').classList.remove('hidden');
+      document.getElementById('sp_primary_uid').removeAttribute('readonly');
+      document.getElementById('sp_primary_uid').classList.remove('bg-gray-100', 'text-gray-500');
+      document.getElementById('sp_verify_btn').style.display = '';
+      ['sp_success', 'nr_success'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById('nr_submit_btn').style.display = '';
+    }
+
+    // ---- New Runner ----
+    function nrGenerateId() {
+      const fn   = document.getElementById('nr_first_name').value.trim();
+      const flat = document.getElementById('nr_flat').value.trim();
+      const uid  = document.getElementById('nr_uid');
+      uid.value = (fn && flat) ? (fn + 'XXXX').substring(0, 4).toUpperCase() + flat : '';
+    }
+
+    function nrCalcAge() {
+      const dob = document.getElementById('nr_dob').value;
+      const ageEl = document.getElementById('nr_age');
+      if (!dob) { ageEl.value = ''; return; }
+      const d = new Date(dob), today = new Date();
+      let age = today.getFullYear() - d.getFullYear();
+      if (today.getMonth() < d.getMonth() || (today.getMonth() === d.getMonth() && today.getDate() < d.getDate())) age--;
+      ageEl.value = age >= 0 ? age : '';
+    }
+
+    function showErr(id, show) {
+      document.getElementById(id).classList.toggle('hidden', !show);
+    }
+
+    async function submitNewRunner() {
+      const fn    = document.getElementById('nr_first_name').value.trim();
+      const flat  = document.getElementById('nr_flat').value.trim();
+      const email = document.getElementById('nr_email').value.trim();
+      const phone = document.getElementById('nr_phone').value.trim();
+      const code  = document.getElementById('nr_code').value;
+      const uid   = document.getElementById('nr_uid').value;
+      const errEl = document.getElementById('nr_error');
+      errEl.classList.add('hidden');
+
+      let valid = true;
+      const flatNum = parseInt(flat);
+      showErr('nr_fn_err',    !fn || !/^[A-Za-z\s]+$/.test(fn));      if (!fn || !/^[A-Za-z\s]+$/.test(fn)) valid = false;
+      showErr('nr_flat_err',  !flat || isNaN(flatNum) || flatNum < 1001 || flatNum > 23188); if (!flat || isNaN(flatNum) || flatNum < 1001 || flatNum > 23188) valid = false;
+      showErr('nr_email_err', !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) valid = false;
+      showErr('nr_phone_err', !!phone && !/^\d{10}$/.test(phone));                            if (phone && !/^\d{10}$/.test(phone)) valid = false;
+      showErr('nr_code_err',  code !== COMMUNITY_CODE);                if (code !== COMMUNITY_CODE) valid = false;
+      if (!uid) { errEl.textContent = 'Could not generate Unique ID.'; errEl.classList.remove('hidden'); return; }
+      if (!valid) return;
+
+      const btn = document.getElementById('nr_submit_btn');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+
+      const { error } = await db.from('runners').insert([{
+        unique_id:                uid,
+        first_name:               fn,
+        last_name:                document.getElementById('nr_last_name').value.trim() || null,
+        flat_number:              flat,
+        email,
+        phone:                    phone || null,
+        dob:                      document.getElementById('nr_dob').value || null,
+        gender:                   document.getElementById('nr_gender').value || null,
+        tshirt_size:              document.getElementById('nr_tshirt').value || null,
+        blood_group:              document.getElementById('nr_blood').value || null,
+        emergency_contact_name:   document.getElementById('nr_ec_name').value.trim() || null,
+        emergency_contact_number: document.getElementById('nr_ec_num').value.trim() || null,
+        status:                   'pending',
+      }]);
+
+      btn.disabled = false; btn.textContent = 'Submit Registration';
+
+      if (error) {
+        errEl.textContent = error.code === '23505'
+          ? `A runner with ID "${uid}" already exists.`
+          : 'Error: ' + error.message;
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('nr_success_uid').textContent = uid;
+      document.getElementById('nr_success').classList.remove('hidden');
+      btn.style.display = 'none';
+    }
+
+    // ---- Secondary Profile ----
+    let verifiedPrimaryUid = null;
+
+    async function verifyPrimaryId() {
+      const uid    = document.getElementById('sp_primary_uid').value.trim().toUpperCase();
+      const errEl  = document.getElementById('sp_verify_err');
+      errEl.classList.add('hidden');
+      if (!uid) { errEl.classList.remove('hidden'); return; }
+
+      const btn = document.getElementById('sp_verify_btn');
+      btn.disabled = true; btn.textContent = 'Verifying...';
+
+      const { data: runner } = await db.from('runners').select('unique_id, first_name, status').eq('unique_id', uid).maybeSingle();
+      btn.disabled = false; btn.textContent = 'Verify ID';
+
+      if (!runner || runner.status !== 'approved') { errEl.classList.remove('hidden'); return; }
+
+      verifiedPrimaryUid = uid;
+      document.getElementById('sp_primary_uid').setAttribute('readonly', true);
+      document.getElementById('sp_primary_uid').classList.add('bg-gray-100', 'text-gray-500');
+      document.getElementById('sp_primary_uid_display').textContent = uid;
+      document.getElementById('sp_step_form').classList.remove('hidden');
+      btn.style.display = 'none';
+    }
+
+    async function submitSecondaryProfile() {
+      if (!verifiedPrimaryUid) return;
+      const errEl = document.getElementById('sp_error');
+      errEl.classList.add('hidden');
+      const type  = document.getElementById('sp_type').value;
+      const name  = document.getElementById('sp_name').value.trim();
+      const phone = document.getElementById('sp_phone').value.trim();
+
+      let valid = true;
+      showErr('sp_type_err', !type); if (!type) valid = false;
+      showErr('sp_name_err', !name); if (!name) valid = false;
+      if (phone && !/^\d{10}$/.test(phone)) { errEl.textContent = 'Phone must be 10 digits.'; errEl.classList.remove('hidden'); return; }
+      if (!valid) return;
+
+      const typePrefix = type === 'guest' ? 'G' : 'K';
+      const { data: existing } = await db.from('secondary_profiles').select('profile_id').eq('runner_unique_id', verifiedPrimaryUid).eq('profile_type', type);
+      const profileId = `${verifiedPrimaryUid}-${typePrefix}${(existing?.length || 0) + 1}`;
+
+      const btn = document.getElementById('sp_submit_btn');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+
+      const { error } = await db.from('secondary_profiles').insert([{
+        profile_id:       profileId,
+        runner_unique_id: verifiedPrimaryUid,
+        profile_type:     type,
+        full_name:        name,
+        dob:              document.getElementById('sp_dob').value || null,
+        email:            document.getElementById('sp_email').value.trim() || null,
+        phone:            phone || null,
+        tshirt_size:      document.getElementById('sp_tshirt').value || null,
+        status:           'pending',
+      }]);
+
+      btn.disabled = false; btn.textContent = 'Add Profile';
+
+      if (error) { errEl.textContent = 'Error: ' + error.message; errEl.classList.remove('hidden'); return; }
+
+      document.getElementById('sp_success_pid').textContent = profileId;
+      document.getElementById('sp_success').classList.remove('hidden');
+      btn.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
