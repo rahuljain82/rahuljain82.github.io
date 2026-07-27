@@ -46,6 +46,13 @@
         Fetch Details
       </button>
       <p id="fetchError" class="text-red-500 text-sm mt-2 hidden"></p>
+
+      <!-- Profile picker (shown only when secondary profiles exist) -->
+      <div id="profilePickerSection" class="hidden mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Who is this registration for?</label>
+        <select id="profileSelect" class="w-full p-2 border rounded text-sm" onchange="onProfileSelect()">
+        </select>
+      </div>
     </div>
 
     <!-- Already submitted notice -->
@@ -125,6 +132,8 @@
     let recipientsData = [];
     let runnerData = null;
     let masterUpdateFields = []; // track fields that can update master data
+    let secondaryProfiles = [];
+    let selectedProfileId = ''; // '' = self
 
     // ---- Helpers ----
     function esc(v) {
@@ -183,7 +192,7 @@
       // Validate runner
       const { data: runner, error: runnerErr } = await db
         .from('runners')
-        .select('first_name, last_name, gender, dob, phone, email, tshirt_size')
+        .select('first_name, last_name, gender, dob, phone, email, tshirt_size, status')
         .eq('unique_id', uniqueId)
         .maybeSingle();
 
@@ -191,14 +200,41 @@
         errEl.textContent = 'Unique ID not found. Please check and try again.';
         errEl.classList.remove('hidden'); return;
       }
+      if (runner.status !== 'approved') {
+        errEl.textContent = 'Your profile is pending admin approval. You can register for events once approved.';
+        errEl.classList.remove('hidden'); return;
+      }
       runnerData = runner;
 
-      // Check for existing registration
+      // Load approved secondary profiles
+      const { data: profiles } = await db
+        .from('secondary_profiles')
+        .select('*')
+        .eq('runner_unique_id', uniqueId)
+        .eq('status', 'approved');
+      secondaryProfiles = profiles || [];
+      selectedProfileId = '';
+
+      // Build profile picker if secondary profiles exist
+      if (secondaryProfiles.length > 0) {
+        const sel = document.getElementById('profileSelect');
+        sel.innerHTML = `<option value="">Myself (${runner.first_name} ${runner.last_name || ''})</option>`;
+        secondaryProfiles.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.profile_id;
+          opt.textContent = `${p.profile_type === 'kid' ? 'Kid' : 'Guest'}: ${p.full_name} (${p.profile_id})`;
+          sel.appendChild(opt);
+        });
+        document.getElementById('profilePickerSection').classList.remove('hidden');
+      }
+
+      // Check for existing registration for this profile
       const { data: existing } = await db
         .from('event_offline_registrations')
         .select('id, payment_done')
         .eq('runner_unique_id', uniqueId)
         .eq('event_name', eventName)
+        .eq('profile_id', '')
         .maybeSingle();
 
       if (existing) {
@@ -242,6 +278,45 @@
       renderForm(runner, cfg);
       renderRecipients(rcpts || []);
       document.getElementById('regForm').classList.remove('hidden');
+    }
+
+    async function onProfileSelect() {
+      const uniqueId = document.getElementById('uniqueIdInput').value.trim();
+      const eventName = document.getElementById('eventSelect').value;
+      const pid = document.getElementById('profileSelect').value;
+      selectedProfileId = pid;
+
+      // Check if this profile already has a registration
+      const { data: existing } = await db
+        .from('event_offline_registrations')
+        .select('id, payment_done')
+        .eq('runner_unique_id', uniqueId)
+        .eq('event_name', eventName)
+        .eq('profile_id', pid)
+        .maybeSingle();
+
+      document.getElementById('alreadySubmittedNotice').classList.add('hidden');
+      document.getElementById('paymentConfirmedNotice').classList.add('hidden');
+      document.getElementById('regForm').classList.remove('hidden');
+
+      if (existing) {
+        document.getElementById('regForm').classList.add('hidden');
+        if (existing.payment_done) {
+          document.getElementById('paymentConfirmedNotice').classList.remove('hidden');
+        } else {
+          document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Re-render form with this profile's data pre-filled
+      const profile = secondaryProfiles.find(p => p.profile_id === pid);
+      const runnerForForm = profile ? {
+        first_name: profile.full_name, last_name: '', gender: runnerData.gender,
+        dob: profile.dob || runnerData.dob, phone: profile.phone || runnerData.phone,
+        email: profile.email || runnerData.email, tshirt_size: profile.tshirt_size || runnerData.tshirt_size
+      } : runnerData;
+      renderForm(runnerForForm, eventConfig);
     }
 
     // ---- Render Form Fields ----
@@ -480,6 +555,7 @@
       const { error } = await db.from('event_offline_registrations').insert([{
         event_name: eventName,
         runner_unique_id: uniqueId,
+        profile_id: selectedProfileId,
         form_data: formData,
         recipient_name: recipientName,
         source_upi_id: sourceUpi,

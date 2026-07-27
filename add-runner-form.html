@@ -225,6 +225,7 @@
           blood_group: form.querySelector('[name="bloodgroup"]').value || null,
           emergency_contact_name: emergencyNameInput?.value.trim() || null,
           emergency_contact_number: emergencyNumberInput?.value.trim() || null,
+          status: 'pending',
         }]);
 
         submitBtn.disabled = false;
@@ -239,7 +240,7 @@
           return;
         }
 
-        alert('Registration successful! Your Unique ID is: ' + uniqueId);
+        alert('Registration submitted! Your Unique ID is: ' + uniqueId + '. An admin will review and approve your profile before you can register for events.');
         document.getElementById('formMessage').classList.remove('hidden');
         form.reset();
         document.querySelector('[name="uniqueId"]').value = '';

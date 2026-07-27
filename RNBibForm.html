@@ -41,6 +41,13 @@
 
       <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-4">Fetch My Data</button>
 
+      <!-- Profile picker (shown only when secondary profiles exist) -->
+      <div id="profilePickerSection" class="hidden mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Who is this registration for?</label>
+        <select id="profileSelect" class="w-full p-2 border rounded text-sm" onchange="onProfileSelect()">
+        </select>
+      </div>
+
       <div id="runnerDetails" class="hidden">
         <label class="block mb-2">Name <input id="name" type="text" class="w-full mt-1 p-2 border rounded" /></label>
         <label class="block mb-2">Gender <input id="gender" type="text" class="w-full mt-1 p-2 border rounded" /></label>
@@ -115,43 +122,94 @@
 
     const RACE_CAT_LABELS = { '5K':'5K', '10K':'10K', '21K':'21K (Half Marathon)', '42K':'42K (Full Marathon)', '50K':'50K (Ultra)', '70K':'70K (Ultra)', '100K':'100K (Ultra)' };
 
+    let primaryRunner = null;
+    let secondaryProfiles = [];
+    let selectedProfileId = '';
+
     async function fetchRunnerData() {
-      const uniqueId = document.getElementById('uniqueId').value.trim();
+      const uniqueId = document.getElementById('uniqueId').value.trim().toUpperCase();
       const marathonName = document.getElementById('marathonName').value;
       if (!uniqueId || !marathonName) return alert('Please enter both fields.');
 
       const { data: runner, error } = await db
         .from('runners')
-        .select('first_name, last_name, gender, dob, blood_group, emergency_contact_name, emergency_contact_number, tshirt_size')
+        .select('first_name, last_name, gender, dob, blood_group, emergency_contact_name, emergency_contact_number, tshirt_size, status')
         .eq('unique_id', uniqueId)
-        .single();
+        .maybeSingle();
 
       if (error || !runner) { alert('Runner not found.'); return; }
+      if (runner.status !== 'approved') {
+        alert('Your profile is pending admin approval. You will be able to register once approved.');
+        return;
+      }
+      primaryRunner = runner;
 
-      document.getElementById('name').value = runner.first_name + ' ' + (runner.last_name || '');
+      // Load approved secondary profiles
+      const { data: profiles } = await db
+        .from('secondary_profiles')
+        .select('*')
+        .eq('runner_unique_id', uniqueId)
+        .eq('status', 'approved');
+      secondaryProfiles = profiles || [];
+
+      document.getElementById('uniqueId').setAttribute('readonly', true);
+      document.getElementById('uniqueId').classList.add('bg-gray-100', 'text-gray-500');
+      document.getElementById('marathonName').setAttribute('disabled', true);
+
+      // Build profile picker
+      if (secondaryProfiles.length > 0) {
+        const sel = document.getElementById('profileSelect');
+        sel.innerHTML = `<option value="">Myself (${runner.first_name} ${runner.last_name || ''})</option>`;
+        secondaryProfiles.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.profile_id;
+          opt.textContent = `${p.profile_type === 'kid' ? 'Kid' : 'Guest'}: ${p.full_name} (${p.profile_id})`;
+          sel.appendChild(opt);
+        });
+        document.getElementById('profilePickerSection').classList.remove('hidden');
+      }
+
+      selectedProfileId = '';
+      await loadBibForProfile(uniqueId, marathonName, runner, null);
+    }
+
+    async function onProfileSelect() {
+      const uniqueId = document.getElementById('uniqueId').value.trim();
+      const marathonName = document.getElementById('marathonName').value;
+      const pid = document.getElementById('profileSelect').value;
+      selectedProfileId = pid;
+      const profile = pid ? secondaryProfiles.find(p => p.profile_id === pid) : null;
+      await loadBibForProfile(uniqueId, marathonName, primaryRunner, profile);
+    }
+
+    async function loadBibForProfile(uniqueId, marathonName, runner, profile) {
+      document.getElementById('name').value = profile
+        ? profile.full_name
+        : (runner.first_name + ' ' + (runner.last_name || '')).trim();
       document.getElementById('gender').value = runner.gender || '';
-      document.getElementById('dob').value = runner.dob || '';
+      document.getElementById('dob').value = profile?.dob || runner.dob || '';
       document.getElementById('bloodGroup').value = runner.blood_group || '';
       document.getElementById('emergencyName').value = runner.emergency_contact_name || '';
       document.getElementById('emergencyNumber').value = runner.emergency_contact_number || '';
-      document.getElementById('tshirtSize').value = runner.tshirt_size || '';
+      document.getElementById('tshirtSize').value = profile?.tshirt_size || runner.tshirt_size || '';
 
-      const { data: eventData, error: catError } = await db
+      const { data: eventData } = await db
         .from('event_race_categories')
         .select('race_categories')
         .eq('event_name', marathonName)
         .maybeSingle();
-      if (catError) console.error('event_race_categories error:', catError.message);
       const cats = eventData?.race_categories || [];
       const distSel = document.getElementById('distance');
       distSel.innerHTML = '<option value="">-- Select Distance --</option>';
       cats.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = RACE_CAT_LABELS[c] || c; distSel.appendChild(opt); });
 
+      const profileId = profile ? profile.profile_id : '';
       const { data: existingBib } = await db
         .from('bib_details')
         .select('distance, bib_number, email_proof')
         .eq('unique_id', uniqueId)
         .eq('event_name', marathonName)
+        .eq('profile_id', profileId)
         .maybeSingle();
 
       const notice = document.getElementById('existingBibNotice');
@@ -162,13 +220,13 @@
         notice.classList.remove('hidden');
         document.getElementById('bibSubmitBtn').textContent = 'Update Bib Details';
       } else {
+        distSel.selectedIndex = 0;
+        document.getElementById('bibNumber').value = '';
+        document.getElementById('comments').value = '';
         notice.classList.add('hidden');
         document.getElementById('bibSubmitBtn').textContent = 'Submit for Bib Collection';
       }
 
-      document.getElementById('uniqueId').setAttribute('readonly', true);
-      document.getElementById('uniqueId').classList.add('bg-gray-100', 'text-gray-500');
-      document.getElementById('marathonName').setAttribute('disabled', true);
       document.getElementById('runnerDetails').classList.remove('hidden');
     }
 
@@ -196,8 +254,9 @@
       errEl.classList.add('hidden');
 
       const { error } = await db.from('bib_details').upsert([{
-        unique_id:        document.getElementById('uniqueId').value.trim(),
-        event_name:       document.getElementById('marathonName').value,
+        unique_id:        uniqueId,
+        event_name:       eventName,
+        profile_id:       selectedProfileId,
         name:             document.getElementById('name').value,
         gender:           document.getElementById('gender').value,
         dob:              document.getElementById('dob').value || null,
@@ -205,10 +264,10 @@
         emergency_name:   document.getElementById('emergencyName').value,
         emergency_number: document.getElementById('emergencyNumber').value,
         tshirt_size:      document.getElementById('tshirtSize').value,
-        distance:         document.getElementById('distance').value,
-        bib_number:       document.getElementById('bibNumber').value,
+        distance:         distance,
+        bib_number:       bibNumber,
         email_proof:      document.getElementById('comments').value,
-      }], { onConflict: 'unique_id,event_name' });
+      }], { onConflict: 'unique_id,event_name,profile_id' });
 
       if (error) {
         document.getElementById('submitError').textContent = 'Something went wrong. Please check your details and try again.';

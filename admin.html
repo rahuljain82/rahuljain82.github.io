@@ -169,7 +169,8 @@
         </button>
         <div class="nav-sub" id="sec-users">
           <button class="nav-item" data-nav="all_runners" onclick="navigateTo('all_runners')">All Runners</button>
-          <button class="nav-item" data-nav="add_runner" onclick="navigateTo('add_runner')">Add New Runner</button>
+          <button class="nav-item" data-nav="add_runner" onclick="navigateTo('add_runner')">Manage User Profiles</button>
+          <button class="nav-item" id="nav-approvals" data-nav="approvals" onclick="navigateTo('approvals')">Admin Approvals</button>
         </div>
 
         <div class="nav-section-label" style="margin-top:0.5rem;">Event Management</div>
@@ -258,7 +259,7 @@
             <div class="quick-card" onclick="navigateTo('bus_bookings')"><div class="quick-icon" style="background:#dcfce7;">🚌</div><div><p class="font-semibold text-gray-800 text-sm">Bus - Step1 (Booking)</p><p class="text-xs text-gray-500 mt-0.5">View ninja bus seat registrations</p></div></div>
             <div class="quick-card" onclick="navigateTo('bus_payments')"><div class="quick-icon" style="background:#fef9c3;">💳</div><div><p class="font-semibold text-gray-800 text-sm">Bus - Step2 (Payment)</p><p class="text-xs text-gray-500 mt-0.5">Track payment collections</p></div></div>
             <div class="quick-card" onclick="navigateTo('bib_details')"><div class="quick-icon" style="background:#fce7f3;">🏷️</div><div><p class="font-semibold text-gray-800 text-sm">Bib Collection</p><p class="text-xs text-gray-500 mt-0.5">Manage runner bib information</p></div></div>
-            <div class="quick-card" onclick="navigateTo('add_runner')"><div class="quick-icon" style="background:#e0f2fe;">➕</div><div><p class="font-semibold text-gray-800 text-sm">Add New Runner</p><p class="text-xs text-gray-500 mt-0.5">Register a new community member</p></div></div>
+            <div class="quick-card" onclick="navigateTo('add_runner')"><div class="quick-icon" style="background:#e0f2fe;">👤</div><div><p class="font-semibold text-gray-800 text-sm">Manage User Profiles</p><p class="text-xs text-gray-500 mt-0.5">Register runners &amp; manage guest/kid profiles</p></div></div>
           </div>
         </div>
 
@@ -280,13 +281,30 @@
           </div>
         </div>
 
-        <!-- ADD RUNNER (inline form) -->
+        <!-- MANAGE USER PROFILES -->
         <div id="ws-add_runner" style="display:none;">
+
+          <!-- Tab bar -->
+          <div class="content-card mb-4" style="padding:0;">
+            <div class="flex border-b border-gray-200">
+              <button onclick="switchMpTab('register')" id="mpTabBtn-register"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">
+                Register New Runner
+              </button>
+              <button onclick="switchMpTab('secondary')" id="mpTabBtn-secondary"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">
+                Secondary Profiles
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab: Register New Runner -->
+          <div id="mpTab-register">
           <div class="content-card" style="max-width:680px;">
             <div class="flex items-center justify-between mb-5">
               <div>
-                <h3 class="font-bold text-gray-800 text-base">Add New Runner</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Creates a runner profile and generates their Unique ID.</p>
+                <h3 class="font-bold text-gray-800 text-base">Register New Runner</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Creates an approved runner profile and generates their Unique ID.</p>
               </div>
               <button onclick="navigateTo('all_runners')" class="text-sm text-gray-400 hover:text-gray-600">← Back to All Runners</button>
             </div>
@@ -370,6 +388,108 @@
               <button id="ar_submit_btn" onclick="submitAddRunner()" class="px-5 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Create Runner</button>
             </div>
           </div>
+          </div><!-- /mpTab-register -->
+
+          <!-- Tab: Secondary Profiles -->
+          <div id="mpTab-secondary" style="display:none;">
+            <!-- Search -->
+            <div class="content-card mb-4" style="max-width:680px;">
+              <h3 class="font-bold text-gray-800 text-sm mb-3">View &amp; Add Secondary Profiles</h3>
+              <div class="flex gap-3">
+                <input id="sp_search_uid" type="text" class="form-input flex-1" placeholder="Enter primary Unique ID"
+                  oninput="this.value=this.value.toUpperCase()" />
+                <button onclick="adminLoadSecondaryProfiles()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Load</button>
+              </div>
+              <p id="sp_search_err" class="text-red-500 text-xs mt-2 hidden"></p>
+            </div>
+
+            <!-- Profiles list -->
+            <div id="sp_list_card" class="content-card mb-4 hidden" style="max-width:680px;">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <p class="font-semibold text-gray-800 text-sm" id="sp_list_title">Profiles for —</p>
+                  <p class="text-xs text-gray-400 mt-0.5">Primary profile is always included as "Self".</p>
+                </div>
+                <button onclick="openAddSecondaryModal()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded">+ Add Profile</button>
+              </div>
+              <div id="sp_list_content" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+            </div>
+          </div><!-- /mpTab-secondary -->
+
+        </div><!-- /ws-add_runner -->
+
+        <!-- Add Secondary Profile Modal -->
+        <div id="addSecondaryModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:480px;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">Add Secondary Profile</h3>
+              <button onclick="document.getElementById('addSecondaryModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Adding profile under: <strong id="asp_uid_display"></strong>. Admin-created profiles are auto-approved.</p>
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Profile Type *</label>
+                  <select id="asp_type" class="form-input">
+                    <option value="">Select...</option>
+                    <option value="guest">Guest</option>
+                    <option value="kid">Kid</option>
+                  </select>
+                  <p id="asp_type_err" class="text-red-500 text-xs mt-1 hidden">Required</p>
+                </div>
+                <div>
+                  <label class="form-label">Full Name *</label>
+                  <input id="asp_name" type="text" class="form-input" placeholder="Full name" />
+                  <p id="asp_name_err" class="text-red-500 text-xs mt-1 hidden">Required</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Date of Birth</label>
+                  <input id="asp_dob" type="date" class="form-input" />
+                </div>
+                <div>
+                  <label class="form-label">T-Shirt Size</label>
+                  <select id="asp_tshirt" class="form-input">
+                    <option value="">Select...</option>
+                    <option value="kids-xs">Kids XS</option><option value="kids-s">Kids S</option>
+                    <option value="kids-m">Kids M</option><option value="kids-l">Kids L</option>
+                    <option value="kids-xl">Kids XL</option>
+                    <option value="xxs">XXS</option><option value="xs">XS</option><option value="s">S</option>
+                    <option value="m">M</option><option value="l">L</option><option value="xl">XL</option><option value="xxl">XXL</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="form-label">Email</label><input id="asp_email" type="email" class="form-input" placeholder="Optional" /></div>
+                <div><label class="form-label">Phone</label><input id="asp_phone" type="tel" class="form-input" placeholder="Optional" /></div>
+              </div>
+            </div>
+            <p id="asp_error" class="text-red-500 text-sm mt-3 hidden"></p>
+            <div class="flex gap-3 justify-end border-t pt-4 mt-4">
+              <button onclick="document.getElementById('addSecondaryModal').classList.add('hidden')" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onclick="submitAdminSecondaryProfile()" id="asp_submit_btn" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Add Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADMIN APPROVALS workspace -->
+        <div id="ws-approvals" style="display:none;">
+          <!-- Pending Runners -->
+          <div class="content-card mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-gray-800 text-sm">Pending Runner Registrations</h3>
+              <button onclick="loadApprovals()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
+            </div>
+            <div id="approvals_runners_content" class="overflow-x-auto"><p class="text-gray-400 text-sm p-2">Loading...</p></div>
+          </div>
+          <!-- Pending Secondary Profiles -->
+          <div class="content-card">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-gray-800 text-sm">Pending Secondary Profiles</h3>
+            </div>
+            <div id="approvals_profiles_content" class="overflow-x-auto"><p class="text-gray-400 text-sm p-2">Loading...</p></div>
+          </div>
         </div>
 
         <!-- Bus seats info bar (bus_payments tab only) -->
@@ -405,45 +525,80 @@
 
         <!-- OFFLINE REGISTRATIONS -->
         <div id="ws-offline_registrations" style="display:none;">
-          <!-- Filter + actions bar -->
-          <div class="content-card mb-4">
-            <div class="flex items-center gap-3 flex-wrap">
-              <label class="text-sm font-medium text-gray-700">Event:</label>
-              <select id="ofl_event_filter" class="form-input py-1.5 text-sm w-auto" onchange="loadOflRegistrations()">
-                <option value="">All Events</option>
-              </select>
-              <button onclick="loadOflRegistrations()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
-              <button onclick="openOflDownloadModal()" class="ml-auto flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download Sheet
+
+          <!-- Tab bar -->
+          <div class="content-card mb-4" style="padding:0;">
+            <div class="flex border-b border-gray-200">
+              <button onclick="switchOflTab('registrations')" id="oflTabBtn-registrations"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">
+                Registrations
+              </button>
+              <button onclick="switchOflTab('overrides')" id="oflTabBtn-overrides"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">
+                Admin Overrides
               </button>
             </div>
           </div>
 
-          <!-- Summary bar -->
-          <div id="ofl_summary_bar" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div class="content-card text-center py-3">
-              <p class="text-2xl font-bold text-indigo-600" id="ofl_stat_total">—</p>
-              <p class="text-xs text-gray-500 mt-0.5">Registered</p>
+          <!-- ── Registrations tab ── -->
+          <div id="oflTab-registrations">
+            <!-- Filter + actions bar -->
+            <div class="content-card mb-4">
+              <div class="flex items-center gap-3 flex-wrap">
+                <label class="text-sm font-medium text-gray-700">Event:</label>
+                <select id="ofl_event_filter" class="form-input py-1.5 text-sm w-auto" onchange="loadOflRegistrations()">
+                  <option value="">All Events</option>
+                </select>
+                <button onclick="loadOflRegistrations()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
+                <button onclick="openOflDownloadModal()" class="ml-auto flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download Sheet
+                </button>
+              </div>
             </div>
-            <div class="content-card text-center py-3">
-              <p class="text-2xl font-bold text-green-600" id="ofl_stat_paid">—</p>
-              <p class="text-xs text-gray-500 mt-0.5">Payment Done</p>
+
+            <!-- Summary bar -->
+            <div id="ofl_summary_bar" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-indigo-600" id="ofl_stat_total">—</p>
+                <p class="text-xs text-gray-500 mt-0.5">Registered</p>
+              </div>
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-green-600" id="ofl_stat_paid">—</p>
+                <p class="text-xs text-gray-500 mt-0.5">Payment Done</p>
+              </div>
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-amber-500" id="ofl_stat_pending">—</p>
+                <p class="text-xs text-gray-500 mt-0.5">Payment Pending</p>
+              </div>
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-blue-500" id="ofl_stat_transport">—</p>
+                <p class="text-xs text-gray-500 mt-0.5">Need Transport</p>
+              </div>
             </div>
-            <div class="content-card text-center py-3">
-              <p class="text-2xl font-bold text-amber-500" id="ofl_stat_pending">—</p>
-              <p class="text-xs text-gray-500 mt-0.5">Payment Pending</p>
-            </div>
-            <div class="content-card text-center py-3">
-              <p class="text-2xl font-bold text-blue-500" id="ofl_stat_transport">—</p>
-              <p class="text-xs text-gray-500 mt-0.5">Need Transport</p>
+
+            <!-- Table -->
+            <div class="content-card overflow-x-auto">
+              <div id="ofl_table_content"><p class="text-gray-400 text-sm p-2">Loading...</p></div>
             </div>
           </div>
 
-          <!-- Table -->
-          <div class="content-card overflow-x-auto">
-            <div id="ofl_table_content"><p class="text-gray-400 text-sm p-2">Loading...</p></div>
+          <!-- ── Admin Overrides tab ── -->
+          <div id="oflTab-overrides" style="display:none;">
+            <div class="content-card mb-4">
+              <div class="flex items-center gap-3 flex-wrap">
+                <label class="text-sm font-medium text-gray-700">Event:</label>
+                <select id="ofl_override_event_filter" class="form-input py-1.5 text-sm w-auto" onchange="loadOflOverrides()">
+                  <option value="">All Events</option>
+                </select>
+                <button onclick="loadOflOverrides()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">↻ Refresh</button>
+              </div>
+            </div>
+            <div class="content-card overflow-x-auto">
+              <div id="ofl_overrides_content"><p class="text-gray-400 text-sm p-2">Select a tab to load overrides.</p></div>
+            </div>
           </div>
+
         </div>
 
         <!-- Offline Registration Download Modal -->
@@ -474,6 +629,29 @@
               <button onclick="document.getElementById('oflDetailModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
             </div>
             <div id="ofl_detail_content" class="space-y-2 text-sm text-gray-700"></div>
+          </div>
+        </div>
+
+        <!-- Offline Registration Edit Modal -->
+        <div id="oflEditModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:520px;max-height:85vh;overflow-y:auto;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">Update Registration</h3>
+              <button onclick="document.getElementById('oflEditModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <div class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2.5 mb-4">
+              All changes are logged in <strong>Admin Overrides</strong> for audit &amp; refund tracking.
+            </div>
+            <input type="hidden" id="oflEditRegId" />
+            <div id="ofl_edit_fields" class="space-y-3 mb-4"></div>
+            <div>
+              <label class="form-label">Reason / Note</label>
+              <input type="text" id="oflEditNote" class="form-input" placeholder="e.g. Runner requested change from 10K to 5K" />
+            </div>
+            <div class="flex gap-3 justify-end border-t pt-4 mt-4">
+              <button onclick="document.getElementById('oflEditModal').classList.add('hidden')" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onclick="saveOflEdit()" id="oflEditSaveBtn" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Changes</button>
+            </div>
           </div>
         </div>
 
@@ -1196,7 +1374,8 @@
     const NAV_META = {
       home:          { title: 'Dashboard',                    breadcrumb: 'Home' },
       all_runners:   { title: 'All Runners',                  breadcrumb: 'User Management / All Runners' },
-      add_runner:    { title: 'Add New Runner',               breadcrumb: 'User Management / Add New Runner' },
+      add_runner:    { title: 'Manage User Profiles',        breadcrumb: 'User Management / Manage User Profiles' },
+      approvals:     { title: 'Admin Approvals',             breadcrumb: 'User Management / Admin Approvals' },
       race_events:   { title: 'Event Info & Management',      breadcrumb: 'Event Management / Event Info & Management' },
       tshirt:        { title: 'T-Shirt - Step1 (Booking)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step1',  tab: 'tshirt',        showExport: true, showClear: true, showFilter: false },
       tshirt2:       { title: 'T-Shirt - Step2 (Payment)',    breadcrumb: 'Event Management / Event Data / T-Shirt Step2' },
@@ -1214,7 +1393,7 @@
     };
 
     const ALL_PANELS = [
-      'ws-home', 'ws-all_runners', 'ws-add_runner', 'tableWrap', 'eventsPanel',
+      'ws-home', 'ws-all_runners', 'ws-add_runner', 'ws-approvals', 'tableWrap', 'eventsPanel',
       'ws-tshirt2', 'ws-race_volunteering', 'ws-landing_cards', 'ws-partners', 'ws-hamburger_menu', 'ws-survey_mgmt', 'ws-quiz_mgmt',
       'ws-offline_registrations'
     ];
@@ -1252,6 +1431,10 @@
 
       } else if (key === 'add_runner') {
         document.getElementById('ws-add_runner').style.display = 'block';
+
+      } else if (key === 'approvals') {
+        document.getElementById('ws-approvals').style.display = 'block';
+        loadApprovals();
 
       } else if (key === 'race_events') {
         document.getElementById('eventsPanel').style.display = 'block';
@@ -1390,6 +1573,9 @@
       });
       const raceVolBtn = document.querySelector('.nav-item[data-nav="race_volunteering"]');
       if (raceVolBtn) raceVolBtn.style.display = eventAdm ? 'none' : '';
+      // Approvals: full admins + super admins only (not event admins)
+      const approvalsBtn = document.getElementById('nav-approvals');
+      if (approvalsBtn) approvalsBtn.style.display = eventAdm ? 'none' : '';
     }
 
     function openDashboard() {
@@ -1792,6 +1978,7 @@
         blood_group:              document.getElementById('ar_blood').value || null,
         emergency_contact_name:   document.getElementById('ar_ec_name').value.trim() || null,
         emergency_contact_number: document.getElementById('ar_ec_num').value.trim() || null,
+        status:                   'approved',
       }]);
 
       btn.disabled = false; btn.textContent = 'Create Runner';
@@ -2620,9 +2807,13 @@
     async function initOflRegistrationsPanel() {
       if (!oflEventsLoaded) {
         const { data } = await db.from('event_offline_reg_config').select('event_name').eq('enabled', true);
-        const sel = document.getElementById('ofl_event_filter');
-        sel.innerHTML = '<option value="">All Events</option>';
-        (data || []).forEach(r => { const o = document.createElement('option'); o.value = r.event_name; o.textContent = r.event_name; sel.appendChild(o); });
+        const events = data || [];
+        // Populate both event filter dropdowns from the same source
+        ['ofl_event_filter', 'ofl_override_event_filter'].forEach(id => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = '<option value="">All Events</option>';
+          events.forEach(r => { const o = document.createElement('option'); o.value = r.event_name; o.textContent = r.event_name; sel.appendChild(o); });
+        });
         oflEventsLoaded = false; // allow refresh on revisit
       }
       loadOflRegistrations();
@@ -2683,7 +2874,7 @@
       oflDynamicCols = getOflDynamicCols(data);
 
       // Fixed prefix cols + dynamic form_data cols + fixed suffix cols
-      const fixedPrefix = ['ID', 'Event', 'Unique ID', 'Submitted'];
+      const fixedPrefix = ['ID', 'Event', 'Unique ID', 'Profile', 'Submitted'];
       const fixedSuffix = ['Pay To', 'Source UPI', 'Payment Done'];
       const dynHeaders  = oflDynamicCols.map(k => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 
@@ -2695,9 +2886,10 @@
         const fd = row.form_data || {};
         const isPaid = !!row.payment_done;
         const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString() : '—';
+        const profileLabel = row.profile_id ? esc(row.profile_id) : '<span style="color:#94a3b8;">Self</span>';
         html += '<tr>';
         // Fixed prefix
-        html += `<td>${row.id}</td><td>${esc(row.event_name||'')}</td><td>${esc(row.runner_unique_id||'')}</td><td>${dateStr}</td>`;
+        html += `<td>${row.id}</td><td>${esc(row.event_name||'')}</td><td>${esc(row.runner_unique_id||'')}</td><td>${profileLabel}</td><td>${dateStr}</td>`;
         // Dynamic form_data cols
         oflDynamicCols.forEach(k => { html += `<td>${esc(oflFmtVal(fd[k]))}</td>`; });
         // Fixed suffix
@@ -2706,6 +2898,7 @@
         // Actions
         html += `<td class="flex gap-1 items-center">
           <button onclick="toggleOflPayment(${row.id},${isPaid})" title="${isPaid?'Unmark':'Mark as paid'}" class="w-7 h-7 rounded border-2 flex items-center justify-center transition-colors ${isPaid?'bg-green-500 border-green-600 text-white hover:bg-red-100 hover:border-red-400 hover:text-red-600':'bg-white border-gray-300 text-transparent hover:border-green-400'}" style="font-size:14px;line-height:1;">✓</button>
+          <button onclick="openOflEditModal(${row.id})" class="text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded p-1 text-sm leading-none" title="Edit / Update">✏️</button>
           <button onclick="openOflRegDetail(${row.id})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="View details">👁</button>
           <button onclick="deleteOflReg(${row.id})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button>
         </td></tr>`;
@@ -2792,6 +2985,378 @@
       const { error } = await db.from('event_offline_registrations').delete().eq('id', id);
       if (error) { alert('Error: ' + error.message); return; }
       loadOflRegistrations();
+    }
+
+    // ---- Manage User Profiles: Tab switching ----
+    function switchMpTab(tab) {
+      ['register', 'secondary'].forEach(t => {
+        document.getElementById(`mpTab-${t}`).style.display = t === tab ? '' : 'none';
+        const btn = document.getElementById(`mpTabBtn-${t}`);
+        btn.classList.toggle('border-indigo-600', t === tab);
+        btn.classList.toggle('text-indigo-600',   t === tab);
+        btn.classList.toggle('border-transparent', t !== tab);
+        btn.classList.toggle('text-gray-500',      t !== tab);
+      });
+    }
+
+    // ---- Admin: Secondary Profiles management ----
+    let adminSpCurrentUid = null;
+
+    async function adminLoadSecondaryProfiles() {
+      const uid = document.getElementById('sp_search_uid').value.trim().toUpperCase();
+      const errEl = document.getElementById('sp_search_err');
+      errEl.classList.add('hidden');
+      if (!uid) { errEl.textContent = 'Enter a Unique ID.'; errEl.classList.remove('hidden'); return; }
+
+      const { data: runner } = await db.from('runners').select('unique_id, first_name, last_name, status').eq('unique_id', uid).maybeSingle();
+      if (!runner) { errEl.textContent = 'Runner not found.'; errEl.classList.remove('hidden'); return; }
+
+      adminSpCurrentUid = uid;
+      document.getElementById('sp_list_title').textContent = `Profiles for ${uid} — ${runner.first_name} ${runner.last_name || ''} (${runner.status})`;
+      document.getElementById('asp_uid_display').textContent = uid;
+      document.getElementById('sp_list_card').classList.remove('hidden');
+
+      const { data: profiles } = await db.from('secondary_profiles').select('*').eq('runner_unique_id', uid).order('created_at');
+      renderAdminSecondaryProfiles(runner, profiles || []);
+    }
+
+    function renderAdminSecondaryProfiles(runner, profiles) {
+      const content = document.getElementById('sp_list_content');
+      const selfBadge = runner.status === 'approved'
+        ? '<span class="badge badge-admin">approved</span>'
+        : runner.status === 'pending'
+          ? '<span class="badge" style="background:#fef9c3;color:#92400e;">pending</span>'
+          : '<span class="badge badge-user">rejected</span>';
+
+      let html = `<table><thead><tr><th>Profile ID</th><th>Type</th><th>Name</th><th>DOB</th><th>T-Shirt</th><th>Status</th><th></th></tr></thead><tbody>`;
+      // Self row
+      html += `<tr><td class="font-mono text-xs">${esc(runner.unique_id)}</td><td><span class="badge badge-user">Self</span></td><td>${esc(runner.first_name + ' ' + (runner.last_name || ''))}</td><td>—</td><td>—</td><td>${selfBadge}</td><td></td></tr>`;
+      // Secondary profile rows
+      profiles.forEach(p => {
+        const statusBadge = p.status === 'approved'
+          ? '<span class="badge badge-admin">approved</span>'
+          : p.status === 'pending'
+            ? '<span class="badge" style="background:#fef9c3;color:#92400e;">pending</span>'
+            : '<span class="badge badge-user">rejected</span>';
+        const typeLabel = p.profile_type === 'kid' ? 'Kid' : 'Guest';
+        html += `<tr>
+          <td class="font-mono text-xs">${esc(p.profile_id)}</td>
+          <td><span class="badge badge-user">${esc(typeLabel)}</span></td>
+          <td>${esc(p.full_name)}</td>
+          <td>${p.dob ? new Date(p.dob).toLocaleDateString() : '—'}</td>
+          <td>${esc(p.tshirt_size || '—')}</td>
+          <td>${statusBadge}</td>
+          <td class="flex gap-1">
+            ${p.status !== 'approved' ? `<button onclick="adminUpdateProfileStatus('${esc(p.profile_id)}','approved')" class="text-xs bg-green-100 hover:bg-green-200 text-green-700 font-semibold px-2 py-1 rounded">Approve</button>` : ''}
+            ${p.status !== 'rejected' ? `<button onclick="adminUpdateProfileStatus('${esc(p.profile_id)}','rejected')" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2 py-1 rounded">Reject</button>` : ''}
+            <button onclick="adminDeleteSecondaryProfile('${esc(p.profile_id)}')" class="text-xs text-red-400 hover:text-red-600 px-1 py-1 rounded" title="Delete">🗑</button>
+          </td>
+        </tr>`;
+      });
+      if (!profiles.length) html += `<tr><td colspan="7" class="text-gray-400 text-sm py-3">No secondary profiles yet.</td></tr>`;
+      content.innerHTML = html + '</tbody></table>';
+    }
+
+    function openAddSecondaryModal() {
+      if (!adminSpCurrentUid) return;
+      ['asp_type','asp_name','asp_dob','asp_tshirt','asp_email','asp_phone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+      });
+      document.getElementById('asp_error').classList.add('hidden');
+      document.getElementById('asp_submit_btn').disabled = false;
+      document.getElementById('asp_submit_btn').textContent = 'Add Profile';
+      document.getElementById('addSecondaryModal').classList.remove('hidden');
+    }
+
+    async function submitAdminSecondaryProfile() {
+      const errEl = document.getElementById('asp_error');
+      errEl.classList.add('hidden');
+      const type = document.getElementById('asp_type').value;
+      const name = document.getElementById('asp_name').value.trim();
+      if (!type) { document.getElementById('asp_type_err').classList.remove('hidden'); return; } else { document.getElementById('asp_type_err').classList.add('hidden'); }
+      if (!name) { document.getElementById('asp_name_err').classList.remove('hidden'); return; } else { document.getElementById('asp_name_err').classList.add('hidden'); }
+
+      const typePrefix = type === 'guest' ? 'G' : 'K';
+      const { data: existing } = await db.from('secondary_profiles').select('profile_id').eq('runner_unique_id', adminSpCurrentUid).eq('profile_type', type);
+      const nextNum = (existing?.length || 0) + 1;
+      const profileId = `${adminSpCurrentUid}-${typePrefix}${nextNum}`;
+
+      const btn = document.getElementById('asp_submit_btn');
+      btn.disabled = true; btn.textContent = 'Adding...';
+
+      const { error } = await db.from('secondary_profiles').insert([{
+        profile_id:       profileId,
+        runner_unique_id: adminSpCurrentUid,
+        profile_type:     type,
+        full_name:        name,
+        dob:              document.getElementById('asp_dob').value || null,
+        tshirt_size:      document.getElementById('asp_tshirt').value || null,
+        email:            document.getElementById('asp_email').value.trim() || null,
+        phone:            document.getElementById('asp_phone').value.trim() || null,
+        status:           'approved',
+      }]);
+
+      btn.disabled = false; btn.textContent = 'Add Profile';
+      if (error) { errEl.textContent = 'Error: ' + error.message; errEl.classList.remove('hidden'); return; }
+
+      document.getElementById('addSecondaryModal').classList.add('hidden');
+      adminLoadSecondaryProfiles();
+    }
+
+    async function adminUpdateProfileStatus(profileId, newStatus) {
+      const { error } = await db.from('secondary_profiles').update({ status: newStatus }).eq('profile_id', profileId);
+      if (error) { alert('Error: ' + error.message); return; }
+      adminLoadSecondaryProfiles();
+    }
+
+    async function adminDeleteSecondaryProfile(profileId) {
+      if (!confirm(`Delete profile ${profileId}? This cannot be undone.`)) return;
+      const { error } = await db.from('secondary_profiles').delete().eq('profile_id', profileId);
+      if (error) { alert('Error: ' + error.message); return; }
+      adminLoadSecondaryProfiles();
+    }
+
+    // ---- Admin Approvals ----
+    async function loadApprovals() {
+      document.getElementById('approvals_runners_content').innerHTML = '<div class="text-gray-400 text-sm p-2">Loading...</div>';
+      document.getElementById('approvals_profiles_content').innerHTML = '<div class="text-gray-400 text-sm p-2">Loading...</div>';
+
+      const [runnersRes, profilesRes] = await Promise.all([
+        db.from('runners').select('unique_id, first_name, last_name, email, phone, flat_number, created_at').eq('status', 'pending').order('created_at', { ascending: false }),
+        db.from('secondary_profiles').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
+      ]);
+
+      renderPendingRunners(runnersRes.data || []);
+      renderPendingProfiles(profilesRes.data || []);
+    }
+
+    function renderPendingRunners(data) {
+      const content = document.getElementById('approvals_runners_content');
+      if (!data.length) { content.innerHTML = '<p class="text-gray-400 text-sm p-2">No pending runner registrations.</p>'; return; }
+      let html = `<table><thead><tr><th>Unique ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Flat</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>`;
+      data.forEach(r => {
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
+        html += `<tr>
+          <td class="font-mono text-xs font-semibold">${esc(r.unique_id)}</td>
+          <td>${esc((r.first_name || '') + ' ' + (r.last_name || ''))}</td>
+          <td>${esc(r.email || '—')}</td>
+          <td>${esc(r.phone || '—')}</td>
+          <td>${esc(r.flat_number || '—')}</td>
+          <td style="white-space:nowrap;">${dateStr}</td>
+          <td class="flex gap-1">
+            <button onclick="approveRunner('${esc(r.unique_id)}','approved')" class="text-xs bg-green-100 hover:bg-green-200 text-green-700 font-semibold px-2 py-1 rounded">Approve</button>
+            <button onclick="approveRunner('${esc(r.unique_id)}','rejected')" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2 py-1 rounded">Reject</button>
+          </td>
+        </tr>`;
+      });
+      content.innerHTML = html + '</tbody></table>';
+    }
+
+    function renderPendingProfiles(data) {
+      const content = document.getElementById('approvals_profiles_content');
+      if (!data.length) { content.innerHTML = '<p class="text-gray-400 text-sm p-2">No pending secondary profiles.</p>'; return; }
+      let html = `<table><thead><tr><th>Profile ID</th><th>Primary ID</th><th>Type</th><th>Name</th><th>DOB</th><th>T-Shirt</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>`;
+      data.forEach(p => {
+        const typeLabel = p.profile_type === 'kid' ? 'Kid' : 'Guest';
+        const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString() : '—';
+        html += `<tr>
+          <td class="font-mono text-xs font-semibold">${esc(p.profile_id)}</td>
+          <td class="font-mono text-xs">${esc(p.runner_unique_id)}</td>
+          <td>${esc(typeLabel)}</td>
+          <td>${esc(p.full_name)}</td>
+          <td>${p.dob ? new Date(p.dob).toLocaleDateString() : '—'}</td>
+          <td>${esc(p.tshirt_size || '—')}</td>
+          <td style="white-space:nowrap;">${dateStr}</td>
+          <td class="flex gap-1">
+            <button onclick="approveProfile('${esc(p.profile_id)}','approved')" class="text-xs bg-green-100 hover:bg-green-200 text-green-700 font-semibold px-2 py-1 rounded">Approve</button>
+            <button onclick="approveProfile('${esc(p.profile_id)}','rejected')" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2 py-1 rounded">Reject</button>
+          </td>
+        </tr>`;
+      });
+      content.innerHTML = html + '</tbody></table>';
+    }
+
+    async function approveRunner(uniqueId, status) {
+      const label = status === 'approved' ? 'approve' : 'reject';
+      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} runner ${uniqueId}?`)) return;
+      const { error } = await db.from('runners').update({ status }).eq('unique_id', uniqueId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadApprovals();
+    }
+
+    async function approveProfile(profileId, status) {
+      const label = status === 'approved' ? 'approve' : 'reject';
+      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} profile ${profileId}?`)) return;
+      const { error } = await db.from('secondary_profiles').update({ status }).eq('profile_id', profileId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadApprovals();
+    }
+
+    // ---- Offline Reg: Tab switching ----
+    function switchOflTab(tab) {
+      ['registrations', 'overrides'].forEach(t => {
+        document.getElementById(`oflTab-${t}`).style.display = t === tab ? '' : 'none';
+        const btn = document.getElementById(`oflTabBtn-${t}`);
+        const active = t === tab;
+        btn.classList.toggle('border-indigo-600', active);
+        btn.classList.toggle('text-indigo-600', active);
+        btn.classList.toggle('border-transparent', !active);
+        btn.classList.toggle('text-gray-500', !active);
+      });
+      if (tab === 'overrides') loadOflOverrides();
+    }
+
+    // ---- Offline Reg: Edit modal ----
+    let oflEditCategoryFees = {};
+
+    async function openOflEditModal(id) {
+      const row = oflRegsData.find(r => r.id === id);
+      if (!row) return;
+      document.getElementById('oflEditRegId').value = id;
+      document.getElementById('oflEditNote').value = '';
+      const btn = document.getElementById('oflEditSaveBtn');
+      btn.disabled = false; btn.textContent = 'Save Changes';
+
+      // Fetch event config to get category options and fees
+      oflEditCategoryFees = {};
+      const { data: cfg } = await db.from('event_offline_reg_config').select('category_fees').eq('event_name', row.event_name).maybeSingle();
+      if (cfg?.category_fees) oflEditCategoryFees = cfg.category_fees;
+      const categoryOptions = Object.keys(oflEditCategoryFees);
+
+      const fd = row.form_data || {};
+      const fieldsDiv = document.getElementById('ofl_edit_fields');
+      fieldsDiv.innerHTML = Object.entries(fd).map(([k, v]) => {
+        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const inputId = `oflEditField_${k}`;
+
+        // Category → dropdown from event config categories
+        if (k === 'category' && categoryOptions.length > 0) {
+          const opts = categoryOptions.map(c => `<option value="${esc(c)}" ${String(v ?? '') === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
+          return `<div>
+            <label class="form-label">${esc(label)}</label>
+            <select id="${inputId}" class="form-input" data-key="${esc(k)}" onchange="oflEditCategoryChange(this.value)">
+              <option value="">-- Select --</option>${opts}
+            </select>
+          </div>`;
+        }
+
+        // Registration fees → read-only when categories exist (auto-filled by category change)
+        if (k === 'registration_fees' && categoryOptions.length > 0) {
+          return `<div>
+            <label class="form-label">${esc(label)} <span class="text-xs text-gray-400 font-normal normal-case">(auto-filled from category)</span></label>
+            <input id="${inputId}" type="text" class="form-input" data-key="${esc(k)}" value="${esc(String(v ?? ''))}" readonly />
+          </div>`;
+        }
+
+        // Boolean → Yes / No select
+        if (typeof v === 'boolean') {
+          return `<div>
+            <label class="form-label">${esc(label)}</label>
+            <select id="${inputId}" class="form-input" data-key="${esc(k)}" data-type="boolean">
+              <option value="true" ${v ? 'selected' : ''}>Yes</option>
+              <option value="false" ${!v ? 'selected' : ''}>No</option>
+            </select>
+          </div>`;
+        }
+
+        // Default → text input
+        return `<div>
+          <label class="form-label">${esc(label)}</label>
+          <input id="${inputId}" type="text" class="form-input" data-key="${esc(k)}" value="${esc(String(v ?? ''))}" />
+        </div>`;
+      }).join('');
+
+      if (!Object.keys(fd).length) {
+        fieldsDiv.innerHTML = '<p class="text-sm text-gray-400">No editable fields found for this registration.</p>';
+      }
+      document.getElementById('oflEditModal').classList.remove('hidden');
+    }
+
+    function oflEditCategoryChange(cat) {
+      const feesEl = document.getElementById('oflEditField_registration_fees');
+      if (feesEl && oflEditCategoryFees[cat] !== undefined) {
+        feesEl.value = oflEditCategoryFees[cat];
+      }
+    }
+
+    async function saveOflEdit() {
+      const id = parseInt(document.getElementById('oflEditRegId').value);
+      const row = oflRegsData.find(r => r.id === id);
+      if (!row) return;
+      const note = document.getElementById('oflEditNote').value.trim();
+      const fd = { ...(row.form_data || {}) };
+      const changes = {};
+      document.querySelectorAll('#ofl_edit_fields [data-key]').forEach(el => {
+        const k = el.dataset.key;
+        const newVal = el.dataset.type === 'boolean' ? (el.value === 'true') : el.value;
+        const oldVal = fd[k];
+        if (String(newVal) !== String(oldVal ?? '')) {
+          changes[k] = { from: oldVal, to: newVal };
+          fd[k] = newVal;
+        }
+      });
+      if (!Object.keys(changes).length) {
+        document.getElementById('oflEditModal').classList.add('hidden');
+        return;
+      }
+      const btn = document.getElementById('oflEditSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      const { error: updErr } = await db.from('event_offline_registrations').update({ form_data: fd }).eq('id', id);
+      if (updErr) { alert('Error updating: ' + updErr.message); btn.disabled = false; btn.textContent = 'Save Changes'; return; }
+      await db.from('offline_reg_overrides').insert({
+        reg_id: id,
+        event_name: row.event_name,
+        runner_unique_id: row.runner_unique_id,
+        admin_id: session.uniqueId,
+        changes,
+        note: note || null
+      });
+      btn.disabled = false; btn.textContent = 'Save Changes';
+      document.getElementById('oflEditModal').classList.add('hidden');
+      loadOflRegistrations();
+    }
+
+    // ---- Offline Reg: Admin Overrides tab ----
+    let oflOverridesData = [];
+
+    async function loadOflOverrides() {
+      const eventFilter = document.getElementById('ofl_override_event_filter').value;
+      document.getElementById('ofl_overrides_content').innerHTML = '<div class="text-gray-400 text-sm p-2">Loading...</div>';
+      let query = db.from('offline_reg_overrides').select('*').order('created_at', { ascending: false });
+      if (eventFilter) query = query.eq('event_name', eventFilter);
+      else if (isEventAdmin() && session.eventAccess?.length > 0) query = query.in('event_name', session.eventAccess);
+      const { data, error } = await query;
+      if (error) { document.getElementById('ofl_overrides_content').innerHTML = '<p class="text-red-500 p-2">Error loading overrides.</p>'; return; }
+      oflOverridesData = data || [];
+      renderOflOverrides(oflOverridesData);
+    }
+
+    function renderOflOverrides(data) {
+      const content = document.getElementById('ofl_overrides_content');
+      if (!data.length) { content.innerHTML = '<p class="text-gray-400 text-sm p-4">No admin overrides recorded yet.</p>'; return; }
+      let html = `<table><thead><tr>
+        <th>When</th><th>Event</th><th>Runner ID</th><th>Reg #</th><th>Admin</th><th>Changes</th><th>Note</th>
+      </tr></thead><tbody>`;
+      data.forEach(row => {
+        const changes = row.changes || {};
+        const changeList = Object.entries(changes).map(([k, v]) => {
+          const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          const fmtV = val => val === true ? 'Yes' : val === false ? 'No' : String(val ?? '—');
+          return `<div style="font-size:0.75rem;"><span style="font-weight:600;color:#475569;">${esc(label)}:</span> <span style="color:#ef4444;text-decoration:line-through;">${esc(fmtV(v.from))}</span> &rarr; <span style="color:#16a34a;font-weight:600;">${esc(fmtV(v.to))}</span></div>`;
+        }).join('');
+        const dateStr = row.created_at ? new Date(row.created_at).toLocaleString() : '—';
+        html += `<tr>
+          <td style="white-space:nowrap;font-size:0.78rem;">${dateStr}</td>
+          <td>${esc(row.event_name || '')}</td>
+          <td>${esc(row.runner_unique_id || '')}</td>
+          <td style="color:#6366f1;font-weight:600;">#${esc(String(row.reg_id || ''))}</td>
+          <td>${esc(row.admin_id || '')}</td>
+          <td style="min-width:200px;">${changeList || '<span style="color:#94a3b8;font-size:0.75rem;">—</span>'}</td>
+          <td style="font-size:0.78rem;color:#64748b;">${esc(row.note || '—')}</td>
+        </tr>`;
+      });
+      content.innerHTML = html + '</tbody></table>';
     }
 
     const PREDEFINED_CATS = ['5K','10K','21K','42K','50K','70K','100K'];
