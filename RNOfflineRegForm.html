@@ -228,28 +228,7 @@
         document.getElementById('profilePickerSection').classList.remove('hidden');
       }
 
-      // Check for existing registration for this profile
-      const { data: existing } = await db
-        .from('event_offline_registrations')
-        .select('id, payment_done')
-        .eq('runner_unique_id', uniqueId)
-        .eq('event_name', eventName)
-        .eq('profile_id', '')
-        .maybeSingle();
-
-      if (existing) {
-        document.getElementById('eventSelect').setAttribute('disabled', true);
-        document.getElementById('uniqueIdInput').setAttribute('readonly', true);
-        document.getElementById('uniqueIdInput').classList.add('bg-gray-100', 'text-gray-500');
-        if (existing.payment_done) {
-          document.getElementById('paymentConfirmedNotice').classList.remove('hidden');
-        } else {
-          document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
-        }
-        return;
-      }
-
-      // Fetch event config
+      // Fetch event config (always, so it's available for guest profile rendering)
       const { data: cfg } = await db
         .from('event_offline_reg_config')
         .select('*')
@@ -262,7 +241,7 @@
       }
       eventConfig = cfg;
 
-      // Fetch payment recipients
+      // Fetch payment recipients (always, so guest profile form has them)
       const { data: rcpts } = await db
         .from('event_payment_recipients')
         .select('*')
@@ -274,6 +253,25 @@
       document.getElementById('eventSelect').setAttribute('disabled', true);
       document.getElementById('uniqueIdInput').setAttribute('readonly', true);
       document.getElementById('uniqueIdInput').classList.add('bg-gray-100', 'text-gray-500');
+
+      // Check for existing registration for self (profile_id: '')
+      const { data: existing } = await db
+        .from('event_offline_registrations')
+        .select('id, payment_done')
+        .eq('runner_unique_id', uniqueId)
+        .eq('event_name', eventName)
+        .eq('profile_id', '')
+        .maybeSingle();
+
+      if (existing) {
+        if (existing.payment_done) {
+          document.getElementById('paymentConfirmedNotice').classList.remove('hidden');
+        } else {
+          document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
+        }
+        // Don't return — secondary profiles may still need to register
+        return;
+      }
 
       renderForm(runner, cfg);
       renderRecipients(rcpts || []);
@@ -312,11 +310,12 @@
       // Re-render form with this profile's data pre-filled
       const profile = secondaryProfiles.find(p => p.profile_id === pid);
       const runnerForForm = profile ? {
-        first_name: profile.full_name, last_name: '', gender: runnerData.gender,
+        first_name: profile.full_name, last_name: '', gender: profile.gender || runnerData.gender,
         dob: profile.dob || runnerData.dob, phone: profile.phone || runnerData.phone,
         email: profile.email || runnerData.email, tshirt_size: profile.tshirt_size || runnerData.tshirt_size
       } : runnerData;
       renderForm(runnerForForm, eventConfig);
+      renderRecipients(recipientsData);
     }
 
     // ---- Render Form Fields ----
