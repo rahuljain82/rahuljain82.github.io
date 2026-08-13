@@ -6,66 +6,178 @@
 <title>Running Ninjas T-Shirt Order</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 py-10">
+<body class="bg-gray-100 py-10 pb-20">
 
 <div class="w-full flex justify-center mb-6">
   <img src="https://i.ibb.co/ZRLT8bH9/Whats-App-Image-2025-07-16-at-17-29-51.jpg" class="w-16 h-16 rounded-full"/>
 </div>
 
 <div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
-  <h2 class="text-xl font-semibold text-gray-800 mb-4">Running Ninjas T-Shirt Order</h2>
+  <h2 class="text-xl font-semibold text-gray-800 mb-1">Running Ninjas T-Shirt Order</h2>
+  <p class="text-sm text-gray-500 mb-5">Enter your Unique ID to view or update your t-shirt order and submit payment.</p>
 
-  <div class="text-center mb-4">
-    <button onclick="window.location.href='index.html'" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">← Back</button>
+  <div class="text-center mb-5">
+    <button onclick="window.location.href='index.html'" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">&#8592; Back</button>
   </div>
 
-  <form id="tshirtForm">
-    <label class="block mb-3">Enter Unique ID
-      <input id="uniqueId" required class="w-full mt-1 p-2 border rounded"/>
+  <!-- Step 1: Enter Unique ID -->
+  <div id="step1">
+    <label class="block mb-1">
+      <span class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">Enter Unique ID</span>
+      <input id="uniqueId" type="text" placeholder="e.g. JOHNB204" class="w-full mt-1 p-2 border rounded text-sm uppercase" oninput="this.value=this.value.toUpperCase()" />
     </label>
-
-    <button type="button" onclick="fetchRunnerData()" class="w-full bg-indigo-600 text-white py-2 rounded mb-2">Fetch My Data</button>
-
-    <p class="text-sm text-center text-gray-500 mb-4">
-      Haven't created your unique ID yet?
+    <button type="button" onclick="fetchRunnerData()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded mb-2 text-sm font-semibold">Fetch My Data</button>
+    <p class="text-sm text-center text-gray-500 mb-2">
+      Haven't created your Unique ID yet?
       <a href="manage-profiles.html" class="text-indigo-600 font-medium hover:underline">Create it here</a>
     </p>
+  </div>
 
-    <div id="loadingSpinner" class="hidden text-center my-4">
-      <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 border-opacity-60 mx-auto"></div>
-      <p class="text-gray-500 text-sm mt-2">Fetching your details...</p>
+  <div id="loadingSpinner" class="hidden text-center my-4">
+    <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 border-opacity-60 mx-auto"></div>
+    <p class="text-gray-500 text-sm mt-2">Fetching your details...</p>
+  </div>
+
+  <!-- Payment Confirmed Notice -->
+  <div id="paymentConfirmedNotice" class="hidden bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-4">
+    <p class="font-semibold text-sm">T-Shirt Order Confirmed!</p>
+    <p class="text-sm mt-1">Your payment has been verified by the organisers. Your t-shirt order is confirmed!</p>
+    <div id="confirmedOrderSummary" class="mt-3"></div>
+  </div>
+
+  <!-- Payment Pending Notice -->
+  <div id="paymentPendingNotice" class="hidden bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4">
+    <p class="font-semibold text-sm">Payment Under Review</p>
+    <p class="text-sm mt-1">Your t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
+    <div id="pendingOrderSummary" class="mt-3"></div>
+  </div>
+
+  <!-- Main Details Section -->
+  <div id="runnerDetails" class="hidden mt-2">
+    <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4 text-sm text-indigo-800">
+      Your existing t-shirt preferences have been pre-filled. Please review and update if needed, then complete payment below.
     </div>
 
-    <div id="runnerDetails" class="hidden">
-      <label class="block mb-2">Name
-        <input id="name" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
-      </label>
-      <label class="block mb-2">Flat
-        <input id="flat" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
-      </label>
-      <label class="block mb-2">Gender
-        <input id="gender" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600"/>
-      </label>
+    <label class="block mb-2 text-sm font-medium text-gray-700">Name
+      <input id="name" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600 text-sm"/>
+    </label>
+    <label class="block mb-2 text-sm font-medium text-gray-700">Flat
+      <input id="flat" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600 text-sm"/>
+    </label>
+    <label class="block mb-4 text-sm font-medium text-gray-700">Gender
+      <input id="gender" readonly class="w-full mt-1 p-2 border rounded bg-gray-100 text-gray-600 text-sm"/>
+    </label>
 
-      <div class="mt-4">
-        <h3 class="font-semibold mb-2">T-Shirt Orders</h3>
-        <div id="tshirtHeader" class="hidden grid grid-cols-5 gap-2 text-sm font-semibold mb-2">
-          <div>Print Name</div><div>Gender</div><div>Size</div><div>Qty</div><div></div>
+    <!-- T-Shirt Orders -->
+    <div class="mt-2">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold text-gray-800">T-Shirt Orders</h3>
+        <button type="button" onclick="openSizeGuide('Female')"
+          class="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Size Guide
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <div style="min-width:480px;">
+          <div id="tshirtHeader" class="grid gap-1.5 text-xs font-semibold text-gray-500 mb-1 px-1" style="grid-template-columns:2fr 0.9fr 1fr 0.9fr 0.55fr 2rem;">
+            <div>Print Name</div><div>Gender</div><div>Size</div><div>Type</div><div>Qty</div><div></div>
+          </div>
+          <div id="tshirtRows"></div>
         </div>
-        <div id="tshirtRows"></div>
-        <button type="button" onclick="addTshirtRow()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">+ Add Another T-Shirt</button>
       </div>
+      <button type="button" onclick="addTshirtRow()" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded text-sm">+ Add T-Shirt</button>
+    </div>
 
-      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded mt-4">Submit T-Shirt Request</button>
-
-      <div id="submitSpinner" class="hidden text-center my-4">
-        <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-green-500 border-opacity-60 mx-auto"></div>
-        <p class="text-gray-500 text-sm mt-2">Submitting your order...</p>
+    <!-- Pricing & Total -->
+    <div id="totalSection" class="hidden mt-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+      <div class="flex justify-between text-sm text-gray-600">
+        <span>Adult T-Shirt price:</span>
+        <span id="adultPriceDisplay" class="font-medium">&#8377;0 each</span>
+      </div>
+      <div class="flex justify-between text-sm text-gray-600 mt-1">
+        <span>Kids T-Shirt price:</span>
+        <span id="kidsPriceDisplay" class="font-medium">&#8377;0 each</span>
+      </div>
+      <div class="flex justify-between items-center mt-2 pt-2 border-t border-indigo-200">
+        <span class="font-semibold text-gray-800">Total Amount:</span>
+        <span class="font-bold text-xl text-indigo-700">&#8377;<span id="totalAmount">0</span></span>
       </div>
     </div>
-  </form>
 
-  <p id="formMessage" class="text-green-600 mt-4 hidden">T-Shirt order submitted successfully!</p>
+    <!-- Payment Section -->
+    <div id="paymentSection" class="hidden border-t pt-4 mt-4">
+      <p class="text-sm font-semibold text-gray-700 mb-3">Payment Details</p>
+
+      <div class="mb-3">
+        <label class="block mb-1 text-sm font-medium text-gray-700">Pay To <span class="text-red-500">*</span></label>
+        <select id="recipientSelect" class="w-full p-2 border rounded text-sm" onchange="onRecipientChange()">
+          <option value="">-- Select recipient --</option>
+        </select>
+      </div>
+
+      <div id="qrDisplay" class="hidden text-center py-3 bg-gray-50 rounded-lg border border-gray-200 mb-3">
+        <img id="qrImage" src="" alt="QR Code" class="mx-auto rounded border border-gray-200" style="max-width:180px;" />
+        <p class="text-xs text-gray-500 mt-2">Scan this QR code to pay the amount shown above</p>
+      </div>
+
+      <div class="mb-3">
+        <label class="block mb-1 text-sm font-medium text-gray-700">Your UPI ID / Phone Number <span class="text-red-500">*</span></label>
+        <input id="sourceUpiId" type="text" placeholder="e.g. yourname@upi or 9876543210" class="w-full p-2 border rounded text-sm" />
+      </div>
+    </div>
+
+    <p id="formError" class="text-red-500 text-sm mt-2 hidden"></p>
+
+    <button type="button" onclick="showPayConfirm()" id="submitBtn" class="hidden w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded mt-4 font-semibold text-sm">
+      Submit T-Shirt Order
+    </button>
+
+    <div id="submitSpinner" class="hidden text-center my-4">
+      <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-green-500 border-opacity-60 mx-auto"></div>
+      <p class="text-gray-500 text-sm mt-2">Submitting your order...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Size Guide Modal -->
+<div id="sizeGuideModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeSizeGuide()">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 pt-4 pb-3">
+      <p class="font-semibold text-gray-800 text-sm">Size Guide</p>
+      <button onclick="closeSizeGuide()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    </div>
+    <!-- Toggle tabs -->
+    <div class="flex mx-4 mb-3 bg-gray-100 rounded-lg p-0.5">
+      <button id="sgTabFemale" onclick="setSizeGuideTab('Female')"
+        class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-white text-indigo-700 shadow-sm transition-all">
+        Female
+      </button>
+      <button id="sgTabMale" onclick="setSizeGuideTab('Male')"
+        class="flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-500 transition-all">
+        Male
+      </button>
+    </div>
+    <!-- Image -->
+    <div class="px-4 pb-4">
+      <img id="sizeGuideImg" src="" alt="Size Guide" class="w-full rounded-lg border border-gray-100" />
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="payConfirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+    <p class="text-base font-semibold text-gray-800 mb-2">Confirm T-Shirt Order Submission</p>
+    <p class="text-sm text-gray-600 mb-1">Only submit if you have <strong>actually completed the payment</strong>.</p>
+    <p class="text-sm text-gray-600 mb-1">Total to pay: <strong class="text-indigo-700">&#8377;<span id="modalTotal">0</span></strong></p>
+    <p class="text-sm text-gray-500 mb-5">False submissions may result in your order being cancelled.</p>
+    <div class="flex gap-3 justify-end">
+      <button onclick="document.getElementById('payConfirmModal').classList.add('hidden')" class="px-4 py-2 rounded border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">Cancel</button>
+      <button id="confirmSubmitBtn" onclick="submitOrder()" class="px-4 py-2 rounded bg-green-600 text-white text-sm font-semibold hover:bg-green-700">Yes, I have paid</button>
+    </div>
+  </div>
 </div>
 
 <script src="js/config.js"></script>
@@ -74,12 +186,49 @@
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let priceConfig = { adult_price: 0, kids_price: 0 };
+let recipientsData = [];
+
+const KIDS_SIZES = new Set(['1to2', '3to4', '5to6', '7to8', '9to10']);
+
+const SIZE_GUIDE_URLS = {
+  Female: 'https://i.ibb.co/XxKwLnw3/SIZE-GUIDE-1.jpg',
+  Male:   'https://i.ibb.co/QvPzfZZ1/SIZE-GUIDE-2.jpg',
+};
+
+function openSizeGuide(tab) {
+  setSizeGuideTab(tab || 'Female');
+  document.getElementById('sizeGuideModal').classList.remove('hidden');
+}
+function closeSizeGuide() {
+  document.getElementById('sizeGuideModal').classList.add('hidden');
+}
+function setSizeGuideTab(tab) {
+  document.getElementById('sizeGuideImg').src = SIZE_GUIDE_URLS[tab];
+  ['Female', 'Male'].forEach(t => {
+    const btn = document.getElementById('sgTab' + t);
+    const active = t === tab;
+    btn.className = active
+      ? 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-white text-indigo-700 shadow-sm transition-all'
+      : 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-500 transition-all';
+  });
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function fetchRunnerData() {
   const uniqueId = document.getElementById('uniqueId').value.trim();
-  if (!uniqueId) { alert('Please enter Unique ID'); return; }
+  if (!uniqueId) { alert('Please enter your Unique ID'); return; }
 
   const spinner = document.getElementById('loadingSpinner');
   spinner.classList.remove('hidden');
+
+  // Reset state
+  ['paymentConfirmedNotice', 'paymentPendingNotice', 'runnerDetails'].forEach(id =>
+    document.getElementById(id).classList.add('hidden')
+  );
 
   try {
     const { data: runner, error } = await db
@@ -89,136 +238,270 @@ async function fetchRunnerData() {
       .single();
 
     if (error || !runner) {
-      spinner.classList.add('hidden');
       alert('Runner not found. Please check your Unique ID.');
       return;
     }
 
-    document.getElementById('name').value = runner.first_name + ' ' + (runner.last_name || '');
+    document.getElementById('name').value = (runner.first_name + ' ' + (runner.last_name || '')).trim();
     document.getElementById('flat').value = runner.flat_number;
     document.getElementById('gender').value = runner.gender || '';
 
-    // Fetch existing orders
+    // Parallel: load price config, recipients, existing payment
+    const [cfgRes, rcptsRes, payRes] = await Promise.all([
+      db.from('tshirt_payment_config').select('*').eq('id', 1).maybeSingle(),
+      db.from('tshirt_payment_recipients').select('*').order('display_order'),
+      db.from('tshirt_payments')
+        .select('*')
+        .eq('unique_id', uniqueId)
+        .in('payment_status', ['pending', 'approved'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    priceConfig = cfgRes.data || { adult_price: 0, kids_price: 0 };
+    recipientsData = rcptsRes.data || [];
+
+    // Check for active payment (pending or approved)
+    if (payRes.data) {
+      const p = payRes.data;
+      if (p.payment_status === 'approved') {
+        renderOrderSummary('confirmedOrderSummary', p);
+        document.getElementById('paymentConfirmedNotice').classList.remove('hidden');
+      } else {
+        renderOrderSummary('pendingOrderSummary', p);
+        document.getElementById('paymentPendingNotice').classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Load existing tshirt_orders to prefill
     const { data: orders } = await db
       .from('tshirt_orders')
-      .select('print_name, gender, size, quantity')
+      .select('print_name, gender, size, type, quantity')
       .eq('unique_id', uniqueId);
 
     document.getElementById('tshirtRows').innerHTML = '';
     if (orders && orders.length > 0) {
-      orders.forEach(o => addTshirtRow(o.print_name, o.gender, o.size, o.quantity));
+      orders.forEach(o => addTshirtRow(o.print_name, o.gender, o.size, o.type || 'Tshirt', o.quantity));
     } else {
       addTshirtRow();
     }
 
+    // Price display
+    const hasPrice = priceConfig.adult_price > 0 || priceConfig.kids_price > 0;
+    if (hasPrice) {
+      document.getElementById('adultPriceDisplay').textContent = '\u20b9' + priceConfig.adult_price + ' each';
+      document.getElementById('kidsPriceDisplay').textContent = '\u20b9' + priceConfig.kids_price + ' each';
+      document.getElementById('totalSection').classList.remove('hidden');
+      updateTotal();
+    }
+
+    // Payment recipients
+    if (recipientsData.length > 0) {
+      renderRecipients(recipientsData);
+      document.getElementById('paymentSection').classList.remove('hidden');
+      document.getElementById('submitBtn').classList.remove('hidden');
+    }
+
     document.getElementById('runnerDetails').classList.remove('hidden');
-    document.getElementById('tshirtHeader').classList.remove('hidden');
-  } catch(err) {
-    alert('Error fetching runner data');
+
+  } catch (err) {
+    alert('Error fetching data: ' + err.message);
   } finally {
     spinner.classList.add('hidden');
   }
 }
 
-document.getElementById('tshirtForm').addEventListener('submit', async e => {
-  e.preventDefault();
+function renderOrderSummary(containerId, payment) {
+  const container = document.getElementById(containerId);
+  const orders = payment.order_summary || [];
+  if (!orders.length) { container.innerHTML = ''; return; }
+  let html = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-current border-opacity-20 rounded">';
+  html += '<thead><tr class="bg-white bg-opacity-30"><th class="p-1.5 text-left">Print Name</th><th class="p-1.5 text-center">Gender</th><th class="p-1.5 text-center">Size</th><th class="p-1.5 text-center">Type</th><th class="p-1.5 text-center">Qty</th></tr></thead><tbody>';
+  orders.forEach(o => {
+    html += `<tr><td class="p-1.5">${esc(o.print_name || '')}</td><td class="p-1.5 text-center">${esc(o.gender || '')}</td><td class="p-1.5 text-center">${esc(o.size || '')}</td><td class="p-1.5 text-center">${esc(o.type || 'Tshirt')}</td><td class="p-1.5 text-center">${o.quantity || 1}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  html += `<p class="mt-2 font-semibold text-sm">Total: \u20b9${payment.total_amount}</p>`;
+  container.innerHTML = html;
+}
 
-  if (document.getElementById('runnerDetails').classList.contains('hidden')) {
-    alert('Please fetch your data first before submitting.');
-    return;
-  }
+function renderRecipients(rcpts) {
+  const sel = document.getElementById('recipientSelect');
+  sel.innerHTML = '<option value="">-- Select recipient --</option>';
+  rcpts.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.recipient_name;
+    opt.textContent = r.recipient_name;
+    sel.appendChild(opt);
+  });
+}
 
-  const spinner = document.getElementById('submitSpinner');
-  spinner.classList.remove('hidden');
+function onRecipientChange() {
+  const val = document.getElementById('recipientSelect').value;
+  const r = recipientsData.find(x => x.recipient_name === val);
+  const qrDiv = document.getElementById('qrDisplay');
+  const qrImg = document.getElementById('qrImage');
+  if (r?.qr_image_url) { qrImg.src = r.qr_image_url; qrDiv.classList.remove('hidden'); }
+  else { qrDiv.classList.add('hidden'); qrImg.src = ''; }
+}
 
-  const uniqueId = document.getElementById('uniqueId').value.trim();
-  const name     = document.getElementById('name').value;
-  const flat     = document.getElementById('flat').value;
-  const gender   = document.getElementById('gender').value;
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll('#tshirtRows > div').forEach(row => {
+    const inputs = row.querySelectorAll('input, select');
+    if (inputs.length < 5) return;
+    const size = inputs[2].value;
+    if (!size) return;
+    const qty = parseInt(inputs[4].value) || 1;
+    const price = KIDS_SIZES.has(size) ? priceConfig.kids_price : priceConfig.adult_price;
+    total += price * qty;
+  });
+  document.getElementById('totalAmount').textContent = total;
+  document.getElementById('modalTotal').textContent = total;
+}
+
+function showPayConfirm() {
+  const errEl = document.getElementById('formError');
+  errEl.classList.add('hidden');
 
   const rows = document.querySelectorAll('#tshirtRows > div');
-  const orders = [];
+  if (!rows.length) {
+    errEl.textContent = 'Please add at least one t-shirt.';
+    errEl.classList.remove('hidden'); return;
+  }
 
   for (const row of rows) {
     const inputs = row.querySelectorAll('input, select');
-    // inputs[0]=printName, inputs[1]=genderSelect, inputs[2]=sizeSelect, inputs[3]=qty
-    if (!inputs[1].value) {
-      alert('Please select a gender for all T-shirt rows.');
-      spinner.classList.add('hidden');
-      return;
-    }
-    if (!inputs[2].value) {
-      alert('Please select a size for all T-shirt rows.');
-      spinner.classList.add('hidden');
-      return;
-    }
-    const qty = parseInt(inputs[3].value) || 1;
-    if (qty > 5) {
-      alert('Maximum quantity per T-shirt row is 5.');
-      spinner.classList.add('hidden');
-      return;
-    }
+    if (!inputs[1].value) { errEl.textContent = 'Please select a gender for all T-shirt rows.'; errEl.classList.remove('hidden'); return; }
+    if (!inputs[2].value) { errEl.textContent = 'Please select a size for all T-shirt rows.'; errEl.classList.remove('hidden'); return; }
+    if (!inputs[3].value) { errEl.textContent = 'Please select a type for all T-shirt rows.'; errEl.classList.remove('hidden'); return; }
+    const qty = parseInt(inputs[4].value) || 1;
+    if (qty < 1 || qty > 5) { errEl.textContent = 'Quantity must be between 1 and 5.'; errEl.classList.remove('hidden'); return; }
+  }
+
+  if (!document.getElementById('recipientSelect').value) {
+    errEl.textContent = 'Please select who you paid to.'; errEl.classList.remove('hidden'); return;
+  }
+  if (!document.getElementById('sourceUpiId').value.trim()) {
+    errEl.textContent = 'Please enter your UPI ID or phone number.'; errEl.classList.remove('hidden'); return;
+  }
+
+  updateTotal();
+  document.getElementById('payConfirmModal').classList.remove('hidden');
+}
+
+async function submitOrder() {
+  const btn = document.getElementById('confirmSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  const uniqueId = document.getElementById('uniqueId').value.trim();
+  const name = document.getElementById('name').value;
+  const flat = document.getElementById('flat').value;
+
+  const rows = document.querySelectorAll('#tshirtRows > div');
+  const orders = [];
+  let total = 0;
+
+  for (const row of rows) {
+    const inputs = row.querySelectorAll('input, select');
+    const qty = parseInt(inputs[4].value) || 1;
+    const size = inputs[2].value;
+    const type = inputs[3].value;
+    const price = KIDS_SIZES.has(size) ? priceConfig.kids_price : priceConfig.adult_price;
+    total += price * qty;
     orders.push({
-      unique_id:  uniqueId,
-      name:       name,
-      flat:       flat,
+      unique_id: uniqueId,
+      name,
+      flat,
       gender:     inputs[1].value,
       print_name: inputs[0].value,
-      size:       inputs[2].value,
+      size,
+      type,
       quantity:   qty,
     });
   }
 
+  const recipientName = document.getElementById('recipientSelect').value;
+  const sourceUpi = document.getElementById('sourceUpiId').value.trim();
+
   try {
-    // Replace all existing orders for this runner
+    // Update tshirt_orders (replace all for this runner)
     await db.from('tshirt_orders').delete().eq('unique_id', uniqueId);
-    const { error } = await db.from('tshirt_orders').insert(orders);
+    const { error: ordersErr } = await db.from('tshirt_orders').insert(orders);
+    if (ordersErr) throw new Error(ordersErr.message);
 
-    spinner.classList.add('hidden');
+    // Create payment record
+    const orderSummary = orders.map(o => ({
+      print_name: o.print_name, gender: o.gender, size: o.size, type: o.type, quantity: o.quantity,
+    }));
+    const { error: payErr } = await db.from('tshirt_payments').insert([{
+      unique_id:      uniqueId,
+      name,
+      flat,
+      order_summary:  orderSummary,
+      total_amount:   total,
+      recipient_name: recipientName,
+      source_upi_id:  sourceUpi,
+      payment_status: 'pending',
+    }]);
+    if (payErr) throw new Error(payErr.message);
 
-    if (error) { alert('Error submitting: ' + error.message); return; }
-
-    document.getElementById('formMessage').classList.remove('hidden');
-    document.getElementById('tshirtForm').reset();
+    document.getElementById('payConfirmModal').classList.add('hidden');
     document.getElementById('runnerDetails').classList.add('hidden');
-    document.getElementById('tshirtHeader').classList.add('hidden');
-    setTimeout(() => document.getElementById('formMessage').classList.add('hidden'), 4000);
-  } catch(err) {
-    spinner.classList.add('hidden');
-    alert('Submission failed');
-  }
-});
+    renderOrderSummary('pendingOrderSummary', { order_summary: orderSummary, total_amount: total });
+    document.getElementById('paymentPendingNotice').classList.remove('hidden');
 
-function addTshirtRow(printName='', tshirtGender='', size='', qty=1) {
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Yes, I have paid';
+    document.getElementById('formError').textContent = 'Submission failed: ' + err.message;
+    document.getElementById('formError').classList.remove('hidden');
+    document.getElementById('payConfirmModal').classList.add('hidden');
+  }
+}
+
+function addTshirtRow(printName = '', tshirtGender = '', size = '', type = 'Tshirt', qty = 1) {
   const container = document.getElementById('tshirtRows');
   if (container.children.length >= 5) {
-    alert('Maximum of 5 T-shirt orders allowed per unique ID.');
+    alert('Maximum of 5 T-shirt rows allowed per Unique ID.');
     return;
   }
   const row = document.createElement('div');
-  row.className = 'grid grid-cols-5 gap-2 mb-2';
+  row.className = 'grid gap-1.5 mb-2 items-center';
+  row.style.gridTemplateColumns = '2fr 0.9fr 1fr 0.9fr 0.55fr 2rem';
   row.innerHTML = `
-    <input placeholder="Print Name" value="${printName}" maxlength="10" required class="p-2 border rounded"/>
-    <select class="p-2 border rounded" required>
+    <input placeholder="Print Name" value="${esc(printName)}" maxlength="10" class="px-1.5 py-1.5 border rounded text-xs w-full"/>
+    <select class="px-1 py-1.5 border rounded text-xs w-full">
       <option value="">Gender</option>
       <option value="Male">Male</option>
       <option value="Female">Female</option>
     </select>
-    <select class="p-2 border rounded" required>
+    <select class="px-1 py-1.5 border rounded text-xs w-full" onchange="updateTotal()">
       <option value="">Size</option>
-      <option value="1to2">Kid 1-2yr</option><option value="3to4">Kid 3-4yr</option>
-      <option value="5to6">Kid 5-6yr</option><option value="7to8">Kid 7-8yr</option>
+      <option value="1to2">Kid 1-2yr</option>
+      <option value="3to4">Kid 3-4yr</option>
+      <option value="5to6">Kid 5-6yr</option>
+      <option value="7to8">Kid 7-8yr</option>
       <option value="9to10">Kid 9-10yr</option>
-      <option value="XS">XS</option><option value="S">S</option>
-      <option value="M">M</option><option value="L">L</option>
-      <option value="XL">XL</option><option value="XXL">XXL</option>
+      <option value="XS">XS</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="XXL">XXL</option>
     </select>
-    <input type="number" min="1" max="5" value="${qty}" class="p-2 border rounded"/>
-    <button type="button" class="bg-red-500 text-white px-2 py-1 rounded" onclick="this.parentElement.remove()">🗑</button>`;
+    <select class="px-1 py-1.5 border rounded text-xs w-full">
+      <option value="Tshirt">T-Shirt</option>
+      <option value="Singlet">Singlet</option>
+    </select>
+    <input type="number" min="1" max="5" value="${qty}" class="px-1 py-1.5 border rounded text-xs w-full text-center" oninput="updateTotal()"/>
+    <button type="button" class="bg-red-500 hover:bg-red-600 text-white px-1.5 py-1.5 rounded text-xs leading-none" onclick="this.parentElement.remove(); updateTotal()">&#128465;</button>`;
   container.appendChild(row);
   const selects = row.querySelectorAll('select');
   if (tshirtGender) selects[0].value = tshirtGender;
   if (size) selects[1].value = size;
+  if (type) selects[2].value = type;
 }
 </script>
 </body>

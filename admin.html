@@ -760,9 +760,108 @@
           </div>
         </div>
 
-        <!-- TSHIRT STEP2 PLACEHOLDER -->
+        <!-- TSHIRT STEP2: MANAGE TSHIRT PAYMENTS -->
         <div id="ws-tshirt2" style="display:none;">
-          <div class="pending-bar"><span style="font-size:1rem;flex-shrink:0;">⚠️</span><div><strong>Coming Soon</strong> — T-Shirt Step2 (Payment) requirements are being finalised. This section will be wired up once requirements are confirmed.</div></div>
+
+          <!-- Tab bar -->
+          <div class="content-card mb-4" style="padding:0;">
+            <div class="flex border-b border-gray-200">
+              <button onclick="switchTshirtTab('config')" id="tshirtTabBtn-config"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">
+                Config
+              </button>
+              <button onclick="switchTshirtTab('payments')" id="tshirtTabBtn-payments"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">
+                Payments
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Config Tab ── -->
+          <div id="tshirtTab-config">
+            <div class="content-card mb-4">
+              <h3 class="font-semibold text-gray-800 mb-1">T-Shirt Pricing</h3>
+              <p class="text-xs text-gray-400 mb-4">Kids sizes: 1-2yr, 3-4yr, 5-6yr, 7-8yr, 9-10yr &nbsp;|&nbsp; Adult sizes: XS, S, M, L, XL, XXL.</p>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="form-label">Adult T-Shirt Price (&#8377;)</label>
+                  <input type="number" id="ts_adult_price" class="form-input" min="0" placeholder="0" />
+                </div>
+                <div>
+                  <label class="form-label">Kids T-Shirt Price (&#8377;)</label>
+                  <input type="number" id="ts_kids_price" class="form-input" min="0" placeholder="0" />
+                </div>
+              </div>
+            </div>
+
+            <div class="content-card mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-800">Payment Recipients</h3>
+                <button onclick="addTsRecipientRow()" class="text-sm text-indigo-600 hover:text-indigo-800 font-semibold">+ Add Recipient</button>
+              </div>
+              <div id="ts_recipients_list" class="space-y-2 mb-2"></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button onclick="saveTshirtConfig()" id="saveTsConfigBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded transition-colors">Save Config</button>
+              <p id="tsConfigMsg" class="text-sm text-green-600 hidden">Configuration saved!</p>
+              <p id="tsConfigErr" class="text-sm text-red-600 hidden"></p>
+            </div>
+          </div>
+
+          <!-- ── Payments Tab ── -->
+          <div id="tshirtTab-payments" style="display:none;">
+            <!-- Filter bar -->
+            <div class="content-card mb-4">
+              <div class="flex items-center gap-3 flex-wrap">
+                <label class="text-sm font-medium text-gray-700">Status:</label>
+                <select id="ts_pay_filter" class="form-input py-1.5 text-sm w-auto" onchange="loadTshirtPayments()">
+                  <option value="">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <button onclick="loadTshirtPayments()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">&#8635; Refresh</button>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div id="ts_pay_stats" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-indigo-600" id="ts_stat_total">&#8212;</p>
+                <p class="text-xs text-gray-500 mt-0.5">Total Orders</p>
+              </div>
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-amber-500" id="ts_stat_pending">&#8212;</p>
+                <p class="text-xs text-gray-500 mt-0.5">Pending</p>
+              </div>
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-green-600" id="ts_stat_approved">&#8212;</p>
+                <p class="text-xs text-gray-500 mt-0.5">Approved</p>
+              </div>
+              <div class="content-card text-center py-3">
+                <p class="text-2xl font-bold text-blue-600" id="ts_stat_amount">&#8212;</p>
+                <p class="text-xs text-gray-500 mt-0.5">Collected (Approved)</p>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="content-card overflow-x-auto">
+              <div id="ts_payments_table"><p class="text-gray-400 text-sm p-2">Select this tab to load payments.</p></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- T-Shirt Payment Detail Modal -->
+        <div id="tsPayDetailModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:500px;max-height:80vh;overflow-y:auto;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">T-Shirt Order Details</h3>
+              <button onclick="document.getElementById('tsPayDetailModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <div id="ts_pay_detail_content" class="text-sm text-gray-700 space-y-3"></div>
+          </div>
         </div>
 
         <!-- CONTENT: LANDING PAGE CARDS -->
@@ -1485,6 +1584,10 @@
       } else if (key === 'race_volunteering') {
         document.getElementById('ws-race_volunteering').style.display = 'block';
         initRvRaceList();
+
+      } else if (key === 'tshirt2') {
+        document.getElementById('ws-tshirt2').style.display = 'block';
+        initTshirtPaymentsPanel();
 
       } else {
         const panel = document.getElementById('ws-' + key);
@@ -3179,17 +3282,41 @@
 
     async function approveRunner(uniqueId, status) {
       const label = status === 'approved' ? 'approve' : 'reject';
-      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} runner ${uniqueId}?`)) return;
-      const { error } = await db.from('runners').update({ status }).eq('unique_id', uniqueId);
-      if (error) { alert('Error: ' + error.message); return; }
+      console.log(`[approveRunner] called — uniqueId: "${uniqueId}", status: "${status}"`);
+      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} runner ${uniqueId}?`)) {
+        console.log('[approveRunner] cancelled by user');
+        return;
+      }
+      console.log('[approveRunner] confirm accepted — calling Supabase update...');
+      const { data, error } = await db.from('runners').update({ status }).eq('unique_id', uniqueId).select();
+      console.log('[approveRunner] Supabase response — data:', data, '| error:', error);
+      if (error) {
+        console.error('[approveRunner] UPDATE failed:', error);
+        alert('Error: ' + error.message);
+        return;
+      }
+      console.log('[approveRunner] UPDATE succeeded — rows affected:', data?.length ?? 'unknown');
+      if (!data || data.length === 0) console.warn('[approveRunner] WARNING: 0 rows updated — uniqueId may not match any row');
       loadApprovals();
     }
 
     async function approveProfile(profileId, status) {
       const label = status === 'approved' ? 'approve' : 'reject';
-      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} profile ${profileId}?`)) return;
-      const { error } = await db.from('secondary_profiles').update({ status }).eq('profile_id', profileId);
-      if (error) { alert('Error: ' + error.message); return; }
+      console.log(`[approveProfile] called — profileId: "${profileId}", status: "${status}"`);
+      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} profile ${profileId}?`)) {
+        console.log('[approveProfile] cancelled by user');
+        return;
+      }
+      console.log('[approveProfile] confirm accepted — calling Supabase update...');
+      const { data, error } = await db.from('secondary_profiles').update({ status }).eq('profile_id', profileId).select();
+      console.log('[approveProfile] Supabase response — data:', data, '| error:', error);
+      if (error) {
+        console.error('[approveProfile] UPDATE failed:', error);
+        alert('Error: ' + error.message);
+        return;
+      }
+      console.log('[approveProfile] UPDATE succeeded — rows affected:', data?.length ?? 'unknown');
+      if (!data || data.length === 0) console.warn('[approveProfile] WARNING: 0 rows updated — profileId may not match any row');
       loadApprovals();
     }
 
@@ -4338,10 +4465,233 @@
       XLSX.writeFile(wb, 'RN_Volunteering_' + rvCurrentRace.replace(/[^a-z0-9]/gi, '_') + '.xlsx');
     }
 
+    // ============================================================
+    // ---- T-Shirt Payment Panel (ManageTshirtPayments) ----
+    // ============================================================
+    let tshirtPaymentsData = [];
+    let tsCurrentTab = 'config';
+
+    function initTshirtPaymentsPanel() {
+      if (tsCurrentTab === 'config') loadTshirtConfig();
+      else loadTshirtPayments();
+    }
+
+    function switchTshirtTab(tab) {
+      tsCurrentTab = tab;
+      ['config', 'payments'].forEach(t => {
+        const btn = document.getElementById('tshirtTabBtn-' + t);
+        const pane = document.getElementById('tshirtTab-' + t);
+        const active = t === tab;
+        btn.className = active
+          ? 'px-5 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors'
+          : 'px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors';
+        pane.style.display = active ? 'block' : 'none';
+      });
+      if (tab === 'config') loadTshirtConfig();
+      else loadTshirtPayments();
+    }
+
+    async function loadTshirtConfig() {
+      const [cfgRes, rcptsRes] = await Promise.all([
+        db.from('tshirt_payment_config').select('*').eq('id', 1).maybeSingle(),
+        db.from('tshirt_payment_recipients').select('*').order('display_order'),
+      ]);
+      const cfg = cfgRes.data || { adult_price: 0, kids_price: 0 };
+      document.getElementById('ts_adult_price').value = cfg.adult_price ?? 0;
+      document.getElementById('ts_kids_price').value = cfg.kids_price ?? 0;
+      document.getElementById('ts_recipients_list').innerHTML = '';
+      (rcptsRes.data || []).forEach(r => addTsRecipientRow(r.recipient_name, r.upi_id || '', r.qr_image_url || ''));
+    }
+
+    function addTsRecipientRow(name = '', upi = '', qr = '') {
+      const list = document.getElementById('ts_recipients_list');
+      const row = document.createElement('div');
+      row.className = 'ts_recipient_row grid gap-2 items-start';
+      row.style.gridTemplateColumns = '1fr 1fr 1.5fr auto';
+      row.innerHTML = `
+        <input type="text" placeholder="Name" value="${name.replace(/"/g, '&quot;')}" class="form-input ts_rcpt_name" />
+        <input type="text" placeholder="UPI ID" value="${upi.replace(/"/g, '&quot;')}" class="form-input ts_rcpt_upi" />
+        <input type="text" placeholder="QR Image URL" value="${qr.replace(/"/g, '&quot;')}" class="form-input ts_rcpt_qr" />
+        <button type="button" onclick="this.closest('.ts_recipient_row').remove()" class="text-red-400 hover:text-red-600 font-bold text-lg px-1 self-center">&times;</button>`;
+      list.appendChild(row);
+    }
+
+    async function saveTshirtConfig() {
+      const btn = document.getElementById('saveTsConfigBtn');
+      const msgEl = document.getElementById('tsConfigMsg');
+      const errEl = document.getElementById('tsConfigErr');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      msgEl.classList.add('hidden'); errEl.classList.add('hidden');
+
+      const adultPrice = parseInt(document.getElementById('ts_adult_price').value) || 0;
+      const kidsPrice  = parseInt(document.getElementById('ts_kids_price').value) || 0;
+
+      const { error: cfgErr } = await db.from('tshirt_payment_config').upsert(
+        { id: 1, adult_price: adultPrice, kids_price: kidsPrice, updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      );
+      if (cfgErr) {
+        errEl.textContent = 'Error saving config: ' + cfgErr.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false; btn.textContent = 'Save Config'; return;
+      }
+
+      // Delete all existing recipients and re-insert
+      await db.from('tshirt_payment_recipients').delete().gt('id', 0);
+      const rcptRows = document.querySelectorAll('.ts_recipient_row');
+      const recipients = [...rcptRows].map((row, i) => ({
+        recipient_name: row.querySelector('.ts_rcpt_name').value.trim(),
+        upi_id:         row.querySelector('.ts_rcpt_upi').value.trim() || null,
+        qr_image_url:   row.querySelector('.ts_rcpt_qr').value.trim() || null,
+        display_order:  i,
+      })).filter(r => r.recipient_name);
+
+      if (recipients.length) {
+        const { error: rcptErr } = await db.from('tshirt_payment_recipients').insert(recipients);
+        if (rcptErr) {
+          errEl.textContent = 'Error saving recipients: ' + rcptErr.message;
+          errEl.classList.remove('hidden');
+          btn.disabled = false; btn.textContent = 'Save Config'; return;
+        }
+      }
+
+      btn.disabled = false; btn.textContent = 'Save Config';
+      msgEl.classList.remove('hidden');
+      setTimeout(() => msgEl.classList.add('hidden'), 3000);
+    }
+
+    async function loadTshirtPayments() {
+      const tableEl = document.getElementById('ts_payments_table');
+      tableEl.innerHTML = '<p class="text-gray-400 text-sm p-2">Loading...</p>';
+
+      const statusFilter = document.getElementById('ts_pay_filter').value;
+      let query = db.from('tshirt_payments').select('*').order('created_at', { ascending: false });
+      if (statusFilter) query = query.eq('payment_status', statusFilter);
+
+      const { data, error } = await query;
+      if (error) { tableEl.innerHTML = `<p class="text-red-500 text-sm p-2">Error: ${error.message}</p>`; return; }
+
+      tshirtPaymentsData = data || [];
+
+      // Stats (always over full dataset regardless of filter)
+      const allData = tshirtPaymentsData;
+      const pendingCount  = allData.filter(p => p.payment_status === 'pending').length;
+      const approvedCount = allData.filter(p => p.payment_status === 'approved').length;
+      const totalCollected = allData.filter(p => p.payment_status === 'approved').reduce((s, p) => s + (p.total_amount || 0), 0);
+      document.getElementById('ts_stat_total').textContent    = allData.length;
+      document.getElementById('ts_stat_pending').textContent  = pendingCount;
+      document.getElementById('ts_stat_approved').textContent = approvedCount;
+      document.getElementById('ts_stat_amount').textContent   = '\u20b9' + totalCollected;
+      document.getElementById('ts_pay_stats').classList.remove('hidden');
+
+      if (!allData.length) {
+        tableEl.innerHTML = '<p class="text-gray-400 text-sm p-4 text-center">No payment submissions found.</p>';
+        return;
+      }
+
+      let html = `<table>
+        <thead><tr>
+          <th>Submitted</th><th>Unique ID</th><th>Name</th><th>Flat</th>
+          <th>Items</th><th>Total</th><th>Paid To</th><th>Their UPI</th><th>Status</th><th>Actions</th>
+        </tr></thead><tbody>`;
+
+      allData.forEach(p => {
+        const statusBadge = p.payment_status === 'approved'
+          ? '<span class="badge" style="background:#dcfce7;color:#15803d;">Approved</span>'
+          : p.payment_status === 'rejected'
+          ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;">Rejected</span>'
+          : '<span class="badge" style="background:#fef9c3;color:#a16207;">Pending</span>';
+
+        const itemCount = (p.order_summary || []).reduce((s, o) => s + (o.quantity || 1), 0);
+        const date = new Date(p.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+
+        const approveBtn = p.payment_status !== 'approved'
+          ? `<button onclick="updateTsPayStatus(${p.id},'approved')" class="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">Approve</button>` : '';
+        const rejectBtn = p.payment_status !== 'rejected'
+          ? `<button onclick="updateTsPayStatus(${p.id},'rejected')" class="text-xs bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded mr-1">Reject</button>` : '';
+        const deleteBtn = `<button onclick="deleteTsPayment(${p.id})" class="text-xs border border-gray-300 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded">Del</button>`;
+
+        html += `<tr>
+          <td>${date}</td>
+          <td class="font-mono text-xs">${p.unique_id}</td>
+          <td><button onclick="openTsPayDetail(${p.id})" class="text-indigo-600 hover:underline text-left">${p.name || '&#8212;'}</button></td>
+          <td>${p.flat || '&#8212;'}</td>
+          <td class="text-center">${itemCount}</td>
+          <td class="font-semibold">\u20b9${p.total_amount || 0}</td>
+          <td>${p.recipient_name || '&#8212;'}</td>
+          <td class="text-xs text-gray-500">${p.source_upi_id || '&#8212;'}</td>
+          <td>${statusBadge}</td>
+          <td style="white-space:nowrap;">${approveBtn}${rejectBtn}${deleteBtn}</td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      tableEl.innerHTML = html;
+    }
+
+    async function updateTsPayStatus(id, status) {
+      const { error } = await db.from('tshirt_payments')
+        .update({ payment_status: status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) { alert('Error updating status: ' + error.message); return; }
+      loadTshirtPayments();
+    }
+
+    async function deleteTsPayment(id) {
+      if (!confirm('Delete this payment record? This cannot be undone.')) return;
+      const { error } = await db.from('tshirt_payments').delete().eq('id', id);
+      if (error) { alert('Error deleting: ' + error.message); return; }
+      loadTshirtPayments();
+    }
+
+    function openTsPayDetail(id) {
+      const p = tshirtPaymentsData.find(x => x.id === id);
+      if (!p) return;
+
+      const orders = p.order_summary || [];
+      let ordersHtml = '';
+      if (orders.length) {
+        ordersHtml = '<table class="w-full text-xs border border-gray-200 rounded mt-1"><thead><tr class="bg-gray-50"><th class="p-1.5 text-left">Print Name</th><th class="p-1.5 text-center">Gender</th><th class="p-1.5 text-center">Size</th><th class="p-1.5 text-center">Type</th><th class="p-1.5 text-center">Qty</th></tr></thead><tbody>';
+        orders.forEach(o => {
+          ordersHtml += `<tr><td class="p-1.5">${o.print_name || ''}</td><td class="p-1.5 text-center">${o.gender || ''}</td><td class="p-1.5 text-center">${o.size || ''}</td><td class="p-1.5 text-center">${o.type || 'Tshirt'}</td><td class="p-1.5 text-center">${o.quantity || 1}</td></tr>`;
+        });
+        ordersHtml += '</tbody></table>';
+      } else {
+        ordersHtml = '<p class="text-gray-400 text-xs">No items recorded.</p>';
+      }
+
+      const statusColors = { approved: '#15803d', pending: '#a16207', rejected: '#b91c1c' };
+      const statusColor = statusColors[p.payment_status] || '#334155';
+
+      document.getElementById('ts_pay_detail_content').innerHTML = `
+        <div class="grid grid-cols-2 gap-3">
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Name</p><p class="font-medium mt-0.5">${p.name || '&#8212;'}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Flat</p><p class="font-medium mt-0.5">${p.flat || '&#8212;'}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Unique ID</p><p class="font-mono text-sm mt-0.5">${p.unique_id}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Status</p><p class="font-semibold mt-0.5 capitalize" style="color:${statusColor};">${p.payment_status}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Paid To</p><p class="mt-0.5">${p.recipient_name || '&#8212;'}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Their UPI</p><p class="font-mono text-sm mt-0.5">${p.source_upi_id || '&#8212;'}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Total Amount</p><p class="font-bold text-lg mt-0.5" style="color:#4f46e5;">\u20b9${p.total_amount || 0}</p></div>
+          <div><p class="text-xs text-gray-400 font-semibold uppercase">Submitted</p><p class="text-sm mt-0.5">${new Date(p.created_at).toLocaleString('en-IN')}</p></div>
+        </div>
+        <div class="mt-3 pt-3 border-t">
+          <p class="text-xs text-gray-400 font-semibold uppercase mb-1">Order Items</p>
+          ${ordersHtml}
+        </div>
+        ${p.admin_note ? `<div class="mt-3 pt-3 border-t"><p class="text-xs text-gray-400 font-semibold uppercase mb-1">Admin Note</p><p>${p.admin_note}</p></div>` : ''}
+        <div class="flex gap-2 mt-4 pt-4 border-t flex-wrap">
+          ${p.payment_status !== 'approved' ? `<button onclick="updateTsPayStatus(${p.id},'approved');document.getElementById('tsPayDetailModal').classList.add('hidden')" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded">Approve</button>` : ''}
+          ${p.payment_status !== 'rejected' ? `<button onclick="updateTsPayStatus(${p.id},'rejected');document.getElementById('tsPayDetailModal').classList.add('hidden')" class="bg-red-500 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded">Reject</button>` : ''}
+          <button onclick="document.getElementById('tsPayDetailModal').classList.add('hidden')" class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm px-4 py-2 rounded ml-auto">Close</button>
+        </div>`;
+
+      document.getElementById('tsPayDetailModal').classList.remove('hidden');
+    }
+
     // ---- Keyboard shortcuts ----
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal','tsPayDetailModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
       if (e.key === 'Enter' && !document.getElementById('stepId').classList.contains('hidden') && document.activeElement === document.getElementById('loginUniqueId')) checkAdminId();
     });
