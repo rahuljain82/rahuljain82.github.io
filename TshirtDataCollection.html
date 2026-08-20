@@ -188,6 +188,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let priceConfig = { adult_price: 0, kids_price: 0 };
 let recipientsData = [];
+let recipientCounts = {};
 
 const KIDS_SIZES = new Set(['1to2', '3to4', '5to6', '7to8', '9to10']);
 
@@ -246,8 +247,8 @@ async function fetchRunnerData() {
     document.getElementById('flat').value = runner.flat_number;
     document.getElementById('gender').value = runner.gender || '';
 
-    // Parallel: load price config, recipients, existing payment
-    const [cfgRes, rcptsRes, payRes] = await Promise.all([
+    // Parallel: load price config, recipients, existing payment, recipient payment counts
+    const [cfgRes, rcptsRes, payRes, countsRes] = await Promise.all([
       db.from('tshirt_payment_config').select('*').eq('id', 1).maybeSingle(),
       db.from('tshirt_payment_recipients').select('*').order('display_order'),
       db.from('tshirt_payments')
@@ -257,10 +258,16 @@ async function fetchRunnerData() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      db.from('tshirt_payments').select('recipient_name').in('payment_status', ['pending', 'approved']),
     ]);
 
     priceConfig = cfgRes.data || { adult_price: 0, kids_price: 0 };
     recipientsData = rcptsRes.data || [];
+
+    recipientCounts = {};
+    (countsRes.data || []).forEach(p => {
+      recipientCounts[p.recipient_name] = (recipientCounts[p.recipient_name] || 0) + 1;
+    });
 
     // Check for active payment (pending or approved)
     if (payRes.data) {
@@ -333,7 +340,8 @@ function renderRecipients(rcpts) {
   rcpts.forEach(r => {
     const opt = document.createElement('option');
     opt.value = r.recipient_name;
-    opt.textContent = r.recipient_name;
+    const count = recipientCounts[r.recipient_name] || 0;
+    opt.textContent = `${r.recipient_name} (${count})`;
     sel.appendChild(opt);
   });
 }
