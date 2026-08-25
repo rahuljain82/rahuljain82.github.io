@@ -2138,6 +2138,34 @@
       }
       tableData = result.data || [];
 
+      // For tshirt bookings: merge type (Singlet/Tshirt) from tshirt_orders, since the RPC omits it
+      if (currentTab === 'tshirt' && tableData.length > 0) {
+        const { data: tsTypeData } = await db
+          .from('tshirt_orders')
+          .select('id, type');
+        if (tsTypeData) {
+          const tsTypeMap = {};
+          tsTypeData.forEach(o => { tsTypeMap[o.id] = o.type; });
+          tableData.forEach(row => {
+            row.type = tsTypeMap[row.id] || null;
+          });
+        }
+      }
+
+      // For tshirt bookings: merge payment status from tshirt_payments
+      if (currentTab === 'tshirt' && tableData.length > 0) {
+        const { data: tsPmtData } = await db
+          .from('tshirt_payments')
+          .select('unique_id, payment_status');
+        if (tsPmtData) {
+          const tsPmtMap = {};
+          tsPmtData.forEach(p => { tsPmtMap[p.unique_id] = p.payment_status; });
+          tableData.forEach(row => {
+            row.payment_status = tsPmtMap[row.unique_id] || 'not_done';
+          });
+        }
+      }
+
       // For bus_bookings: merge payment status from bus_payments
       if (currentTab === 'bus_bookings' && tableData.length > 0) {
         const { data: pmtData } = await db
@@ -2237,9 +2265,12 @@
         cols.forEach(col => {
           const val = row[col];
           if (col === 'payment_status') {
-            const labels = { not_done: 'Not Done', under_review: 'Under Review', verified: 'Verified by Admin' };
-            const colors = { not_done: 'background:#fee2e2;color:#991b1b;', under_review: 'background:#fef9c3;color:#854d0e;', verified: 'background:#dcfce7;color:#166534;' };
+            const labels = { not_done: 'Not Done', under_review: 'Under Review', verified: 'Verified by Admin', pending: 'Admin Pending', approved: 'Confirmed', rejected: 'Rejected' };
+            const colors = { not_done: 'background:#fee2e2;color:#991b1b;', under_review: 'background:#fef9c3;color:#854d0e;', verified: 'background:#dcfce7;color:#166534;', pending: 'background:#fef9c3;color:#854d0e;', approved: 'background:#dcfce7;color:#166534;', rejected: 'background:#fee2e2;color:#991b1b;' };
             html += `<td><span style="font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;${colors[val] || ''}">${labels[val] || '—'}</span></td>`;
+          } else if (col === 'type' && currentTab === 'tshirt') {
+            const isSinglet = String(val || '').toLowerCase() === 'singlet';
+            html += `<td><span style="font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;${isSinglet ? 'background:#ede9fe;color:#5b21b6;' : 'background:#dbeafe;color:#1e40af;'}">${val || '—'}</span></td>`;
           } else if (col === 'payment_received') {
             const isPaid = !!val;
             html += `<td><span data-pmt-badge="${row.id}" class="badge ${isPaid ? 'badge-admin' : 'badge-user'}">${isPaid ? '✓ Received' : 'Pending'}</span></td>`;
