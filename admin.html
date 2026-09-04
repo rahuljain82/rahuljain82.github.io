@@ -2158,8 +2158,16 @@
           .from('tshirt_payments')
           .select('unique_id, payment_status');
         if (tsPmtData) {
+          // Priority: approved > pending > rejected — prevents a rejected payment from
+          // overwriting an approved one when a user has multiple payment records
+          const STATUS_PRIORITY = { approved: 3, pending: 2, rejected: 1 };
           const tsPmtMap = {};
-          tsPmtData.forEach(p => { tsPmtMap[p.unique_id] = p.payment_status; });
+          tsPmtData.forEach(p => {
+            const existing = tsPmtMap[p.unique_id];
+            if (!existing || (STATUS_PRIORITY[p.payment_status] || 0) > (STATUS_PRIORITY[existing] || 0)) {
+              tsPmtMap[p.unique_id] = p.payment_status;
+            }
+          });
           tableData.forEach(row => {
             row.payment_status = tsPmtMap[row.unique_id] || 'not_done';
           });
@@ -4665,6 +4673,40 @@
         .update({ payment_status: status, updated_at: new Date().toISOString() })
         .eq('id', id);
       if (error) { alert('Error updating status: ' + error.message); return; }
+
+      // On rejection, clean up tshirt_orders so rejected shirts don't linger.
+      // Rebuild tshirt_orders for this unique_id from the remaining active payments only.
+      if (status === 'rejected') {
+        const { data: rejectedPmt } = await db.from('tshirt_payments').select('unique_id, name, flat').eq('id', id).single();
+        if (rejectedPmt) {
+          const { data: activePayments } = await db.from('tshirt_payments')
+            .select('order_summary')
+            .eq('unique_id', rejectedPmt.unique_id)
+            .in('payment_status', ['pending', 'approved']);
+
+          const remainingOrders = [];
+          (activePayments || []).forEach(p => {
+            (p.order_summary || []).forEach(item => {
+              remainingOrders.push({
+                unique_id:  rejectedPmt.unique_id,
+                name:       rejectedPmt.name,
+                flat:       rejectedPmt.flat,
+                print_name: item.print_name,
+                gender:     item.gender,
+                size:       item.size,
+                type:       item.type || 'Tshirt',
+                quantity:   item.quantity || 1,
+              });
+            });
+          });
+
+          await db.from('tshirt_orders').delete().eq('unique_id', rejectedPmt.unique_id);
+          if (remainingOrders.length > 0) {
+            await db.from('tshirt_orders').insert(remainingOrders);
+          }
+        }
+      }
+
       loadTshirtPayments();
     }
 

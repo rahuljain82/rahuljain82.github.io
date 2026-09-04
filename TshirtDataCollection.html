@@ -201,7 +201,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let priceConfig = { adult_price: 0, kids_price: 0 };
 let recipientsData = [];
 let recipientCounts = {};
-let existingPayments = []; // all active payments for this runner
+let existingPayments = []; // all active (pending/approved) payments for this runner
 let currentMode = null;    // null | 'modify' | 'orderMore'
 
 const KIDS_SIZES = new Set(['1to2', '3to4', '5to6', '7to8', '9to10']);
@@ -233,26 +233,28 @@ function esc(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Returns HTML string for a payment's order summary table
-function buildOrderSummaryHtml(payment) {
-  const orders = payment.order_summary || [];
-  if (!orders.length) return '';
+// Returns HTML string for an order rows array (from tshirt_orders or a submitted batch)
+function buildOrderTableHtml(orderRows, totalAmount) {
+  if (!orderRows || !orderRows.length) return '';
   let html = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-current border-opacity-20 rounded">';
   html += '<thead><tr class="bg-white bg-opacity-30"><th class="p-1.5 text-left">Print Name</th><th class="p-1.5 text-center">Gender</th><th class="p-1.5 text-center">Size</th><th class="p-1.5 text-center">Type</th><th class="p-1.5 text-center">Qty</th></tr></thead><tbody>';
-  orders.forEach(o => {
+  orderRows.forEach(o => {
     html += `<tr><td class="p-1.5">${esc(o.print_name || '')}</td><td class="p-1.5 text-center">${esc(o.gender || '')}</td><td class="p-1.5 text-center">${esc(o.size || '')}</td><td class="p-1.5 text-center">${esc(o.type || 'Tshirt')}</td><td class="p-1.5 text-center">${o.quantity || 1}</td></tr>`;
   });
   html += '</tbody></table></div>';
-  html += `<p class="mt-2 font-semibold text-sm">Total: &#8377;${payment.total_amount}</p>`;
+  if (totalAmount != null) html += `<p class="mt-2 font-semibold text-sm">Total: &#8377;${totalAmount}</p>`;
   return html;
 }
 
-// Renders all active payment notices into #orderNoticesContainer
+// Renders all active payment notices into #orderNoticesContainer.
+// Each payment's own order_summary is used for the shirt table — rejected payments
+// are excluded by the query filter, so their shirts never appear here.
 function renderAllPayments(payments) {
   const container = document.getElementById('orderNoticesContainer');
   let html = '';
+
   payments.forEach(p => {
-    const summaryHtml = buildOrderSummaryHtml(p);
+    const summaryHtml = buildOrderTableHtml(p.order_summary || [], p.total_amount);
     if (p.payment_status === 'approved') {
       html += `<div class="bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-4">
         <p class="font-semibold text-sm">T-Shirt Order Confirmed!</p>
@@ -267,6 +269,7 @@ function renderAllPayments(payments) {
       </div>`;
     }
   });
+
   container.innerHTML = html;
 }
 
@@ -398,23 +401,20 @@ async function enterModifyMode() {
   document.getElementById('saveModifyBtn').classList.remove('hidden');
   document.getElementById('formError').classList.add('hidden');
 
-  // Load existing orders from tshirt_orders table
-  let orders = [];
-  try {
-    const { data } = await db.from('tshirt_orders')
-      .select('print_name, gender, size, type, quantity')
-      .eq('unique_id', uniqueId);
-    orders = data || [];
-  } catch (e) {}
-
-  // Fallback: use most recent payment's order_summary if tshirt_orders is empty
-  if (!orders.length && existingPayments.length > 0) {
-    const latest = existingPayments[existingPayments.length - 1];
-    orders = (latest.order_summary || []).map(o => ({
-      print_name: o.print_name, gender: o.gender, size: o.size,
-      type: o.type || 'Tshirt', quantity: o.quantity || 1,
-    }));
-  }
+  // Build the shirt list from all active payments' order_summary.
+  // This avoids showing shirts from rejected payments that may still be in tshirt_orders.
+  const orders = [];
+  existingPayments.forEach(p => {
+    (p.order_summary || []).forEach(item => {
+      orders.push({
+        print_name: item.print_name,
+        gender:     item.gender,
+        size:       item.size,
+        type:       item.type || 'Tshirt',
+        quantity:   item.quantity || 1,
+      });
+    });
+  });
 
   document.getElementById('tshirtRows').innerHTML = '';
   if (orders.length > 0) {
@@ -541,6 +541,20 @@ async function saveModifyOrder() {
     await db.from('tshirt_orders').delete().eq('unique_id', uniqueId);
     const { error } = await db.from('tshirt_orders').insert(orders);
     if (error) throw new Error(error.message);
+
+    // Build lookup: print_name → {gender, size, type} from the modified form
+    const modifiedMap = {};
+    orders.forEach(o => { modifiedMap[o.print_name] = { gender: o.gender, size: o.size, type: o.type }; });
+
+    // Update order_summary in each active payment so re-fetch shows correct sizes
+    for (const payment of existingPayments) {
+      const updatedSummary = (payment.order_summary || []).map(item => {
+        const mod = modifiedMap[item.print_name];
+        return mod ? { ...item, gender: mod.gender, size: mod.size, type: mod.type } : item;
+      });
+      await db.from('tshirt_payments').update({ order_summary: updatedSummary }).eq('id', payment.id);
+      payment.order_summary = updatedSummary; // keep in-memory copy in sync
+    }
 
     // Return to notices view and show success
     document.getElementById('runnerDetails').classList.add('hidden');
@@ -694,14 +708,14 @@ async function submitOrder() {
     document.getElementById('runnerDetails').classList.add('hidden');
 
     if (currentMode === 'orderMore') {
-      // Show existing notices, then append the new pending notice beneath them
+      // Re-render existing notices (each uses its own order_summary), then append new pending notice
       renderAllPayments(existingPayments);
       const newNotice = document.createElement('div');
       newNotice.className = 'bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4';
       newNotice.innerHTML = `
         <p class="font-semibold text-sm">Additional Order Under Review</p>
         <p class="text-sm mt-1">Your additional t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
-        ${buildOrderSummaryHtml({ order_summary: orderSummary, total_amount: total })}
+        ${buildOrderTableHtml(orderSummary, total)}
       `;
       document.getElementById('orderNoticesContainer').appendChild(newNotice);
     } else {
@@ -710,7 +724,7 @@ async function submitOrder() {
         <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4">
           <p class="font-semibold text-sm">Payment Under Review</p>
           <p class="text-sm mt-1">Your t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
-          ${buildOrderSummaryHtml({ order_summary: orderSummary, total_amount: total })}
+          ${buildOrderTableHtml(orderSummary, total)}
         </div>
       `;
     }
