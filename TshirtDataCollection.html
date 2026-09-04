@@ -38,23 +38,27 @@
     <p class="text-gray-500 text-sm mt-2">Fetching your details...</p>
   </div>
 
-  <!-- Payment Confirmed Notice -->
-  <div id="paymentConfirmedNotice" class="hidden bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-4">
-    <p class="font-semibold text-sm">T-Shirt Order Confirmed!</p>
-    <p class="text-sm mt-1">Your payment has been verified by the organisers. Your t-shirt order is confirmed!</p>
-    <div id="confirmedOrderSummary" class="mt-3"></div>
+  <!-- Order Notices Container (dynamically rendered) -->
+  <div id="orderNoticesContainer"></div>
+
+  <!-- Actions shown when active payment(s) exist -->
+  <div id="existingOrderActions" class="hidden mt-4 flex flex-col gap-3 sm:flex-row">
+    <button onclick="enterModifyMode()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded font-semibold text-sm">
+      Modify Existing Order
+    </button>
+    <button onclick="enterOrderMoreMode()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded font-semibold text-sm">
+      + Order More T-Shirts
+    </button>
   </div>
 
-  <!-- Payment Pending Notice -->
-  <div id="paymentPendingNotice" class="hidden bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4">
-    <p class="font-semibold text-sm">Payment Under Review</p>
-    <p class="text-sm mt-1">Your t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
-    <div id="pendingOrderSummary" class="mt-3"></div>
-  </div>
+  <!-- Main Details / Form Section -->
+  <div id="runnerDetails" class="hidden mt-4">
 
-  <!-- Main Details Section -->
-  <div id="runnerDetails" class="hidden mt-2">
-    <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4 text-sm text-indigo-800">
+    <!-- Back to options (shown in modify / orderMore mode) -->
+    <button onclick="backToActions()" id="backToActionsBtn" class="hidden mb-3 text-sm text-indigo-600 hover:underline">&#8592; Back to options</button>
+
+    <!-- Mode Banner -->
+    <div id="modeBanner" class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4 text-sm text-indigo-800">
       Your existing t-shirt preferences have been pre-filled. Please review and update if needed, then complete payment below.
     </div>
 
@@ -86,7 +90,7 @@
           <div id="tshirtRows"></div>
         </div>
       </div>
-      <button type="button" onclick="addTshirtRow()" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded text-sm">+ Add T-Shirt</button>
+      <button type="button" id="addTshirtBtn" onclick="addTshirtRow()" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded text-sm">+ Add T-Shirt</button>
     </div>
 
     <!-- Pricing & Total -->
@@ -129,6 +133,12 @@
 
     <p id="formError" class="text-red-500 text-sm mt-2 hidden"></p>
 
+    <!-- Save Modifications Button (modify mode only) -->
+    <button type="button" onclick="saveModifyOrder()" id="saveModifyBtn" class="hidden w-full bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded mt-4 font-semibold text-sm">
+      Save Modifications
+    </button>
+
+    <!-- Submit Order Button (new order / orderMore mode) -->
     <button type="button" onclick="showPayConfirm()" id="submitBtn" class="hidden w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded mt-4 font-semibold text-sm">
       Submit T-Shirt Order
     </button>
@@ -137,18 +147,21 @@
       <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-green-500 border-opacity-60 mx-auto"></div>
       <p class="text-gray-500 text-sm mt-2">Submitting your order...</p>
     </div>
+
+    <div id="saveModifySpinner" class="hidden text-center my-4">
+      <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-amber-500 border-opacity-60 mx-auto"></div>
+      <p class="text-gray-500 text-sm mt-2">Saving modifications...</p>
+    </div>
   </div>
 </div>
 
 <!-- Size Guide Modal -->
 <div id="sizeGuideModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeSizeGuide()">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-    <!-- Header -->
     <div class="flex items-center justify-between px-4 pt-4 pb-3">
       <p class="font-semibold text-gray-800 text-sm">Size Guide</p>
       <button onclick="closeSizeGuide()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
     </div>
-    <!-- Toggle tabs -->
     <div class="flex mx-4 mb-3 bg-gray-100 rounded-lg p-0.5">
       <button id="sgTabFemale" onclick="setSizeGuideTab('Female')"
         class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-white text-indigo-700 shadow-sm transition-all">
@@ -159,7 +172,6 @@
         Male
       </button>
     </div>
-    <!-- Image -->
     <div class="px-4 pb-4">
       <img id="sizeGuideImg" src="" alt="Size Guide" class="w-full rounded-lg border border-gray-100" />
     </div>
@@ -189,6 +201,8 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let priceConfig = { adult_price: 0, kids_price: 0 };
 let recipientsData = [];
 let recipientCounts = {};
+let existingPayments = []; // all active payments for this runner
+let currentMode = null;    // null | 'modify' | 'orderMore'
 
 const KIDS_SIZES = new Set(['1to2', '3to4', '5to6', '7to8', '9to10']);
 
@@ -219,6 +233,43 @@ function esc(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// Returns HTML string for a payment's order summary table
+function buildOrderSummaryHtml(payment) {
+  const orders = payment.order_summary || [];
+  if (!orders.length) return '';
+  let html = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-current border-opacity-20 rounded">';
+  html += '<thead><tr class="bg-white bg-opacity-30"><th class="p-1.5 text-left">Print Name</th><th class="p-1.5 text-center">Gender</th><th class="p-1.5 text-center">Size</th><th class="p-1.5 text-center">Type</th><th class="p-1.5 text-center">Qty</th></tr></thead><tbody>';
+  orders.forEach(o => {
+    html += `<tr><td class="p-1.5">${esc(o.print_name || '')}</td><td class="p-1.5 text-center">${esc(o.gender || '')}</td><td class="p-1.5 text-center">${esc(o.size || '')}</td><td class="p-1.5 text-center">${esc(o.type || 'Tshirt')}</td><td class="p-1.5 text-center">${o.quantity || 1}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  html += `<p class="mt-2 font-semibold text-sm">Total: &#8377;${payment.total_amount}</p>`;
+  return html;
+}
+
+// Renders all active payment notices into #orderNoticesContainer
+function renderAllPayments(payments) {
+  const container = document.getElementById('orderNoticesContainer');
+  let html = '';
+  payments.forEach(p => {
+    const summaryHtml = buildOrderSummaryHtml(p);
+    if (p.payment_status === 'approved') {
+      html += `<div class="bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-4">
+        <p class="font-semibold text-sm">T-Shirt Order Confirmed!</p>
+        <p class="text-sm mt-1">Your payment has been verified by the organisers. Your t-shirt order is confirmed!</p>
+        ${summaryHtml}
+      </div>`;
+    } else {
+      html += `<div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4">
+        <p class="font-semibold text-sm">Payment Under Review</p>
+        <p class="text-sm mt-1">Your t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
+        ${summaryHtml}
+      </div>`;
+    }
+  });
+  container.innerHTML = html;
+}
+
 async function fetchRunnerData() {
   const uniqueId = document.getElementById('uniqueId').value.trim();
   if (!uniqueId) { alert('Please enter your Unique ID'); return; }
@@ -227,9 +278,12 @@ async function fetchRunnerData() {
   spinner.classList.remove('hidden');
 
   // Reset state
-  ['paymentConfirmedNotice', 'paymentPendingNotice', 'runnerDetails'].forEach(id =>
-    document.getElementById(id).classList.add('hidden')
-  );
+  document.getElementById('orderNoticesContainer').innerHTML = '';
+  document.getElementById('existingOrderActions').classList.add('hidden');
+  document.getElementById('runnerDetails').classList.add('hidden');
+  document.getElementById('formError').classList.add('hidden');
+  existingPayments = [];
+  currentMode = null;
 
   try {
     const { data: runner, error } = await db
@@ -247,42 +301,35 @@ async function fetchRunnerData() {
     document.getElementById('flat').value = runner.flat_number;
     document.getElementById('gender').value = runner.gender || '';
 
-    // Parallel: load price config, recipients, existing payment, recipient payment counts
-    const [cfgRes, rcptsRes, payRes, countsRes] = await Promise.all([
+    // Parallel: load price config, recipients, all active payments, recipient counts
+    const [cfgRes, rcptsRes, payListRes, countsRes] = await Promise.all([
       db.from('tshirt_payment_config').select('*').eq('id', 1).maybeSingle(),
       db.from('tshirt_payment_recipients').select('*').order('display_order'),
       db.from('tshirt_payments')
         .select('*')
         .eq('unique_id', uniqueId)
         .in('payment_status', ['pending', 'approved'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .order('created_at', { ascending: true }),
       db.from('tshirt_payments').select('recipient_name').in('payment_status', ['pending', 'approved']),
     ]);
 
     priceConfig = cfgRes.data || { adult_price: 0, kids_price: 0 };
     recipientsData = rcptsRes.data || [];
+    existingPayments = payListRes.data || [];
 
     recipientCounts = {};
     (countsRes.data || []).forEach(p => {
       recipientCounts[p.recipient_name] = (recipientCounts[p.recipient_name] || 0) + 1;
     });
 
-    // Check for active payment (pending or approved)
-    if (payRes.data) {
-      const p = payRes.data;
-      if (p.payment_status === 'approved') {
-        renderOrderSummary('confirmedOrderSummary', p);
-        document.getElementById('paymentConfirmedNotice').classList.remove('hidden');
-      } else {
-        renderOrderSummary('pendingOrderSummary', p);
-        document.getElementById('paymentPendingNotice').classList.remove('hidden');
-      }
+    // If active payments exist, show notices + action buttons
+    if (existingPayments.length > 0) {
+      renderAllPayments(existingPayments);
+      document.getElementById('existingOrderActions').classList.remove('hidden');
       return;
     }
 
-    // Load existing tshirt_orders to prefill
+    // No active payments: show full order form
     const { data: orders } = await db
       .from('tshirt_orders')
       .select('print_name, gender, size, type, quantity')
@@ -295,23 +342,7 @@ async function fetchRunnerData() {
       addTshirtRow();
     }
 
-    // Price display
-    const hasPrice = priceConfig.adult_price > 0 || priceConfig.kids_price > 0;
-    if (hasPrice) {
-      document.getElementById('adultPriceDisplay').textContent = '\u20b9' + priceConfig.adult_price + ' each';
-      document.getElementById('kidsPriceDisplay').textContent = '\u20b9' + priceConfig.kids_price + ' each';
-      document.getElementById('totalSection').classList.remove('hidden');
-      updateTotal();
-    }
-
-    // Payment recipients
-    if (recipientsData.length > 0) {
-      renderRecipients(recipientsData);
-      document.getElementById('paymentSection').classList.remove('hidden');
-      document.getElementById('submitBtn').classList.remove('hidden');
-    }
-
-    document.getElementById('runnerDetails').classList.remove('hidden');
+    showNewOrderForm();
 
   } catch (err) {
     alert('Error fetching data: ' + err.message);
@@ -320,18 +351,215 @@ async function fetchRunnerData() {
   }
 }
 
-function renderOrderSummary(containerId, payment) {
-  const container = document.getElementById(containerId);
-  const orders = payment.order_summary || [];
-  if (!orders.length) { container.innerHTML = ''; return; }
-  let html = '<div class="overflow-x-auto mt-2"><table class="w-full text-xs border border-current border-opacity-20 rounded">';
-  html += '<thead><tr class="bg-white bg-opacity-30"><th class="p-1.5 text-left">Print Name</th><th class="p-1.5 text-center">Gender</th><th class="p-1.5 text-center">Size</th><th class="p-1.5 text-center">Type</th><th class="p-1.5 text-center">Qty</th></tr></thead><tbody>';
-  orders.forEach(o => {
-    html += `<tr><td class="p-1.5">${esc(o.print_name || '')}</td><td class="p-1.5 text-center">${esc(o.gender || '')}</td><td class="p-1.5 text-center">${esc(o.size || '')}</td><td class="p-1.5 text-center">${esc(o.type || 'Tshirt')}</td><td class="p-1.5 text-center">${o.quantity || 1}</td></tr>`;
+// Sets up the form UI for a brand-new order (no existing payments)
+function showNewOrderForm() {
+  const banner = document.getElementById('modeBanner');
+  banner.textContent = 'Your existing t-shirt preferences have been pre-filled. Please review and update if needed, then complete payment below.';
+  banner.className = 'bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4 text-sm text-indigo-800';
+
+  document.getElementById('backToActionsBtn').classList.add('hidden');
+  document.getElementById('addTshirtBtn').classList.remove('hidden');
+  document.getElementById('saveModifyBtn').classList.add('hidden');
+  document.getElementById('submitBtn').textContent = 'Submit T-Shirt Order';
+
+  const hasPrice = priceConfig.adult_price > 0 || priceConfig.kids_price > 0;
+  if (hasPrice) {
+    document.getElementById('adultPriceDisplay').textContent = '\u20b9' + priceConfig.adult_price + ' each';
+    document.getElementById('kidsPriceDisplay').textContent = '\u20b9' + priceConfig.kids_price + ' each';
+    document.getElementById('totalSection').classList.remove('hidden');
+    updateTotal();
+  }
+
+  if (recipientsData.length > 0) {
+    renderRecipients(recipientsData);
+    document.getElementById('paymentSection').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  }
+
+  document.getElementById('runnerDetails').classList.remove('hidden');
+}
+
+// Modify mode: load existing orders, freeze print_name & qty, hide payment
+async function enterModifyMode() {
+  currentMode = 'modify';
+  const uniqueId = document.getElementById('uniqueId').value.trim();
+
+  document.getElementById('existingOrderActions').classList.add('hidden');
+
+  const banner = document.getElementById('modeBanner');
+  banner.textContent = 'Modify mode: you can update Gender, Size, and Type for your existing shirts. Print Name and Quantity are fixed as payment has already been made.';
+  banner.className = 'bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800';
+
+  document.getElementById('backToActionsBtn').classList.remove('hidden');
+  document.getElementById('totalSection').classList.add('hidden');
+  document.getElementById('paymentSection').classList.add('hidden');
+  document.getElementById('submitBtn').classList.add('hidden');
+  document.getElementById('addTshirtBtn').classList.add('hidden');
+  document.getElementById('saveModifyBtn').classList.remove('hidden');
+  document.getElementById('formError').classList.add('hidden');
+
+  // Load existing orders from tshirt_orders table
+  let orders = [];
+  try {
+    const { data } = await db.from('tshirt_orders')
+      .select('print_name, gender, size, type, quantity')
+      .eq('unique_id', uniqueId);
+    orders = data || [];
+  } catch (e) {}
+
+  // Fallback: use most recent payment's order_summary if tshirt_orders is empty
+  if (!orders.length && existingPayments.length > 0) {
+    const latest = existingPayments[existingPayments.length - 1];
+    orders = (latest.order_summary || []).map(o => ({
+      print_name: o.print_name, gender: o.gender, size: o.size,
+      type: o.type || 'Tshirt', quantity: o.quantity || 1,
+    }));
+  }
+
+  document.getElementById('tshirtRows').innerHTML = '';
+  if (orders.length > 0) {
+    orders.forEach(o => addTshirtRow(o.print_name, o.gender, o.size, o.type || 'Tshirt', o.quantity));
+  } else {
+    addTshirtRow();
+  }
+
+  // Freeze print_name (inputs[0]) and qty (inputs[4]); hide delete buttons
+  document.querySelectorAll('#tshirtRows > div').forEach(row => {
+    const inputs = row.querySelectorAll('input, select');
+    inputs[0].readOnly = true;
+    inputs[0].classList.add('bg-gray-100', 'text-gray-600');
+    inputs[4].readOnly = true;
+    inputs[4].classList.add('bg-gray-100', 'text-gray-600');
+    const delBtn = row.querySelector('button');
+    if (delBtn) delBtn.classList.add('hidden');
   });
-  html += '</tbody></table></div>';
-  html += `<p class="mt-2 font-semibold text-sm">Total: \u20b9${payment.total_amount}</p>`;
-  container.innerHTML = html;
+
+  document.getElementById('runnerDetails').classList.remove('hidden');
+}
+
+// Order more mode: clean form, full payment flow, don't touch existing orders on submit
+function enterOrderMoreMode() {
+  currentMode = 'orderMore';
+
+  document.getElementById('existingOrderActions').classList.add('hidden');
+
+  const banner = document.getElementById('modeBanner');
+  banner.textContent = 'Ordering additional t-shirts. Your existing order(s) remain unchanged. Fill in the new shirts below and complete payment.';
+  banner.className = 'bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4 text-sm text-indigo-800';
+
+  document.getElementById('backToActionsBtn').classList.remove('hidden');
+  document.getElementById('addTshirtBtn').classList.remove('hidden');
+  document.getElementById('saveModifyBtn').classList.add('hidden');
+  document.getElementById('submitBtn').textContent = 'Submit Additional T-Shirt Order';
+  document.getElementById('formError').classList.add('hidden');
+
+  // Start with a clean form
+  document.getElementById('tshirtRows').innerHTML = '';
+  addTshirtRow();
+
+  // Reset payment fields
+  document.getElementById('recipientSelect').value = '';
+  document.getElementById('qrDisplay').classList.add('hidden');
+  document.getElementById('qrImage').src = '';
+  document.getElementById('sourceUpiId').value = '';
+
+  const hasPrice = priceConfig.adult_price > 0 || priceConfig.kids_price > 0;
+  if (hasPrice) {
+    document.getElementById('adultPriceDisplay').textContent = '\u20b9' + priceConfig.adult_price + ' each';
+    document.getElementById('kidsPriceDisplay').textContent = '\u20b9' + priceConfig.kids_price + ' each';
+    document.getElementById('totalSection').classList.remove('hidden');
+    updateTotal();
+  }
+
+  if (recipientsData.length > 0) {
+    renderRecipients(recipientsData);
+    document.getElementById('paymentSection').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  }
+
+  document.getElementById('runnerDetails').classList.remove('hidden');
+}
+
+// Go back to the notices + action buttons view
+function backToActions() {
+  currentMode = null;
+  document.getElementById('runnerDetails').classList.add('hidden');
+  document.getElementById('formError').classList.add('hidden');
+  renderAllPayments(existingPayments);
+  document.getElementById('existingOrderActions').classList.remove('hidden');
+}
+
+// Save modifications (size / gender / type only, no payment changes)
+async function saveModifyOrder() {
+  const errEl = document.getElementById('formError');
+  errEl.classList.add('hidden');
+
+  const rows = document.querySelectorAll('#tshirtRows > div');
+  if (!rows.length) {
+    errEl.textContent = 'No T-shirt rows found.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const uniqueId = document.getElementById('uniqueId').value.trim();
+  const name = document.getElementById('name').value;
+  const flat = document.getElementById('flat').value;
+  const orders = [];
+
+  for (const row of rows) {
+    const inputs = row.querySelectorAll('input, select');
+    if (!inputs[1].value) {
+      errEl.textContent = 'Please select a gender for all T-shirt rows.';
+      errEl.classList.remove('hidden'); return;
+    }
+    if (!inputs[2].value) {
+      errEl.textContent = 'Please select a size for all T-shirt rows.';
+      errEl.classList.remove('hidden'); return;
+    }
+    if (!inputs[3].value) {
+      errEl.textContent = 'Please select a type for all T-shirt rows.';
+      errEl.classList.remove('hidden'); return;
+    }
+    orders.push({
+      unique_id:  uniqueId,
+      name,
+      flat,
+      print_name: inputs[0].value,
+      gender:     inputs[1].value,
+      size:       inputs[2].value,
+      type:       inputs[3].value,
+      quantity:   parseInt(inputs[4].value) || 1,
+    });
+  }
+
+  const saveBtn = document.getElementById('saveModifyBtn');
+  const spinner = document.getElementById('saveModifySpinner');
+  saveBtn.classList.add('hidden');
+  spinner.classList.remove('hidden');
+
+  try {
+    await db.from('tshirt_orders').delete().eq('unique_id', uniqueId);
+    const { error } = await db.from('tshirt_orders').insert(orders);
+    if (error) throw new Error(error.message);
+
+    // Return to notices view and show success
+    document.getElementById('runnerDetails').classList.add('hidden');
+    renderAllPayments(existingPayments);
+    document.getElementById('existingOrderActions').classList.remove('hidden');
+    currentMode = null;
+
+    const successDiv = document.createElement('div');
+    successDiv.className = 'bg-green-50 border border-green-300 text-green-800 rounded-lg p-3 mt-3 text-sm font-medium';
+    successDiv.textContent = 'Your order modifications have been saved successfully!';
+    document.getElementById('orderNoticesContainer').appendChild(successDiv);
+
+  } catch (err) {
+    errEl.textContent = 'Failed to save: ' + err.message;
+    errEl.classList.remove('hidden');
+    saveBtn.classList.remove('hidden');
+  } finally {
+    spinner.classList.add('hidden');
+  }
 }
 
 function renderRecipients(rcpts) {
@@ -420,7 +648,7 @@ async function submitOrder() {
     const price = KIDS_SIZES.has(size) ? priceConfig.kids_price : priceConfig.adult_price;
     total += price * qty;
     orders.push({
-      unique_id: uniqueId,
+      unique_id:  uniqueId,
       name,
       flat,
       gender:     inputs[1].value,
@@ -435,12 +663,18 @@ async function submitOrder() {
   const sourceUpi = document.getElementById('sourceUpiId').value.trim();
 
   try {
-    // Update tshirt_orders (replace all for this runner)
-    await db.from('tshirt_orders').delete().eq('unique_id', uniqueId);
-    const { error: ordersErr } = await db.from('tshirt_orders').insert(orders);
-    if (ordersErr) throw new Error(ordersErr.message);
+    if (currentMode === 'orderMore') {
+      // Do NOT delete existing orders — only insert the new ones
+      const { error: ordersErr } = await db.from('tshirt_orders').insert(orders);
+      if (ordersErr) throw new Error(ordersErr.message);
+    } else {
+      // Normal flow: replace all orders for this runner
+      await db.from('tshirt_orders').delete().eq('unique_id', uniqueId);
+      const { error: ordersErr } = await db.from('tshirt_orders').insert(orders);
+      if (ordersErr) throw new Error(ordersErr.message);
+    }
 
-    // Create payment record
+    // Create a new payment record
     const orderSummary = orders.map(o => ({
       print_name: o.print_name, gender: o.gender, size: o.size, type: o.type, quantity: o.quantity,
     }));
@@ -458,8 +692,30 @@ async function submitOrder() {
 
     document.getElementById('payConfirmModal').classList.add('hidden');
     document.getElementById('runnerDetails').classList.add('hidden');
-    renderOrderSummary('pendingOrderSummary', { order_summary: orderSummary, total_amount: total });
-    document.getElementById('paymentPendingNotice').classList.remove('hidden');
+
+    if (currentMode === 'orderMore') {
+      // Show existing notices, then append the new pending notice beneath them
+      renderAllPayments(existingPayments);
+      const newNotice = document.createElement('div');
+      newNotice.className = 'bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4';
+      newNotice.innerHTML = `
+        <p class="font-semibold text-sm">Additional Order Under Review</p>
+        <p class="text-sm mt-1">Your additional t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
+        ${buildOrderSummaryHtml({ order_summary: orderSummary, total_amount: total })}
+      `;
+      document.getElementById('orderNoticesContainer').appendChild(newNotice);
+    } else {
+      // Normal flow: show single pending notice
+      document.getElementById('orderNoticesContainer').innerHTML = `
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mt-4">
+          <p class="font-semibold text-sm">Payment Under Review</p>
+          <p class="text-sm mt-1">Your t-shirt order has been submitted and is pending payment confirmation by the Ninjas team.</p>
+          ${buildOrderSummaryHtml({ order_summary: orderSummary, total_amount: total })}
+        </div>
+      `;
+    }
+
+    currentMode = null;
 
   } catch (err) {
     btn.disabled = false; btn.textContent = 'Yes, I have paid';
