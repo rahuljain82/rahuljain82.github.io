@@ -774,6 +774,14 @@
                 class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">
                 Payments
               </button>
+              <button onclick="switchTshirtTab('adminSummary')" id="tshirtTabBtn-adminSummary"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">
+                Admin Summary
+              </button>
+              <button onclick="switchTshirtTab('transactions')" id="tshirtTabBtn-transactions"
+                class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">
+                Transactions
+              </button>
             </div>
           </div>
 
@@ -851,6 +859,38 @@
             </div>
           </div>
 
+          <!-- ── Admin Summary Tab ── -->
+          <div id="tshirtTab-adminSummary" style="display:none;">
+            <div class="content-card mb-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-gray-800">Admin Payment Summary</h3>
+                  <p class="text-xs text-gray-400 mt-0.5">Received amounts are auto-calculated from approved payments. You can override them below — overrides are saved to the database.</p>
+                </div>
+                <button onclick="loadAdminSummary()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">&#8635; Refresh</button>
+              </div>
+            </div>
+            <div id="ts_admin_summary_content" class="content-card overflow-x-auto">
+              <p class="text-gray-400 text-sm p-2">Select this tab to load summary.</p>
+            </div>
+          </div>
+
+          <!-- ── Transactions Tab ── -->
+          <div id="tshirtTab-transactions" style="display:none;">
+            <div class="content-card mb-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-gray-800">Spend Transactions</h3>
+                  <p class="text-xs text-gray-400 mt-0.5">All spend entries across admins. Edit or delete individual transactions here.</p>
+                </div>
+                <button onclick="loadTransactions()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">&#8635; Refresh</button>
+              </div>
+            </div>
+            <div id="ts_transactions_content" class="content-card overflow-x-auto">
+              <p class="text-gray-400 text-sm p-2">Select this tab to load transactions.</p>
+            </div>
+          </div>
+
         </div>
 
         <!-- T-Shirt Payment Detail Modal -->
@@ -861,6 +901,67 @@
               <button onclick="document.getElementById('tsPayDetailModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
             </div>
             <div id="ts_pay_detail_content" class="text-sm text-gray-700 space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- New Spend Modal -->
+        <div id="tsNewSpendModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:420px;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">Add New Spend</h3>
+              <button onclick="document.getElementById('tsNewSpendModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="form-label">Admin <span class="text-red-500">*</span></label>
+                <select id="tsNewSpend_adminId" class="form-input">
+                  <option value="">-- Select Admin --</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Amount (&#8377;) <span class="text-red-500">*</span></label>
+                <input type="number" id="tsNewSpend_amount" class="form-input" min="1" placeholder="e.g. 500" />
+              </div>
+              <div>
+                <label class="form-label">Remarks <span class="text-red-500">*</span></label>
+                <textarea id="tsNewSpend_remarks" class="form-input" rows="2" placeholder="What was the money spent on?"></textarea>
+              </div>
+              <p id="tsNewSpendErr" class="text-red-500 text-xs hidden"></p>
+            </div>
+            <div class="flex gap-3 mt-5 justify-end">
+              <button onclick="document.getElementById('tsNewSpendModal').classList.add('hidden')" class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm px-4 py-2 rounded">Cancel</button>
+              <button onclick="saveNewSpend()" id="tsNewSpendSaveBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded">Save Spend</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Spend Modal -->
+        <div id="tsEditSpendModal" class="modal-overlay hidden">
+          <div class="modal-box" style="max-width:420px;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-800">Edit Spend</h3>
+              <button onclick="document.getElementById('tsEditSpendModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <input type="hidden" id="tsEditSpend_id" />
+            <div class="space-y-3">
+              <div>
+                <label class="form-label">Admin</label>
+                <input type="text" id="tsEditSpend_adminName" class="form-input bg-gray-100 text-gray-600" readonly />
+              </div>
+              <div>
+                <label class="form-label">Amount (&#8377;) <span class="text-red-500">*</span></label>
+                <input type="number" id="tsEditSpend_amount" class="form-input" min="1" />
+              </div>
+              <div>
+                <label class="form-label">Remarks <span class="text-red-500">*</span></label>
+                <textarea id="tsEditSpend_remarks" class="form-input" rows="2"></textarea>
+              </div>
+              <p id="tsEditSpendErr" class="text-red-500 text-xs hidden"></p>
+            </div>
+            <div class="flex gap-3 mt-5 justify-end">
+              <button onclick="document.getElementById('tsEditSpendModal').classList.add('hidden')" class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm px-4 py-2 rounded">Cancel</button>
+              <button onclick="saveEditSpend()" id="tsEditSpendSaveBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded">Save Changes</button>
+            </div>
           </div>
         </div>
 
@@ -4508,16 +4609,19 @@
     // ---- T-Shirt Payment Panel (ManageTshirtPayments) ----
     // ============================================================
     let tshirtPaymentsData = [];
+    let tsAdminSpendsData = [];
     let tsCurrentTab = 'config';
 
     function initTshirtPaymentsPanel() {
       if (tsCurrentTab === 'config') loadTshirtConfig();
-      else loadTshirtPayments();
+      else if (tsCurrentTab === 'payments') loadTshirtPayments();
+      else if (tsCurrentTab === 'adminSummary') loadAdminSummary();
+      else if (tsCurrentTab === 'transactions') loadTransactions();
     }
 
     function switchTshirtTab(tab) {
       tsCurrentTab = tab;
-      ['config', 'payments'].forEach(t => {
+      ['config', 'payments', 'adminSummary', 'transactions'].forEach(t => {
         const btn = document.getElementById('tshirtTabBtn-' + t);
         const pane = document.getElementById('tshirtTab-' + t);
         const active = t === tab;
@@ -4527,7 +4631,9 @@
         pane.style.display = active ? 'block' : 'none';
       });
       if (tab === 'config') loadTshirtConfig();
-      else loadTshirtPayments();
+      else if (tab === 'payments') loadTshirtPayments();
+      else if (tab === 'adminSummary') loadAdminSummary();
+      else if (tab === 'transactions') loadTransactions();
     }
 
     async function loadTshirtConfig() {
@@ -4761,10 +4867,262 @@
       document.getElementById('tsPayDetailModal').classList.remove('hidden');
     }
 
+    // ============================================================
+    // ---- Admin Summary & Transactions ----
+    // ============================================================
+
+    async function loadAdminSummary() {
+      const el = document.getElementById('ts_admin_summary_content');
+      el.innerHTML = '<p class="text-gray-400 text-sm p-2">Loading...</p>';
+
+      // Load recipients, approved payment totals per recipient, overrides, and all spends
+      const [rcptsRes, approvedRes, overridesRes, spendsRes] = await Promise.all([
+        db.from('tshirt_payment_recipients').select('recipient_name').order('display_order'),
+        db.from('tshirt_payments').select('recipient_name, total_amount').eq('payment_status', 'approved'),
+        db.from('admin_payments').select('*'),
+        db.from('admin_spends').select('admin_id, amount'),
+      ]);
+
+      const recipients = (rcptsRes.data || []).map(r => r.recipient_name);
+      if (!recipients.length) {
+        el.innerHTML = '<p class="text-gray-400 text-sm p-4 text-center">No payment recipients configured. Add recipients in the Config tab first.</p>';
+        return;
+      }
+
+      // Build calc map: auto-sum from approved payments per recipient
+      const calcMap = {};
+      (approvedRes.data || []).forEach(p => {
+        calcMap[p.recipient_name] = (calcMap[p.recipient_name] || 0) + (p.total_amount || 0);
+      });
+
+      // Build override map
+      const overrideMap = {};
+      (overridesRes.data || []).forEach(o => { overrideMap[o.admin_id] = o; });
+
+      // Build spends map: total spent per admin_id
+      const spentMap = {};
+      (spendsRes.data || []).forEach(s => {
+        spentMap[s.admin_id] = (spentMap[s.admin_id] || 0) + (s.amount || 0);
+      });
+
+      let html = `<table>
+        <thead><tr>
+          <th>Admin</th>
+          <th>Auto-Calculated Received (&#8377;)</th>
+          <th>Override Received (&#8377;)</th>
+          <th>Total Spent (&#8377;)</th>
+          <th>Remaining Balance (&#8377;)</th>
+          <th>Actions</th>
+        </tr></thead><tbody>`;
+
+      recipients.forEach(name => {
+        const autoCalc = calcMap[name] || 0;
+        const override = overrideMap[name];
+        const overrideVal = override ? override.amount_received : '';
+        const effectiveReceived = (override && override.amount_received != null) ? override.amount_received : autoCalc;
+        const totalSpent = spentMap[name] || 0;
+        const remaining = effectiveReceived - totalSpent;
+        const remainingColor = remaining < 0 ? 'color:#b91c1c;font-weight:600;' : remaining === 0 ? 'color:#6b7280;' : 'color:#15803d;font-weight:600;';
+
+        html += `<tr>
+          <td class="font-semibold">${esc(name)}</td>
+          <td class="text-center text-gray-500">&#8377;${autoCalc}</td>
+          <td class="text-center">
+            <div class="flex items-center gap-1 justify-center">
+              <input type="number" min="0" value="${overrideVal}" placeholder="${autoCalc}"
+                class="form-input py-1 text-sm w-24 text-center"
+                id="tsOverride_${esc(name)}" />
+              <button onclick="saveAdminReceivedOverride('${esc(name)}')"
+                class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded whitespace-nowrap">Save</button>
+            </div>
+          </td>
+          <td class="text-center">&#8377;${totalSpent}</td>
+          <td class="text-center" style="${remainingColor}">&#8377;${remaining}</td>
+          <td class="text-center">
+            <button onclick="openNewSpendModal('${esc(name)}')"
+              class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded whitespace-nowrap">+ New Spend</button>
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    async function saveAdminReceivedOverride(adminId) {
+      const input = document.getElementById('tsOverride_' + adminId);
+      if (!input) return;
+      const val = input.value.trim();
+      const amount = val === '' ? null : parseInt(val);
+
+      const { error } = await db.from('admin_payments').upsert(
+        { admin_id: adminId, admin_name: adminId, amount_received: amount, updated_at: new Date().toISOString() },
+        { onConflict: 'admin_id' }
+      );
+      if (error) { alert('Error saving override: ' + error.message); return; }
+      loadAdminSummary();
+    }
+
+    function openNewSpendModal(preselectedAdminId = '') {
+      // Populate admin dropdown from recipients
+      const sel = document.getElementById('tsNewSpend_adminId');
+      const recipientEls = document.querySelectorAll('.ts_rcpt_name');
+      const names = [];
+      recipientEls.forEach(el => { if (el.value.trim()) names.push(el.value.trim()); });
+
+      // If config tab hasn't been loaded, fall back to fetching from DB inline
+      if (!names.length) {
+        db.from('tshirt_payment_recipients').select('recipient_name').order('display_order').then(({ data }) => {
+          sel.innerHTML = '<option value="">-- Select Admin --</option>';
+          (data || []).forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.recipient_name;
+            opt.textContent = r.recipient_name;
+            if (r.recipient_name === preselectedAdminId) opt.selected = true;
+            sel.appendChild(opt);
+          });
+        });
+      } else {
+        sel.innerHTML = '<option value="">-- Select Admin --</option>';
+        names.forEach(n => {
+          const opt = document.createElement('option');
+          opt.value = n; opt.textContent = n;
+          if (n === preselectedAdminId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      document.getElementById('tsNewSpend_amount').value = '';
+      document.getElementById('tsNewSpend_remarks').value = '';
+      document.getElementById('tsNewSpendErr').classList.add('hidden');
+      document.getElementById('tsNewSpendSaveBtn').disabled = false;
+      document.getElementById('tsNewSpendSaveBtn').textContent = 'Save Spend';
+      document.getElementById('tsNewSpendModal').classList.remove('hidden');
+    }
+
+    async function saveNewSpend() {
+      const errEl = document.getElementById('tsNewSpendErr');
+      errEl.classList.add('hidden');
+
+      const adminId = document.getElementById('tsNewSpend_adminId').value.trim();
+      const amount = parseInt(document.getElementById('tsNewSpend_amount').value) || 0;
+      const remarks = document.getElementById('tsNewSpend_remarks').value.trim();
+
+      if (!adminId) { errEl.textContent = 'Please select an admin.'; errEl.classList.remove('hidden'); return; }
+      if (amount <= 0) { errEl.textContent = 'Amount must be greater than 0.'; errEl.classList.remove('hidden'); return; }
+      if (!remarks) { errEl.textContent = 'Please enter remarks.'; errEl.classList.remove('hidden'); return; }
+
+      const btn = document.getElementById('tsNewSpendSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+
+      const { error } = await db.from('admin_spends').insert([{
+        admin_id: adminId, admin_name: adminId, amount, remarks,
+      }]);
+
+      if (error) {
+        errEl.textContent = 'Error saving spend: ' + error.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false; btn.textContent = 'Save Spend';
+        return;
+      }
+
+      document.getElementById('tsNewSpendModal').classList.add('hidden');
+      // Refresh whichever tab is active
+      if (tsCurrentTab === 'adminSummary') loadAdminSummary();
+      else if (tsCurrentTab === 'transactions') loadTransactions();
+      else loadAdminSummary();
+    }
+
+    async function loadTransactions() {
+      const el = document.getElementById('ts_transactions_content');
+      el.innerHTML = '<p class="text-gray-400 text-sm p-2">Loading...</p>';
+
+      const { data, error } = await db.from('admin_spends').select('*').order('created_at', { ascending: false });
+      if (error) { el.innerHTML = `<p class="text-red-500 text-sm p-2">Error: ${error.message}</p>`; return; }
+
+      tsAdminSpendsData = data || [];
+
+      if (!tsAdminSpendsData.length) {
+        el.innerHTML = '<p class="text-gray-400 text-sm p-4 text-center">No spend transactions found. Use "Admin Summary" to add a spend.</p>';
+        return;
+      }
+
+      let html = `<table>
+        <thead><tr>
+          <th>Date</th><th>Admin</th><th>Amount (&#8377;)</th><th>Remarks</th><th>Actions</th>
+        </tr></thead><tbody>`;
+
+      tsAdminSpendsData.forEach(s => {
+        const date = new Date(s.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+        html += `<tr>
+          <td class="text-xs text-gray-500">${date}</td>
+          <td class="font-semibold">${esc(s.admin_name)}</td>
+          <td class="font-semibold text-right">&#8377;${s.amount || 0}</td>
+          <td class="text-sm text-gray-600">${esc(s.remarks)}</td>
+          <td style="white-space:nowrap;">
+            <button onclick="openEditSpendModal(${s.id})" class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-2 py-1 rounded mr-1">Edit</button>
+            <button onclick="deleteSpend(${s.id})" class="text-xs border border-gray-300 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded">Delete</button>
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    function openEditSpendModal(id) {
+      const s = tsAdminSpendsData.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('tsEditSpend_id').value = s.id;
+      document.getElementById('tsEditSpend_adminName').value = s.admin_name;
+      document.getElementById('tsEditSpend_amount').value = s.amount;
+      document.getElementById('tsEditSpend_remarks').value = s.remarks;
+      document.getElementById('tsEditSpendErr').classList.add('hidden');
+      document.getElementById('tsEditSpendSaveBtn').disabled = false;
+      document.getElementById('tsEditSpendSaveBtn').textContent = 'Save Changes';
+      document.getElementById('tsEditSpendModal').classList.remove('hidden');
+    }
+
+    async function saveEditSpend() {
+      const errEl = document.getElementById('tsEditSpendErr');
+      errEl.classList.add('hidden');
+
+      const id = parseInt(document.getElementById('tsEditSpend_id').value);
+      const amount = parseInt(document.getElementById('tsEditSpend_amount').value) || 0;
+      const remarks = document.getElementById('tsEditSpend_remarks').value.trim();
+
+      if (amount <= 0) { errEl.textContent = 'Amount must be greater than 0.'; errEl.classList.remove('hidden'); return; }
+      if (!remarks) { errEl.textContent = 'Please enter remarks.'; errEl.classList.remove('hidden'); return; }
+
+      const btn = document.getElementById('tsEditSpendSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+
+      const { error } = await db.from('admin_spends')
+        .update({ amount, remarks, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        errEl.textContent = 'Error saving: ' + error.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false; btn.textContent = 'Save Changes';
+        return;
+      }
+
+      document.getElementById('tsEditSpendModal').classList.add('hidden');
+      loadTransactions();
+    }
+
+    async function deleteSpend(id) {
+      if (!confirm('Delete this spend record? This cannot be undone.')) return;
+      const { error } = await db.from('admin_spends').delete().eq('id', id);
+      if (error) { alert('Error deleting: ' + error.message); return; }
+      loadTransactions();
+    }
+
     // ---- Keyboard shortcuts ----
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal','tsPayDetailModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal','tsPayDetailModal','tsNewSpendModal','tsEditSpendModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
       if (e.key === 'Enter' && !document.getElementById('stepId').classList.contains('hidden') && document.activeElement === document.getElementById('loginUniqueId')) checkAdminId();
     });
