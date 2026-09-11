@@ -418,7 +418,7 @@ async function enterModifyMode() {
 
   document.getElementById('tshirtRows').innerHTML = '';
   if (orders.length > 0) {
-    orders.forEach(o => addTshirtRow(o.print_name, o.gender, o.size, o.type || 'Tshirt', o.quantity));
+    orders.forEach(o => addTshirtRow(o.print_name, o.gender, o.size, o.type || 'Tshirt', o.quantity, true));
   } else {
     addTshirtRow();
   }
@@ -739,9 +739,9 @@ async function submitOrder() {
   }
 }
 
-function addTshirtRow(printName = '', tshirtGender = '', size = '', type = 'Tshirt', qty = 1) {
+function addTshirtRow(printName = '', tshirtGender = '', size = '', type = 'Tshirt', qty = 1, skipLimitCheck = false) {
   const container = document.getElementById('tshirtRows');
-  if (container.children.length >= 5) {
+  if (!skipLimitCheck && container.children.length >= 5) {
     alert('Maximum of 5 T-shirt rows allowed per Unique ID.');
     return;
   }
