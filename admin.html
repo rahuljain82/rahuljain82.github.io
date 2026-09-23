@@ -2275,19 +2275,31 @@
         }
       }
 
-      // For bus_bookings: merge payment status from bus_payments
+      // For bus_bookings: merge payment status from bus_payments + admin_status from bus_bookings
       if (currentTab === 'bus_bookings' && tableData.length > 0) {
-        const { data: pmtData } = await db
-          .from('bus_payments')
-          .select('unique_id, event_name, payment_received');
+        const rowIds = tableData.map(r => r.id).filter(Boolean);
+        const [pmtRes, adminStatusRes] = await Promise.all([
+          db.from('bus_payments').select('unique_id, event_name, payment_received'),
+          rowIds.length > 0
+            ? db.from('bus_bookings').select('id, admin_status').in('id', rowIds)
+            : Promise.resolve({ data: [] })
+        ]);
+        const pmtData = pmtRes.data;
+        const adminStatusData = adminStatusRes.data || [];
+        const adminStatusMap = {};
+        adminStatusData.forEach(r => { adminStatusMap[r.id] = r.admin_status; });
+        tableData.forEach(row => { row.admin_status = adminStatusMap[row.id] || null; });
         if (pmtData) {
           const pmtMap = {};
           pmtData.forEach(p => { pmtMap[p.unique_id + '|' + p.event_name] = p; });
           tableData.forEach(row => {
             const key = (row.unique_id || '') + '|' + (row.event_name || '');
             const pmt = pmtMap[key];
-            if (!pmt) row.payment_status = 'not_done';
-            else row.payment_status = pmt.payment_received ? 'verified' : 'under_review';
+            // Payment-driven states take priority over admin overrides
+            if (pmt && pmt.payment_received) row.payment_status = 'verified';
+            else if (pmt && !pmt.payment_received) row.payment_status = 'under_review';
+            else if (row.admin_status) row.payment_status = row.admin_status;
+            else row.payment_status = 'not_done';
           });
         }
       }
@@ -2360,7 +2372,8 @@
       if (!data || data.length === 0) { wrap.innerHTML = '<p class="text-gray-400 p-4">No data found.</p>'; document.getElementById('rowCount').textContent = '0 rows'; return; }
       const cols = Object.keys(data[0]).filter(c =>
         c !== 'admin_password_hash' &&
-        !(currentTab === 'bib_details' && c === 'emergency_contact_number')
+        !(currentTab === 'bib_details' && c === 'emergency_contact_number') &&
+        !(currentTab === 'bus_bookings' && c === 'admin_status')
       );
       tableColumns = cols;
       document.getElementById('rowCount').textContent = data.length + ' rows';
@@ -2374,9 +2387,19 @@
         cols.forEach(col => {
           const val = row[col];
           if (col === 'payment_status') {
-            const labels = { not_done: 'Not Done', under_review: 'Under Review', verified: 'Verified by Admin', pending: 'Admin Pending', approved: 'Confirmed', rejected: 'Rejected' };
-            const colors = { not_done: 'background:#fee2e2;color:#991b1b;', under_review: 'background:#fef9c3;color:#854d0e;', verified: 'background:#dcfce7;color:#166534;', pending: 'background:#fef9c3;color:#854d0e;', approved: 'background:#dcfce7;color:#166534;', rejected: 'background:#fee2e2;color:#991b1b;' };
-            html += `<td><span style="font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;${colors[val] || ''}">${labels[val] || '—'}</span></td>`;
+            const labels = { not_done: 'Not Done', under_review: 'Under Review', verified: 'Verified by Admin', payment_pending: 'Payment Pending', cancelled: 'Cancelled', waitlisted: 'Waitlisted', pending: 'Admin Pending', approved: 'Confirmed', rejected: 'Rejected' };
+            const colors = { not_done: 'background:#fee2e2;color:#991b1b;', under_review: 'background:#fef9c3;color:#854d0e;', verified: 'background:#dcfce7;color:#166534;', payment_pending: 'background:#dbeafe;color:#1e40af;', cancelled: 'background:#fee2e2;color:#991b1b;', waitlisted: 'background:#ffedd5;color:#9a3412;', pending: 'background:#fef9c3;color:#854d0e;', approved: 'background:#dcfce7;color:#166534;', rejected: 'background:#fee2e2;color:#991b1b;' };
+            if (currentTab === 'bus_bookings' && val !== 'verified' && val !== 'under_review') {
+              const curAdminStatus = row.admin_status || '';
+              html += `<td><select onchange="setBusBookingAdminStatus(${row.id}, this.value)" style="font-size:0.7rem;font-weight:600;padding:2px 5px;border-radius:4px;border:1px solid #d1d5db;cursor:pointer;max-width:130px;">` +
+                `<option value="" ${curAdminStatus === '' ? 'selected' : ''}>Not Done</option>` +
+                `<option value="payment_pending" ${curAdminStatus === 'payment_pending' ? 'selected' : ''}>Payment Pending</option>` +
+                `<option value="waitlisted" ${curAdminStatus === 'waitlisted' ? 'selected' : ''}>Waitlisted</option>` +
+                `<option value="cancelled" ${curAdminStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>` +
+                `</select></td>`;
+            } else {
+              html += `<td><span style="font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;${colors[val] || ''}">${labels[val] || '—'}</span></td>`;
+            }
           } else if (col === 'type' && currentTab === 'tshirt') {
             const isSinglet = String(val || '').toLowerCase() === 'singlet';
             html += `<td><span style="font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;${isSinglet ? 'background:#ede9fe;color:#5b21b6;' : 'background:#dbeafe;color:#1e40af;'}">${val || '—'}</span></td>`;
@@ -2465,7 +2488,7 @@
     }
 
     // ---- Event Data Edit ----
-    const ED_SKIP = new Set(['id', 'created_at', 'payment_status']);
+    const ED_SKIP = new Set(['id', 'created_at', 'payment_status', 'admin_status']);
     let editEventDataTarget = null;
 
     function openEditEventDataModal(ri) {
@@ -2637,6 +2660,16 @@
 
       // Refresh summary bar only (no table reload)
       loadBusSeatsInfo();
+    }
+
+    // ---- Bus Bookings: Set Admin Status ----
+    async function setBusBookingAdminStatus(rowId, status) {
+      const { error } = await db
+        .from('bus_bookings')
+        .update({ admin_status: status || null })
+        .eq('id', rowId);
+      if (error) { showToggleError('Failed to update status: ' + error.message); return; }
+      loadCurrentTab();
     }
 
     function showToggleError(msg) {

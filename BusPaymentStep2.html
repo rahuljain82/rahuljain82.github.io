@@ -48,6 +48,16 @@
         <p class="text-sm mt-1">Your payment submission for this race is currently under review. Please contact the organisers if you have any concerns.</p>
       </div>
 
+      <div id="cancelledNotice" class="hidden bg-red-50 border border-red-300 text-red-800 rounded-lg p-4 mt-2">
+        <p class="font-semibold text-sm">Bus Booking Cancelled</p>
+        <p class="text-sm mt-1">Your bus booking for this event has been cancelled by the organisers. Please contact the admin for assistance.</p>
+      </div>
+
+      <div id="waitlistedNotice" class="hidden bg-orange-50 border border-orange-300 text-orange-800 rounded-lg p-4 mt-2">
+        <p class="font-semibold text-sm">You Are on the Waitlist</p>
+        <p class="text-sm mt-1">You are currently on the waitlist for a bus seat. Seats are not available for payment at this time. Please contact the admin for updates.</p>
+      </div>
+
       <div id="seatConfirmedNotice" class="hidden bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mt-2">
         <p class="font-semibold text-sm">Your bus seat is confirmed!</p>
         <p class="text-sm mt-1">Number of seats: <span id="confirmedSeats" class="font-semibold">—</span></p>
@@ -163,11 +173,13 @@
       document.getElementById('seatsFull').style.display = 'none';
       document.getElementById('busDetails').classList.add('hidden');
       document.getElementById('alreadySubmittedNotice').classList.add('hidden');
+      document.getElementById('cancelledNotice').classList.add('hidden');
+      document.getElementById('waitlistedNotice').classList.add('hidden');
 
       // Check bus booking
       const { data: booking } = await db
         .from('bus_bookings')
-        .select('name, flat, race_category, bus_seats')
+        .select('name, flat, race_category, bus_seats, admin_status')
         .eq('unique_id', uniqueId)
         .eq('event_name', marathonName)
         .maybeSingle();
@@ -175,6 +187,15 @@
       if (!booking) {
         errMsg.textContent = 'This Unique ID has not registered for bus for this event.';
         errMsg.classList.remove('hidden');
+        return;
+      }
+
+      if (booking.admin_status === 'cancelled') {
+        document.getElementById('cancelledNotice').classList.remove('hidden');
+        return;
+      }
+      if (booking.admin_status === 'waitlisted') {
+        document.getElementById('waitlistedNotice').classList.remove('hidden');
         return;
       }
 
