@@ -1389,6 +1389,20 @@
     </div>
   </div>
 
+  <!-- Bus Booking Admin Note Modal -->
+  <div id="busNoteModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Admin Note</h3>
+      <p id="busNoteRowLabel" class="text-xs text-gray-500 mb-3"></p>
+      <textarea id="busNoteText" rows="4" class="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-y" placeholder="Add a note for this booking..."></textarea>
+      <p id="busNoteError" class="text-red-500 text-sm mt-2 hidden"></p>
+      <div class="flex gap-3 justify-end mt-4">
+        <button onclick="closeBusNoteModal()" class="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="busNoteSaveBtn" onclick="saveBusNote()" class="px-4 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Save Note</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Clear Table Modal -->
   <div id="clearTableModal" class="modal-overlay hidden">
     <div class="modal-box">
@@ -2281,14 +2295,15 @@
         const [pmtRes, adminStatusRes] = await Promise.all([
           db.from('bus_payments').select('unique_id, event_name, payment_received'),
           rowIds.length > 0
-            ? db.from('bus_bookings').select('id, admin_status').in('id', rowIds)
+            ? db.from('bus_bookings').select('id, admin_status, admin_note').in('id', rowIds)
             : Promise.resolve({ data: [] })
         ]);
         const pmtData = pmtRes.data;
         const adminStatusData = adminStatusRes.data || [];
         const adminStatusMap = {};
-        adminStatusData.forEach(r => { adminStatusMap[r.id] = r.admin_status; });
-        tableData.forEach(row => { row.admin_status = adminStatusMap[row.id] || null; });
+        const adminNoteMap = {};
+        adminStatusData.forEach(r => { adminStatusMap[r.id] = r.admin_status; adminNoteMap[r.id] = r.admin_note; });
+        tableData.forEach(row => { row.admin_status = adminStatusMap[row.id] || null; row.admin_note = adminNoteMap[row.id] || null; });
         if (pmtData) {
           const pmtMap = {};
           pmtData.forEach(p => { pmtMap[p.unique_id + '|' + p.event_name] = p; });
@@ -2373,7 +2388,8 @@
       const cols = Object.keys(data[0]).filter(c =>
         c !== 'admin_password_hash' &&
         !(currentTab === 'bib_details' && c === 'emergency_contact_number') &&
-        !(currentTab === 'bus_bookings' && c === 'admin_status')
+        !(currentTab === 'bus_bookings' && c === 'admin_status') &&
+        !(currentTab === 'bus_bookings' && c === 'admin_note')
       );
       tableColumns = cols;
       document.getElementById('rowCount').textContent = data.length + ' rows';
@@ -2418,7 +2434,14 @@
           const isPaid = !!row.payment_received;
           html += `<td class="text-center"><button data-pmt-btn="${row.id}" onclick="togglePaymentReceived(${row.id}, ${isPaid})" title="${isPaid ? 'Click to unmark' : 'Click to mark as paid'}" class="w-7 h-7 rounded border-2 flex items-center justify-center transition-colors ${isPaid ? 'bg-green-500 border-green-600 text-white hover:bg-red-100 hover:border-red-400 hover:text-red-600' : 'bg-white border-gray-300 text-transparent hover:border-green-400'}" style="font-size:14px;line-height:1;">✓</button></td>`;
         }
-        html += `<td class="flex gap-1 items-center"><button onclick="openEditEventDataModal(${ri})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="Edit">✏️</button><button onclick="openDeleteRowModal(${ri})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button></td>`;
+        const noteBtn = currentTab === 'bus_bookings'
+          ? (() => {
+              const hasNote = !!row.admin_note;
+              const notePreview = hasNote ? row.admin_note.replace(/"/g, '&quot;').substring(0, 100) + (row.admin_note.length > 100 ? '…' : '') : 'Add note';
+              return `<button onclick="openBusNoteModal(${row.id}, ${ri})" title="${notePreview}" class="rounded p-1 text-sm leading-none ${hasNote ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' : 'text-gray-300 hover:text-gray-500 hover:bg-gray-50'}">ℹ</button>`;
+            })()
+          : '';
+        html += `<td class="flex gap-1 items-center">${noteBtn}<button onclick="openEditEventDataModal(${ri})" class="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-1 text-sm leading-none" title="Edit">✏️</button><button onclick="openDeleteRowModal(${ri})" class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 text-base leading-none" title="Delete">🗑</button></td>`;
         html += '</tr>';
       });
       html += '</tbody></table>';
@@ -2488,7 +2511,7 @@
     }
 
     // ---- Event Data Edit ----
-    const ED_SKIP = new Set(['id', 'created_at', 'payment_status', 'admin_status']);
+    const ED_SKIP = new Set(['id', 'created_at', 'payment_status', 'admin_status', 'admin_note']);
     let editEventDataTarget = null;
 
     function openEditEventDataModal(ri) {
@@ -2660,6 +2683,36 @@
 
       // Refresh summary bar only (no table reload)
       loadBusSeatsInfo();
+    }
+
+    // ---- Bus Bookings: Admin Note ----
+    let busNoteTarget = null;
+    function openBusNoteModal(rowId, ri) {
+      const row = tableData[ri];
+      busNoteTarget = { rowId, ri };
+      document.getElementById('busNoteRowLabel').textContent =
+        (row.name ? row.name + ' — ' : '') + (row.event_name || '') + (row.unique_id ? ' (' + row.unique_id + ')' : '');
+      document.getElementById('busNoteText').value = row.admin_note || '';
+      document.getElementById('busNoteError').classList.add('hidden');
+      const btn = document.getElementById('busNoteSaveBtn'); btn.disabled = false; btn.textContent = 'Save Note';
+      document.getElementById('busNoteModal').classList.remove('hidden');
+    }
+    function closeBusNoteModal() {
+      busNoteTarget = null;
+      document.getElementById('busNoteModal').classList.add('hidden');
+    }
+    async function saveBusNote() {
+      if (!busNoteTarget) return;
+      const note = document.getElementById('busNoteText').value.trim() || null;
+      const errEl = document.getElementById('busNoteError');
+      const btn = document.getElementById('busNoteSaveBtn'); btn.disabled = true; btn.textContent = 'Saving...';
+      const { error } = await db.from('bus_bookings').update({ admin_note: note }).eq('id', busNoteTarget.rowId);
+      btn.disabled = false; btn.textContent = 'Save Note';
+      if (error) { errEl.textContent = 'Failed to save: ' + error.message; errEl.classList.remove('hidden'); return; }
+      // Update local data and refresh note button in-place
+      tableData[busNoteTarget.ri].admin_note = note;
+      closeBusNoteModal();
+      loadCurrentTab();
     }
 
     // ---- Bus Bookings: Set Admin Status ----
@@ -5155,7 +5208,7 @@
     // ---- Keyboard shortcuts ----
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal','tsPayDetailModal','tsNewSpendModal','tsEditSpendModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        ['deleteRowModal','clearTableModal','eventEditorModal','deleteEventModal','runnerEditorModal','eventDataEditModal','eventDataAddModal','landingCardModal','partnerModal','menuLinkModal','emailModal','tsPayDetailModal','tsNewSpendModal','tsEditSpendModal','busNoteModal'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
       if (e.key === 'Enter' && !document.getElementById('stepId').classList.contains('hidden') && document.activeElement === document.getElementById('loginUniqueId')) checkAdminId();
     });
