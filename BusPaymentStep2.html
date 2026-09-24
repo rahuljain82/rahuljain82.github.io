@@ -176,25 +176,28 @@
       document.getElementById('cancelledNotice').classList.add('hidden');
       document.getElementById('waitlistedNotice').classList.add('hidden');
 
-      // Check bus booking
-      const { data: booking } = await db
+      // Check bus booking — fetch all profiles (primary + guests) for this unique_id + event
+      const { data: bookings } = await db
         .from('bus_bookings')
-        .select('name, flat, race_category, bus_seats, admin_status')
+        .select('name, flat, race_category, bus_seats, admin_status, profile_id')
         .eq('unique_id', uniqueId)
-        .eq('event_name', marathonName)
-        .maybeSingle();
+        .eq('event_name', marathonName);
 
-      if (!booking) {
+      if (!bookings || bookings.length === 0) {
         errMsg.textContent = 'This Unique ID has not registered for bus for this event.';
         errMsg.classList.remove('hidden');
         return;
       }
 
-      if (booking.admin_status === 'cancelled') {
+      // Use primary profile (profile_id = '') for name/flat/admin_status; fall back to first entry
+      const primaryBooking = bookings.find(b => !b.profile_id) || bookings[0];
+      const totalSeats = bookings.reduce((sum, b) => sum + (b.bus_seats || 0), 0);
+
+      if (primaryBooking.admin_status === 'cancelled') {
         document.getElementById('cancelledNotice').classList.remove('hidden');
         return;
       }
-      if (booking.admin_status === 'waitlisted') {
+      if (primaryBooking.admin_status === 'waitlisted') {
         document.getElementById('waitlistedNotice').classList.remove('hidden');
         return;
       }
@@ -212,7 +215,7 @@
         document.getElementById('uniqueId').classList.add('bg-gray-100', 'text-gray-500');
         document.getElementById('marathonName').setAttribute('disabled', true);
         if (existingPayment.payment_received) {
-          document.getElementById('confirmedSeats').textContent = booking.bus_seats || '—';
+          document.getElementById('confirmedSeats').textContent = totalSeats || '—';
           document.getElementById('seatConfirmedNotice').classList.remove('hidden');
         } else {
           document.getElementById('alreadySubmittedNotice').classList.remove('hidden');
@@ -259,13 +262,13 @@
       });
       document.getElementById('qrDisplay').classList.add('hidden');
 
-      // Calculate amount
-      const amount = (event?.seat_cost || 0) * (booking.bus_seats || 1);
+      // Calculate amount across all profiles (own + guest seats)
+      const amount = (event?.seat_cost || 0) * totalSeats;
 
-      document.getElementById('name').value         = booking.name;
-      document.getElementById('flat').value         = booking.flat;
-      document.getElementById('raceCategory').value = booking.race_category;
-      document.getElementById('busSeats').value     = booking.bus_seats;
+      document.getElementById('name').value         = primaryBooking.name;
+      document.getElementById('flat').value         = primaryBooking.flat;
+      document.getElementById('raceCategory').value = primaryBooking.race_category;
+      document.getElementById('busSeats').value     = totalSeats;
       document.getElementById('amountToPay').value  = amount ? '₹' + amount : '—';
 
       const instrRow = document.getElementById('instructionsRow');
