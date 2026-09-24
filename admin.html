@@ -4470,9 +4470,9 @@
           : 'background:white;color:#475569;border:1px solid #e2e8f0;';
         return `<span style="display:inline-flex;align-items:center;gap:0.35rem;${chipStyle}font-size:0.78rem;font-weight:600;padding:0.2rem 0.65rem 0.2rem 0.45rem;border-radius:9999px;transition:all 0.15s;">
           <input type="checkbox" ${included ? 'checked' : ''} title="${included ? 'Included in scorecard — uncheck to exclude' : 'Excluded from scorecard — check to include'}"
-            onchange="toggleRaceInclusion('${escAttr(race)}', this.checked)" onclick="event.stopPropagation()"
+            data-race="${escAttr(race)}" onchange="toggleRaceInclusion(this.dataset.race, this.checked)" onclick="event.stopPropagation()"
             style="width:13px;height:13px;cursor:pointer;accent-color:${active ? 'white' : '#6366f1'};flex-shrink:0;" />
-          <span onclick="loadRaceVolunteering('${escAttr(race)}')" style="cursor:pointer;">${esc(race)}</span>
+          <span data-race="${escAttr(race)}" onclick="loadRaceVolunteering(this.dataset.race)" style="cursor:pointer;">${esc(race)}</span>
         </span>`;
       }).join('');
     }
